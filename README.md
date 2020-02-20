@@ -1,0 +1,2 @@
+# hass-config
+Coming soon.
