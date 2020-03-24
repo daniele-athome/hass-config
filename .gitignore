@@ -1,0 +1,7 @@
+/secrets.yaml
+/known_devices.yaml
+/www/ui/karen-avatar.jpg
+/www/github
+/www/community
+*.pyc
+__pycache__
