@@ -105,11 +105,50 @@ Known people living at my place (just me for now).
 
 ### Presence
 
-This is where the fun begins. TODO
+I use a combination of sources to determine my presence:
+
+* Network (nmap integration)
+* Bluetooth using [monitor](https://github.com/andrewjfreyer/monitor/)
+* GPS using [GPSLogger](https://gpslogger.app/)
+
+When my entrance door opens, some lights are turned on if needed and a presence
+arrival scan is initiated. When my phone is detected, Karen greets me and tells
+me some information about the house. Also, the alarm system is disarmed.
+
+When I leave, a deperture scan is initiated. When my phone is no longer detected,
+lights and any media player are turned off. The alarm system is armed.
+
+Since both automations are triggered by the entrance door sensor, I use a
+combination of conditions to distinguish between arrival and departure.
+
+During the night, a motion sensor will turn on a LED strip with a mild light
+to help me moving through the living room.
 
 ### Scenarios
 
-A few nice automations here, mainly for living room scenarios. TODO
+A few nice automations here, mainly for living room scenarios. Not all lights are
+under Home Assistant control yet though.
+
+Scenarios are mainly for my living room, since is the room where most of my home
+automation hardware is installed at the moment.
+
+When I watch something, all lights are turned off &mdash; I call this *cinema mode*.
+A LED strip facing my ceiling is gently turned on when I pause.
+
+Cinema mode is suspended if I ask Karen to keep some lights on &mdash; very useful
+when I'm watching something while eating &mdash; I do that a lot :spaghetti:
+
+Controlled lights are turned off automatically when too much light is detected in
+the room.
+
+#### Guest mode
+
+I need to improve this, but mainly it does something when I tell Karen that I have
+guests:
+
+* set a specific light scene
+* put some ambient playlist on ([ThePianoGuys](https://www.youtube.com/channel/UCmKurapML4BF9Bjtj4RbvXw)!!)
+* Karen won't speak unless it's an emergency
 
 ### Security
 
