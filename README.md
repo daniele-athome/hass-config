@@ -126,8 +126,8 @@ to help me moving through the living room.
 
 ### Scenarios
 
-A few nice automations here, mainly for living room scenarios. Not all lights are
-under Home Assistant control yet though.
+A few nice automations here. Not all lights are under Home Assistant control yet
+though.
 
 Scenarios are mainly for my living room, since is the room where most of my home
 automation hardware is installed at the moment.
