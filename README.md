@@ -26,6 +26,17 @@ TODO some nice diagram with draw.io maybe
 
 ## Hardware used
 
+* An unused 2012 laptop running Home Assistant and Rhasspy
+* ConBee II ZigBee USB controller attached to the laptop
+* Raspberry Pi 3B+ running Kodi
+* Google Home (used only as speaker)
+* Sonoff Basic flashed with Tasmota
+* Shelly One flashed with Tasmota
+* ZigBee Aqara temperature sensors
+* ZigBee Aqara motion sensor
+* ZigBee Aqara door sensor
+* ZigBee RGB LED strips
+
 TODO also include a wishlist or planning to buy
 
 ## Lovelace interface
