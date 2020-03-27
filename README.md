@@ -29,6 +29,7 @@ TODO some nice diagram with draw.io maybe
 * An unused 2012 laptop running Home Assistant and Rhasspy
 * ConBee II ZigBee USB controller attached to the laptop
 * Raspberry Pi 3B+ running Kodi
+* A cheap Android tablet as my control center
 * Google Home (used only as speaker)
 * Sonoff Basic flashed with Tasmota
 * Shelly One flashed with Tasmota
@@ -41,7 +42,39 @@ TODO also include a wishlist or planning to buy
 
 ## Lovelace interface
 
-TODO screenshots with some explaining
+I view this mainly from my tablet hanging on a wall. I had to take some measures
+to make it work on the tablet because a complex web application like Lovelace
+really needs computing power and memory (did I say it's a cheap tablet?).
+A few tricks to keep it fast:
+
+* Don't use a background image
+* Don't use animated icons
+* Don't put too many cards on a view
+
+I tried pretty much every browser on the tablet and the fastest seems to be Chrome.
+
+My views are pretty tailored to my tablet display: I made them so all content
+would fit and I wouldn't need to scroll up and down.
+
+Main view/Home
+![Home](lovelace-home.png)
+
+Environment/HVAC
+![Environment](lovelace-environment.png)
+
+System monitor
+![System](lovelace-system.png)
+
+Home automation devices
+![Things](lovelace-things.png)
+
+Security
+![Security](lovelace-security.png)
+
+## Software setup
+
+All software is installed through hand-crafted Ansible recipes. Home Assistant runs on
+Debian GNU/Linux using a virtualenv.
 
 ## Packages
 
