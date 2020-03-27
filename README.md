@@ -73,7 +73,7 @@ would fit and I wouldn't need to scroll up and down.
 
 ## Software setup
 
-All software is installed through hand-crafted Ansible recipes. Home Assistant runs on
+All software is installed through handcrafted Ansible recipes. Home Assistant runs on
 Debian GNU/Linux using a virtualenv.
 
 ## Packages
