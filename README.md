@@ -1,7 +1,5 @@
 # My Home Assistant configuration
 
-> I'm preparing my setup for the world to see. Stay tuned.
-
 This is a mirror of my home automation configuration for Home Assistant.
 It's been stripped down of some templates for speech and notifications.
 
