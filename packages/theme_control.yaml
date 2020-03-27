@@ -1,0 +1,16 @@
+#################################################################
+#                                                               #
+#                    Packages/Theme Control                     #
+#                                                               #
+#################################################################
+
+automation:
+  - alias: 'Set Default Theme'
+    initial_state: 'on'
+    trigger:
+    - platform: homeassistant
+      event: start
+    action:
+    - service: frontend.set_theme
+      data:
+        name: !secret default_theme

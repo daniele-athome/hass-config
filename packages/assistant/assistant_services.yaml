@@ -1,0 +1,71 @@
+
+automation:
+
+  - alias: wakeword_disable
+    trigger:
+      # Kodi: in playing
+      - platform: state
+        entity_id: 'media_player.kodi'
+        to: 'playing'
+      # Lounge (TTS) che parla
+      - platform: state
+        entity_id: 'media_player.lounge'
+        to: 'playing'
+      # TV che parla
+      - platform: template
+        value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', false) }}"
+    action:
+      - service: rest_command.wakeword_disable
+
+  - alias: wakeword_enable
+    trigger:
+      # Kodi: qualsiasi stato che non sia playing
+      - platform: state
+        entity_id: 'media_player.kodi'
+        from: 'playing'
+      # Lounge (TTS) non in playing
+      - platform: state
+        entity_id: 'media_player.lounge'
+        from: 'playing'
+      # TV spenta
+      - platform: state
+        entity_id: 'media_player.tv'
+        to: 'off'
+      # TV muta
+      - platform: template
+        value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', true) }}"
+    action:
+      - service: rest_command.wakeword_enable
+
+rest_command:
+
+  wakeword_enable:
+    url: 'http://localhost:12101/api/listen-for-wake'
+    method: post
+    payload: 'on'
+
+  wakeword_disable:
+    url: 'http://localhost:12101/api/listen-for-wake'
+    method: post
+    payload: 'off'
+
+rhasspy_events:
+  events:
+    - GetTime
+    - GetDate
+    - GreetingGoodMorning
+    - GreetingGeneral
+    - Thankyou
+    - AnnounceGoingAway
+    - GreetingGoodNight
+    - GetExternalTemperature
+    - SetDinnerEating
+    - AllLightsOff
+    - LivingUtilityLightOn
+    - SetCountdownAlarm
+    - GetCountdownAlarm
+    - ClearCountdownAlarm
+    - TrashReminderMorning
+    - GuestModeOn
+    - GuestModeOff
+    - StartMusicPlaylist

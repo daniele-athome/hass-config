@@ -1,0 +1,136 @@
+# Weather stuff
+
+homeassistant:
+  customize:
+    weather.home:
+      friendly_name: !secret weather_full_name_home
+
+    sensor.outside_temperature:
+      friendly_name: Temperatura esterna
+
+    sensor.outside_humidity:
+      friendly_name: Umidità
+
+    sensor.wind_bearing_cardinal:
+      friendly_name: Direzione vento
+
+    sensor.wind_bearing_cardinal_friendly:
+      friendly_name: Direzione vento
+
+    sensor.weather_temperature:
+      friendly_name: Temperatura esterna
+
+weather:
+  - name: home
+    #platform: openweathermap
+    #api_key: !secret openweathermap_apikey
+    platform: darksky
+    api_key: !secret darksky_apikey
+    mode: daily
+
+sensor:
+  - name: weather
+    platform: darksky
+    api_key: !secret darksky_apikey
+    language: it
+    scan_interval: '01:00'
+    forecast:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+    hourly_forecast:
+      - 0
+      - 1
+    monitored_conditions:
+      - summary
+      - minutely_summary
+      - hourly_summary
+      - daily_summary
+      - icon
+      - uv_index
+      - ozone
+      - temperature
+      - temperature_high
+      - temperature_low
+      - apparent_temperature
+      - apparent_temperature_high
+      - humidity
+      - wind_speed
+      - wind_bearing
+      - precip_probability
+      - precip_intensity
+      - precip_intensity_max
+      - pressure
+      - visibility
+
+  #
+  # Outside temperature and humidity
+  #
+  # Information is rounded to integers, because decimal points here are not useful
+  # for human consumption ...and because the hyper-local temperature is likely off
+  # by a few degrees anyway. This isn't a laboratory after all!
+  #
+  - platform: template
+    sensors:
+      outside_temperature:
+        icon_template: mdi:thermometer
+        unit_of_measurement: '°C'
+        value_template: >-
+          {{ states('sensor.weather_temperature') | round }}
+
+      outside_humidity:
+        icon_template: mdi:water-percent
+        unit_of_measurement: '%'
+        value_template: >-
+          {{ states('sensor.weather_humidity') | round }}
+
+  #
+  # Wind direction
+  #
+  # Wind provenance in degrees is great for computers, but pointless for humans.
+  # Cardinal points make more sense to humans.
+  #
+  # @see /customize.yaml
+  #
+  # @link http://www.themethodology.net/2013/12/how-to-convert-degrees-to-cardinal.html
+  # @link https://stackoverflow.com/questions/7490660/converting-wind-direction-in-angles-to-text-words
+  #
+  - platform: template
+    sensors:
+      wind_bearing_cardinal:
+        value_template: >-
+          {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
+          {% set directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] %}
+
+          {% if degrees >= 0 %}
+            {% set val = (degrees / 45) | int %}
+
+            {{ directions[(val % 8)] }}
+          {% else %}
+            unknown
+          {% endif %}
+
+      wind_bearing_cardinal_friendly:
+        value_template: >-
+          {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
+          {% set directions = [
+            'Nord',
+            'Nord-est',
+            'Est',
+            'Sud-est',
+            'Sud',
+            'Sud-ovest',
+            'Ovest',
+            'Nord-ovest'
+          ] %}
+
+          {% if degrees >= 0 %}
+            {% set val = (degrees / 45) | int %}
+
+            {{ directions[(val % 8)] }}
+          {% else %}
+            non lo so
+          {% endif %}

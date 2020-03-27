@@ -1,0 +1,41 @@
+# Calendar data sensors
+
+homeassistant:
+  customize:
+    sensor.date_long:
+      friendly_name: Data
+
+# Calendario personale
+calendar:
+  - platform: caldav
+    username: !secret caldav_username
+    password: !secret caldav_password
+    url: !secret caldav_url
+
+sensor:
+  - platform: time_date
+    display_options:
+      - time
+      - date
+      - date_time
+
+  # Data fatta bene
+  - platform: template
+    sensors:
+      date_long:
+        entity_id: sensor.date
+        icon_template: mdi:calendar-today
+        value_template: >-
+          {% set months = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"] %}
+          {% set days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]  %}
+          {% set weekday = days[now().weekday()] %}
+          {% set year = now().year %}
+          {% set month = months[now().month-1] %}
+          {% set day = now().day | int %}
+          {% set day = 'primo' if (day == 1) else day %}
+
+          {{ weekday }}, {{ day }} {{ month }} {{ year }}
+
+binary_sensor:
+  - platform: workday
+    country: IT

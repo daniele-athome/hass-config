@@ -1,0 +1,98 @@
+# House lights
+
+homeassistant:
+  customize:
+    light.living_stand:
+      friendly_name: Piantana soggiorno
+    light.living_ceiling:
+      friendly_name: Striscia soffitto
+    light.living_extra:
+      friendly_name: Soggiorno extra
+
+automation:
+  - alias: "Sync Tasmota states on start-up"
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "cmnd/tasmotas/state"
+          payload: ""
+
+light:
+
+  - platform: mqtt
+    name: "living_stand"
+    state_topic: "stat/piantana/RESULT"
+    value_template: "{{ value_json.POWER }}"
+    command_topic: "cmnd/piantana/POWER"
+    payload_on: "ON"
+    payload_off: "OFF"
+    availability_topic: "tele/piantana/LWT"
+    payload_available: "Online"
+    payload_not_available: "Offline"
+    qos: 1
+    retain: false
+
+  - platform: template
+    lights:
+      living_ceiling:
+        entity_id: light.living_ceiling_real
+        value_template: "{{ states('light.living_ceiling_real') }}"
+        level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int }}"
+        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int }}"
+        turn_on:
+          service: light.turn_on
+          data_template:
+            entity_id: light.living_ceiling_real
+            brightness: 255
+        turn_off:
+          service: light.turn_on
+          data:
+            entity_id: light.living_ceiling_real
+            brightness: 0
+        set_level:
+          service: light.turn_on
+          data_template:
+            entity_id: light.living_ceiling_real
+            brightness: "{{ brightness }}"
+        set_temperature:
+          service: light.turn_on
+          data_template:
+            entity_id: light.living_ceiling_real
+            color_temp: "{{ color_temp }}"
+
+  - platform: group
+    name: living_extra
+    entities:
+      - light.living_stand
+      - light.living_ceiling
+
+  # TODO group living_main: -- quando avremo sotto controllo le luci principali
+
+scene:
+
+  # Luci guida notturne
+  - name: night_guidance_on
+    entities:
+      light.living_ceiling:
+        state: on
+        brightness: 40
+        color_temp: 400
+
+  - name: night_guidance_off
+    entities:
+      light.living_ceiling:
+        state: off
+
+  # Luci ingresso in casa
+  - name: house_entrance
+    entities:
+      light.living_ceiling:
+        state: on
+        brightness: 255
+        color_temp: 400
+      light.living_stand:
+        state: on

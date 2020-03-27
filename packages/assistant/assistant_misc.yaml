@@ -1,0 +1,138 @@
+homeassistant:
+  customize:
+    script.goodmorning:
+      friendly_name: Buongiorno!
+      icon: mdi:coffee
+
+intent_script:
+
+  TrashReminderMorning:
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.trash_reminder_morning
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_TrashReminderMorning.yaml
+
+  GreetingGoodMorning:
+    action:
+      - service: script.goodmorning
+
+  GreetingGeneral:
+    action:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_GreetingGeneral.yaml
+
+  Thankyou:
+    action:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_Thankyou.yaml
+
+  AnnounceGoingAway:
+    action:
+      - service: script.announce_going_away
+
+  GreetingGoodNight:
+    action:
+      - service: script.goodnight
+
+input_boolean:
+
+  # TODO prevedere variabile per indicare il giorno del reminder
+  trash_reminder_morning:
+    name: 'Porta la spazzatura domattina'
+    initial: off
+    icon: mdi:recycle
+
+automation:
+
+  # Avvisa di viaggi duri al lavoro se in mattina feriale e c'è qualcuno in casa
+  - alias: work_commute_hard
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.commute_to_work
+        above: 35
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.workmorning_sensor
+          state: 'on'
+        - condition: numeric_state
+          entity_id: sensor.people_home_count
+          above: '0'
+    action:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_work_commute_hard.yaml
+
+script:
+
+  # Saluto del buongiorno
+  goodmorning:
+    sequence:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_goodmorning.yaml
+      - condition: template
+        value_template: '{{ 4 <= now().hour < 10 }}'
+      - delay:
+          seconds: 10
+      - wait_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'paused') }}"
+        timeout: '00:01:00'
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.lounge
+          volume_level: !secret lounge_volume
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.lounge
+          media_content_id: >-
+            {% set hour = states('sensor.time').split(':')[0] %}
+            https://cdn.rtl.it/RTLFM/on-demand/giornale-orario/go_{{ hour }}.mp3
+          media_content_type: music
+
+  # Saluto della buonanotte
+  goodnight:
+    sequence:
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_goodnight.yaml
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+      - service: light.turn_off
+        entity_id: all
+      - service: switch.turn_off
+        entity_id: switch.homeserver
+
+  # Bentornato a casa
+  welcome_home:
+    sequence:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_welcome_home.yaml
+      - condition: template
+        value_template: '{{ (now().hour == 20 and now().minute < 10) or (now().hour == 19 and now().minute > 50) }}'
+      - delay:
+          seconds: 5
+      #- wait_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'paused') }}"
+      #  timeout: '00:01:00'
+      - service: script.tv_channel_favourite_news
+
+  # Andando via
+  # TODO da sistemare con altre informazioni
+  # TODO sfruttare macro
+  # TODO variazioni di testo
+  announce_going_away:
+    sequence:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_announce_going_away.yaml
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.trash_reminder_morning
+      - service: switch.turn_on
+        entity_id: switch.homeserver

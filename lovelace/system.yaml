@@ -1,0 +1,255 @@
+id: 2
+title: Sistema
+icon: mdi:lan
+panel: true
+cards:
+
+  - type: custom:layout-card
+    layout: vertical
+    cards:
+
+  # Column 1
+
+      - type: markdown
+        content: >
+          ## Home Server
+
+      - type: custom:vertical-stack-in-card
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: picture
+                    image: /local/ui/homeserver.png
+                    style: |
+                      img {
+                        border-radius: var(--ha-card-border-radius);
+                      }
+
+              - type: custom:bar-card
+                title_position: inside
+                entity: sensor.homeserver_uptime
+                title: Uptime
+                align: center
+                indicator: off
+                animation: off
+                padding: 5px
+
+      - type: 'custom:bar-card'
+        align: split
+        show_icon: true
+        padding: 4px
+        columns: 2
+        entities:
+          - entity: sensor.homeserver_used_percent
+            title: Disco
+          - entity: sensor.homeserver_ram_used_percent
+            title: RAM
+
+      - type: 'custom:bar-card'
+        align: split
+        show_icon: true
+        padding: 4px
+        columns: 2
+        entities:
+          - entity: sensor.homeserver_cpu_used
+            title: CPU
+          - entity: sensor.homeserver_w83627thf_1_temp
+            title: Temp
+            icon: mdi:thermometer
+
+      - type: 'custom:button-card'
+        entity: switch.homeserver
+        icon: mdi:power-sleep
+        name: 'Sospendi/Sveglia'
+        layout: icon_name
+        state:
+          - value: 'off'
+            name: 'Sveglia'
+          - value: 'on'
+            name: 'Sospendi'
+
+      - type: horizontal-stack
+        cards:
+
+          - type: 'custom:button-card'
+            icon: mdi:power-cycle
+            name: 'Riavvia'
+            layout: icon_name
+            confirmation:
+              text: 'Riavviare il server?'
+            tap_action:
+              action: call-service
+              service: shell_command.homeserver_reboot
+
+          - type: 'custom:button-card'
+            icon: mdi:power
+            name: 'Spegni'
+            layout: icon_name
+            confirmation:
+              text: 'Shutdown del server?'
+            tap_action:
+              action: call-service
+              service: shell_command.homeserver_poweroff
+
+      - break
+
+  # Column 2
+
+      - type: markdown
+        content: >
+          ## Media Center
+
+      - type: custom:vertical-stack-in-card
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: picture
+                    image: /local/ui/mediarasp.png
+                    style: |
+                      img {
+                        border-radius: var(--ha-card-border-radius);
+                      }
+
+              - type: custom:bar-card
+                title_position: inside
+                entity: sensor.mediarasp_uptime
+                title: Uptime
+                align: center
+                indicator: off
+                animation: off
+                padding: 5px
+
+      - type: 'custom:bar-card'
+        align: split
+        show_icon: true
+        padding: 4px
+        columns: 2
+        entities:
+          - entity: sensor.mediarasp_used_percent
+            title: Disco
+          - entity: sensor.mediarasp_cpu_thermal_1_temp
+            title: Temp
+            icon: mdi:thermometer
+
+      - type: horizontal-stack
+        cards:
+
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+            height: 74
+            line_width: 2
+            font_size: 65
+            hours_to_show: 120
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 45
+                color: "#e74c3c"
+              - value: 38
+                color: "#e79b3c"
+              - value: 0
+                color: "#3498db"
+
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+            height: 74
+            line_width: 2
+            font_size: 65
+            hours_to_show: 120
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 45
+                color: "#e74c3c"
+              - value: 38
+                color: "#e79b3c"
+              - value: 0
+                color: "#3498db"
+
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            show_header_toggle: off
+            entities:
+              - type: section
+                label: INTERNAL
+              - type: 'custom:hui-horizontal-stack-card'
+                cards:
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_home_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: /home
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_var_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: /var
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+
+          - type: entities
+            show_header_toggle: off
+            entities:
+              - type: section
+                label: EXTERNAL
+              - type: 'custom:hui-horizontal-stack-card'
+                cards:
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_media_external1_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: external1
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_media_external2_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: external2
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}

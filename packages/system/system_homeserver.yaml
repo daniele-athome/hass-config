@@ -1,0 +1,71 @@
+# Home server monitoring
+
+homeassistant:
+  customize:
+    sensor.homeserver_w83627thf_1_temp:
+      friendly_name: Temperatura CPU server
+    sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732:
+      friendly_name: Disco 1
+    sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143:
+      friendly_name: Disco 2
+    sensor.homeserver_uptime:
+      friendly_name: Uptime
+    automation.server_on_fire:
+      friendly_name: Server caldo
+
+glances:
+
+  - host: server
+    name: homeserver
+    version: 3
+
+sensor:
+
+  - platform: hddtemp
+    name: homeserver_hddtemp
+    host: server
+    disks:
+      - /dev/disk/by-id/ata-WDC_WD1002FAEX-00Z3A0_WD-WCATR9149732
+      - /dev/disk/by-id/ata-WDC_WD1002FAEX-00Z3A0_WD-WCATR9159143
+
+  # Unsupported by Glances integration
+  - platform: rest
+    resource: http://server:61208/api/3/uptime
+    name: homeserver_uptime
+    value_template: '{{ value_json }}'
+    scan_interval: 300
+
+automation:
+  - alias: server_on_fire
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+        above: 50
+      - platform: numeric_state
+        entity_id: sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+        above: 50
+      - platform: numeric_state
+        entity_id: sensor.homeserver_w83627thf_1_temp
+        above: 50
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Temperatura server eccessiva!
+          Core: {{ states.sensor.homeserver_w83627thf_1_temp.state_with_unit }}
+          Disco 1: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732.state_with_unit }}
+          Disco 2: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143.state_with_unit }}
+
+switch:
+  - platform: wake_on_lan
+    name: homeserver
+    host: server
+    mac: !secret homeserver_mac_address
+    turn_off:
+      service: shell_command.homeserver_suspend
+
+shell_command:
+  homeserver_suspend: ssh homeassistant@server sudo systemctl suspend
+  homeserver_reboot: ssh homeassistant@server sudo systemctl reboot
+  homeserver_poweroff: ssh homeassistant@server sudo systemctl poweroff

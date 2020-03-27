@@ -1,0 +1,26 @@
+
+intent_script:
+
+  GetTime:
+    action:
+      - service: script.say_time
+
+  GetDate:
+    action:
+      - service: script.say_date
+
+script:
+
+  # Pronuncia l'ora
+  say_time:
+    sequence:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_say_time.yaml
+
+  # Pronuncia la data
+  say_date:
+    sequence:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_say_date.yaml

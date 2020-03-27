@@ -1,0 +1,158 @@
+id: 3
+title: Oggetti
+icon: mdi:cogs
+panel: true
+cards:
+
+  - type: custom:layout-card
+    layout: vertical
+    cards:
+
+  # Column 1
+
+      - type: markdown
+        style: |
+          .markdown.no-header {
+            padding: 0 !important;
+          }
+          ha-markdown {
+            padding: 0;
+          }
+          ha-markdown h1 {
+            line-height: 64px;
+          }
+          ha-markdown img {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--ha-card-border-radius);
+            vertical-align: top;
+            margin-right: 10px;
+          }
+        content: >
+          # ![Karen](/local/ui/karen-avatar.jpg) Karen
+
+      - type: 'custom:bar-card'
+        align: split
+        show_icon: true
+        padding: 4px
+        columns: 2
+        entities:
+          - entity: sensor.disk_use_percent
+            title: Disco
+          - entity: sensor.memory_use_percent
+            title: RAM
+
+      - type: 'custom:bar-card'
+        align: split
+        show_icon: true
+        padding: 4px
+        columns: 2
+        entities:
+          - entity: sensor.processor_use
+            title: CPU
+          - entity: sensor.core_temperature
+            title: Temp
+            icon: mdi:thermometer
+
+      - type: entities
+        entities:
+          - type: section
+            label: HOME ASSISTANT
+          - type: custom:bar-card
+            title_position: inside
+            align: center
+            padding: 4px
+            card_style:
+              border-radius: 5px
+            columns: 2
+            entities:
+              - entity: sensor.current_version
+                title: Corrente
+              - entity: sensor.latest_version
+                title: Ultima
+
+          - type: custom:fold-entity-row
+            head: sensor.potential_breaking_changes
+            entities:
+              - type: custom:list-card
+                entity: sensor.potential_breaking_changes
+                columns:
+                  - title: Component
+                    add_link: doclink
+                    field: component
+                  - title: Description
+                    add_link: prlink
+                    field: description
+
+      - break
+
+  # Column 2
+
+      - type: entities
+        show_header_toggle: off
+        entities:
+          - type: section
+            label: CONTROLLER
+
+          - type: custom:bar-card
+            title_position: inside
+            align: center
+            padding: 4px
+            card_style:
+              border-radius: 5px
+            columns: 2
+            entities:
+              - entity: sensor.battery_core
+                show_value: false
+              - entity: sensor.status_controlcenter
+                show_value: false
+              - entity: sensor.status_thermostat
+                show_value: false
+              - entity: sensor.status_mediarasp
+                show_value: false
+                animation: 'off'
+                indicator: 'off'
+            severity:
+              - value: 15
+                color: '#bf4040'
+              - value: 75
+                color: '#bf9540'
+              - value: 100
+                color: '#1db954'
+
+          - type: section
+            label: SENSORI
+
+          - type: custom:bar-card
+            title_position: inside
+            align: center
+            padding: 4px
+            card_style:
+              border-radius: 5px
+            columns: 2
+            entities:
+              - entity: sensor.battery_env_living
+                show_value: false
+              - entity: sensor.battery_env_bedroom
+                show_value: false
+              - entity: sensor.battery_door_main
+                show_value: false
+              - entity: sensor.battery_motion_living
+                show_value: false
+            severity:
+              - value: 15
+                color: '#bf4040'
+              - value: 75
+                color: '#bf9540'
+              - value: 100
+                color: '#1db954'
+
+          # TODO non so se queste vanno qui...
+          - type: section
+            label: LUCI
+
+          - type: 'custom:button-card'
+            entity: light.living_extra
+            icon: mdi:lightbulb
+            tap_action:
+              action: toggle

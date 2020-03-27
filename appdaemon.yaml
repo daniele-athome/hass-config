@@ -1,0 +1,10 @@
+appdaemon:
+  latitude: !secret latitude_home
+  longitude: !secret longitude_home
+  elevation: !secret elevation_home
+  time_zone: !secret timezone_home
+  plugins:
+    HASS:
+      type: hass
+      ha_url: !secret app_url
+      token: !secret appdaemon_token

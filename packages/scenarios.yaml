@@ -1,0 +1,161 @@
+# Entity state scenes and scenarios
+
+input_boolean:
+
+  need_living_utility_light:
+    name: 'Ho bisogno di una luce minima in soggiorno'
+    initial: off
+    icon: mdi:lighthouse-on
+
+scene:
+
+  - name: dinner_watching
+    entities:
+      light.living_extra: on
+      # TODO light.living_main_light: off
+      # TODO light.living_table_light: off
+
+  - name: cinema_mode
+    entities:
+      light.living_extra: off
+      # TODO light.living_main_light: off
+      # TODO light.living_table_light: off
+
+automation:
+
+  - alias: need_utility_light_on
+    trigger:
+      - platform: state
+        entity_id: input_boolean.need_living_utility_light
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: binary_sensor.living_need_light
+        state: 'on'
+    action:
+      - service: light.turn_on
+        entity_id: light.living_extra
+
+  - alias: need_utility_light_off
+    trigger:
+      - platform: state
+        entity_id: input_boolean.need_living_utility_light
+        to: 'off'
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: 'media_player.kodi'
+          state: idle
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'on'
+    action:
+      - service: light.turn_off
+        entity_id: light.living_extra
+
+  - alias: dinner_watching
+    trigger:
+      - platform: state
+        entity_id: 'media_player.kodi'
+        to: 'playing'
+      - platform: template
+        value_template: "{{ is_state_attr('media_player.tv', 'media_content_type', 'channel') }}"
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.living_need_light
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.need_living_utility_light
+          state: 'on'
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'on'
+    action:
+      - service: scene.turn_on
+        entity_id: scene.dinner_watching
+
+  - alias: cinema_mode
+    trigger:
+      - platform: state
+        entity_id: 'media_player.kodi'
+        to: 'playing'
+      - platform: template
+        value_template: >-
+          {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'media_content_type', 'channel') }}
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.need_living_utility_light
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'on'
+    action:
+      - service: scene.turn_on
+        entity_id: scene.cinema_mode
+
+  # Accendi luce utility se mettiamo in pausa un video
+  - alias: media_paused
+    trigger:
+      - platform: state
+        entity_id: 'media_player.kodi'
+        from: 'playing'
+        # TODO paused only? Sure?
+        to: 'paused'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.living_need_light
+          state: 'on'
+        - condition: template
+          value_template: '{{ states.media_player.kodi.attributes.media_content_type in ["movie","tvshow","video"] }}'
+    action:
+      - service: light.turn_on
+        entity_id: light.living_ceiling
+
+  - alias: guestmode_on
+    trigger:
+      - platform: state
+        entity_id: input_boolean.guest_mode
+        to: 'on'
+    action:
+      - delay:
+          seconds: 5
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.kodi
+          media_content_id: !secret guest_mode_playlist
+          media_content_type: music
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.kodi
+          volume_level: !secret guest_mode_volume
+
+  - alias: guestmode_off
+    trigger:
+      - platform: state
+        entity_id: input_boolean.guest_mode
+        from: 'on'
+        to: 'off'
+    action:
+      - service: media_player.media_stop
+        entity_id: media_player.kodi
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.kodi
+          volume_level: 0.9
+
+  # Troppa luce in soggiorno: spegni le luci extra
+  - alias: living_too_much_light
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.living_main_lux
+        above: !secret living_lux_too_much_threshold
+    action:
+      - service: light.turn_off
+        entity_id: light.living_extra

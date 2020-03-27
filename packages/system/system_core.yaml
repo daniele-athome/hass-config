@@ -1,0 +1,35 @@
+# HASS core (scatola)
+
+homeassistant:
+  customize:
+    sensor.battery_core:
+      friendly_name: Scatola
+
+sensor:
+  - platform: linux_battery
+    name: battery_core
+    battery: 0
+
+  - platform: command_line
+    name: ac_status_core
+    command: 'cat /sys/class/power_supply/AC/online'
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_use_percent
+      - type: processor_use
+
+  - platform: command_line
+    name: core_temperature
+    command: '/usr/bin/sensors -j'
+    value_template: '{{ value_json["coretemp-isa-0000"]["Package id 0"]["temp1_input"] }}'
+    unit_of_measurement: '°C'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      core_battery_discharging:
+        friendly_name: "Batteria core in scaricamento"
+        value_template: "{{ states.sensor.ac_status_core.state == '0' }}"

@@ -1,0 +1,102 @@
+# HVAC systems
+
+homeassistant:
+  customize:
+    climate.home_boiler:
+      friendly_name: Riscaldamento
+    automation.ThermostatDown:
+      friendly_name: Termostato irraggiungibile
+    automation.ThermostatStuck:
+      friendly_name: Termostato bloccato
+
+shell_command:
+
+  thermorasp_publish_temp_bedroom: >-
+    mosquitto_pub
+    -h thermostat.local
+    -t homeassistant/thermorasp/sensor/temp_bedroom/control
+    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_bedroom.state }}}'
+
+  thermorasp_publish_temp_living: >-
+    mosquitto_pub
+    -h thermostat.local
+    -t homeassistant/thermorasp/sensor/temp_living/control
+    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_living.state }}}'
+
+automation:
+
+  # Termostato down
+  - alias: thermostat_down
+    trigger:
+      - platform: state
+        entity_id: device_tracker.thermostat
+        to: 'not_home'
+        for:
+          minutes: 8
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Termostato non raggiungibile!
+
+  # Termostato bloccato (caldaia accesa)
+  - alias: thermostat_stuck
+    trigger:
+      - platform: state
+        entity_id: climate.home_boiler
+        to: 'heat'
+        for:
+          hours: 6
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Riscaldamento attivo da più di 6 ore!
+
+  - alias: thermorasp_publish_temp_bedroom
+    trigger:
+      - platform: state
+        entity_id: sensor.temp_bedroom
+      # Il termostato richiede comunque un aggiornamento ogni 900 secondi
+      - platform: time_pattern
+        minutes: "/15"
+    action:
+      - service: shell_command.thermorasp_publish_temp_bedroom
+      #- service: mqtt.publish
+      #  data_template:
+      #    topic: "homeassistant/thermorasp/sensor/temp_bedroom/control"
+      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_bedroom.state }}}'
+
+  - alias: thermorasp_publish_temp_living
+    trigger:
+      - platform: state
+        entity_id: sensor.temp_living
+      # Il termostato richiede comunque un aggiornamento ogni 900 secondi
+      - platform: time_pattern
+        minutes: "/15"
+    action:
+      - service: shell_command.thermorasp_publish_temp_living
+      #- service: mqtt.publish
+      #  data_template:
+      #    topic: "homeassistant/thermorasp/sensor/temp_living/control"
+      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_living.state }}}'
+
+# Termostato principale
+climate:
+  - platform: mqtt
+    name: home_boiler
+    precision: 0.1
+    temp_step: 0.5
+    min_temp: 10
+    max_temp: 30
+    modes:
+      - 'off'
+      - 'heat'
+    #current_temperature_topic: ''
+    #current_temperature_template: '{{ value_json.xxx }}'
+    mode_state_topic: 'homeassistant/thermorasp/device/home_boiler/state'
+    mode_state_template: "{{ 'heat' if value_json.enabled else 'off' }}"
+    temperature_state_topic: 'homeassistant/thermorasp/behavior/active'
+    temperature_state_template: '{{ value_json.config.target_temperature }}'

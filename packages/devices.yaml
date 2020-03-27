@@ -1,0 +1,178 @@
+# Devices monitoring and tracking
+
+homeassistant:
+  customize:
+    device_tracker.daniele_paytonwifi:
+      friendly_name: Payton (WiFi)
+
+    device_tracker.daniele_paytongps:
+      friendly_name: Payton (GPS)
+      icon: mdi:cellphone-android
+
+    device_tracker.daniele_paytonble:
+      friendly_name: Payton (BLE)
+
+    sensor.battery_phone:
+      friendly_name: Telefono
+
+    sensor.battery_controlcenter:
+      friendly_name: Centro di controllo
+
+    sensor.battery_env_living:
+      friendly_name: 'Ambiente: Salone'
+
+    sensor.battery_env_bedroom:
+      friendly_name: 'Ambiente: Camera'
+
+    sensor.battery_door_main:
+      friendly_name: 'Porta: Entrata'
+
+    binary_sensor.door_main:
+      friendly_name: 'Porta: Entrata'
+
+    sensor.battery_motion_living:
+      friendly_name: 'Movimento: Salone'
+
+    automation.control_center_low_battery:
+      friendly_name: Centro di controllo scarico
+
+    sensor.status_controlcenter:
+      friendly_name: Centro di controllo
+
+    sensor.status_thermostat:
+      friendly_name: Termostato
+
+    sensor.status_mediarasp:
+      friendly_name: Media center
+
+device_tracker:
+  - platform: nmap_tracker
+    hosts: 192.168.0.0/24
+    home_interval: 3
+    scan_options: --privileged -PR -n -sn --host-timeout 10s
+    track_new_devices: false
+    interval_seconds: 30
+    consider_home: 180
+    exclude:
+      - server
+      - scatola
+
+  - platform: mqtt
+    devices:
+      daniele_paytonble: 'homeassistant/monitor/rasp/payton/device_tracker'
+    source_type: bluetooth
+
+sensor:
+
+  - platform: template
+    sensors:
+      battery_phone:
+        unit_of_measurement: "%"
+        device_class: battery
+        value_template: "{{ state_attr('device_tracker.daniele_paytongps', 'battery_level') }}"
+
+      # FIXME NaN al riavvio
+      battery_controlcenter:
+        #unit_of_measurement: "%"
+        device_class: battery
+        value_template: ""
+
+      # da usare in UI per rappresentare stato assente
+      status_controlcenter:
+        unit_of_measurement: "%"
+        device_class: battery
+        entity_id:
+          - sensor.battery_controlcenter
+          - device_tracker.controlcenter
+        value_template: >-
+          {% if is_state('device_tracker.controlcenter', 'home') %}
+          {{ states.sensor.battery_controlcenter.state }}
+          {% else %}
+          0
+          {% endif %}
+
+      status_thermostat:
+        unit_of_measurement: "%"
+        device_class: battery
+        entity_id:
+          - device_tracker.thermostat
+        value_template: >-
+          {% if is_state('device_tracker.thermostat', 'home') %}
+          100
+          {% else %}
+          0
+          {% endif %}
+
+      status_mediarasp:
+        unit_of_measurement: "%"
+        device_class: battery
+        entity_id:
+          - device_tracker.rasp
+        value_template: >-
+          {% if is_state('device_tracker.rasp', 'home') %}
+          100
+          {% else %}
+          0
+          {% endif %}
+
+binary_sensor:
+
+  - name: living_door_motion
+    platform: mqtt
+    state_topic: homeassistant/camera/living_door/motion
+    device_class: motion
+
+proximity:
+  prox_home_daniele:
+    devices:
+      - device_tracker.daniele_paytongps
+    tolerance: 50
+
+camera:
+  - platform: mjpeg
+    name: living_door
+    mjpeg_url: http://localhost:9995/
+
+image_processing:
+  - platform: deepstack_object
+    ip_address: localhost
+    port: 5000
+    api_key: Mysecretkey
+    # scan_interval: 30 # Optional, in seconds
+    #save_file_folder: /config/www/
+    save_timestamped_file: True
+    source:
+      - entity_id: camera.living_door
+        name: deepstack_person_detector
+
+automation:
+  - alias: control_center_low_battery
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.battery_controlcenter
+        below: 10
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Batteria del centro di controllo bassa: {{ states.sensor.battery_controlcenter.state_with_unit }}
+
+alert:
+  core_battery_discharging:
+    name: Batteria core in scaricamento
+    message: 'Batteria core in scaricamento: {{ states.sensor.battery_core.state_with_unit }}'
+    done_message: 'Batteria core carica.'
+    entity_id: binary_sensor.core_battery_discharging
+    state: 'on'
+    repeat: 5
+    can_acknowledge: true
+    notifiers:
+      - kontalk_daniele
+
+group:
+  living_motion:
+    name: Living room motion
+    entities:
+      - binary_sensor.living_door_motion
+      - binary_sensor.living_main_motion

@@ -1,0 +1,86 @@
+# House security and alarms
+
+homeassistant:
+  customize:
+    alarm_control_panel.main:
+      friendly_name: Allarme
+
+alarm_control_panel:
+  - platform: manual
+    name: main
+    code: !secret alarm_code
+    pending_time: 120
+    triggered:
+      pending_time: 60
+
+automation:
+
+  # Rilevato movimento, nessuno in casa ed allarme armato
+  - alias: security_trigger_alarm
+    trigger:
+      # Qualsiasi sensore di movimento scattato
+      - platform: state
+        entity_id: group.living_motion
+        to: 'on'
+      # Porta di ingresso aperta
+      - platform: state
+        entity_id: binary_sensor.door_main
+        to: 'on'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: alarm_control_panel.main
+          state: 'armed_away'
+    action:
+      - service: alarm_control_panel.alarm_trigger
+        entity_id: alarm_control_panel.main
+
+  # Tutti usciti, attiva allarme
+  - alias: security_autoactivate
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.people_home_count
+        below: '1'
+    action:
+      - service: alarm_control_panel.alarm_arm_away
+        data:
+          entity_id: alarm_control_panel.main
+          code: !secret alarm_code
+
+  # Ingresso in casa di persone autorizzate, disattiva allarme
+  - alias: security_authorized_entry
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.people_home_count
+        above: '0'
+    action:
+      - service: alarm_control_panel.alarm_disarm
+        data:
+          entity_id: alarm_control_panel.main
+          code: !secret alarm_code
+
+  - alias: security_alarm_triggered
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.main
+        to: 'triggered'
+    action:
+      - service: notify.kontalk_daniele
+        data_template:
+          title: "Allarme"
+          message: |-
+            Rilevato movimento in casa!
+        # TODO invia fotogramma del movimento e/o link al video
+
+  - alias: security_alarm_armed
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.main
+        to: 'armed_away'
+    action:
+      - service: notify.kontalk_daniele
+        data_template:
+          title: "Allarme"
+          message: |-
+            armato.

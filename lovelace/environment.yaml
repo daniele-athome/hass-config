@@ -1,0 +1,126 @@
+id: 1
+title: Ambiente
+icon: mdi:thermometer
+panel: true
+cards:
+
+  - type: custom:layout-card
+    layout: vertical
+    min_columns: 1
+    max_columns: 2
+    cards:
+
+      # Column 1
+
+      - type: custom:thermostat-card
+        entity: climate.home_boiler
+        ambient_temperature: sensor.temp_average
+
+      - break
+
+      # Column 2
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.weather_temperature
+              - entity: sensor.weather_humidity
+                show_state: true
+                show_graph: false
+            name: Esterno
+            height: 46
+            line_width: 2
+            font_size: 65
+            hours_to_show: 168
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 28
+                color: "#e74c3c"
+              - value: 15
+                color: "#1db954"
+              - value: 0
+                color: "#3498db"
+
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.temp_kitchen
+            name: Cucina
+            height: 74
+            line_width: 2
+            font_size: 65
+            hours_to_show: 168
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 28
+                color: "#e74c3c"
+              - value: 15
+                color: "#1db954"
+              - value: 0
+                color: "#3498db"
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.temp_bedroom
+              - entity: sensor.humidity_bedroom
+                show_state: true
+                show_graph: false
+            name: Camera
+            height: 74
+            line_width: 2
+            font_size: 65
+            hours_to_show: 168
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 28
+                color: "#e74c3c"
+              - value: 15
+                color: "#1db954"
+              - value: 0
+                color: "#3498db"
+
+          - type: custom:mini-graph-card
+            entities:
+              - sensor.temp_living
+              - entity: sensor.humidity_living
+                show_state: true
+                show_graph: false
+            name: Salone
+            height: 74
+            line_width: 2
+            font_size: 65
+            hours_to_show: 168
+            points_per_hour: 1
+            hour24: true
+            show:
+              icon: true
+              extrema: true
+            color_thresholds:
+              - value: 28
+                color: "#e74c3c"
+              - value: 15
+                color: "#1db954"
+              - value: 0
+                color: "#3498db"
+
+      - type: 'custom:button-card'
+        name: 'Controllo termostato'
+        icon: mdi:thermometer-lines
+        layout: icon_name
+        tap_action:
+          action: url
+          url_path: !secret thermostat_local_url

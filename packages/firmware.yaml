@@ -1,0 +1,50 @@
+# Firmware
+# Inspired by https://github.com/JamesMcCarthy79/Home-Assistant-Config/tree/master/config/packages/firmware
+
+homeassistant:
+  customize:
+    sensor.potential_breaking_changes:
+      friendly_name: Cambiamenti rilevanti
+    sensor.ha_update_available:
+      friendly_name: Aggiornamento HA disponibile
+
+group:
+  firmware:
+    name: Stato Firmware
+    entities:
+      - binary_sensor.ha_update_available
+
+breaking_changes:
+
+sensor:
+  - platform: version
+    source: local
+
+  - platform: version
+    source: pypi
+
+  - platform: template
+    sensors:
+      ha_update_available:
+        icon_template: mdi:cloud-download
+        value_template: "{{ 'on' if states.sensor.current_version.state != states.sensor.latest_version.state else 'off' }}"
+
+  ## Check Latest HA Version
+  #- platform: rest
+  #  resource: https://s3.amazonaws.com/hassio-version/stable.json
+  #  name: Latest HA Version
+  #  value_template: "{{ value_json.homeassistant.default }}"
+  #  scan_interval: 3600
+
+automation:
+  - alias: Notifica aggiornamento HASS
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.updater
+        from: 'off'
+        to: 'on'
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: 'Nuova versione di Home Assistant'
+        message: "Home Assistant {{ state_attr('binary_sensor.updater', 'newest_version') }} è stato rilasciato."

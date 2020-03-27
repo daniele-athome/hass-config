@@ -1,0 +1,25 @@
+
+intent_script:
+
+  StartMusicPlaylist:
+    action:
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_StartMusicPlaylist.yaml
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.kodi
+          media_content_id: >-
+            special://profile/playlists/music/{{ playlist }}.m3u
+          media_content_type: music
+      - service: media_player.volume_set
+        data_template:
+          entity_id: media_player.kodi
+          # FIXME hard-coding variables: guest_mode_volume, no_guest_mode_volume
+          # because secrets in templates are not supported
+          volume_level: >-
+            {%- if is_state('input_boolean.guest_mode', 'on') -%}
+            0.5
+            {%- else -%}
+            0.8
+            {%- endif -%}

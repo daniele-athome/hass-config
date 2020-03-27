@@ -1,0 +1,181 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: Home
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret latitude_home
+  longitude: !secret longitude_home
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: !secret elevation_home
+  # metric for Metric, imperial for Imperial
+  unit_system: metric
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: !secret timezone_home
+  auth_mfa_modules:
+    - type: totp
+  packages: !include_dir_named packages
+
+# Show links to resources in log and frontend
+#introduction:
+
+# Enables API
+api:
+
+# Enables the frontend
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Enables mobile support
+mobile_app:
+
+# Enables configuration UI
+config:
+
+# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+http:
+  server_host: 127.0.0.1
+  base_url: !secret app_url
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
+
+# Community store
+hacs:
+  token: !secret github_token
+
+# Discover some devices automatically
+#discovery:
+#  enable:
+#    - dlna_dmr
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time
+history:
+
+# View all events in a logbook
+logbook:
+
+# Recording only what is necessary
+recorder:
+  db_url: mysql+pymysql://homeassistant@localhost/homeassistant?charset=utf8
+  include:
+    entities:
+      - person.daniele
+      - climate.home_boiler
+      - sensor.battery_controlcenter
+      - sensor.battery_phone
+      - sensor.battery_env_bedroom
+      - sensor.battery_door_main
+      - sensor.homeserver_cpu_used
+      - sensor.homeserver_ram_used_percent
+      - sensor.outside_humidity
+      - sensor.outside_temperature
+      - sensor.weather_temperature
+      - sensor.weather_apparent_temperature
+      - sensor.homeserver_w83627thf_1_temp
+      - sensor.temp_bedroom
+      - sensor.pressure_bedroom
+      - sensor.humidity_bedroom
+      - sensor.temp_living
+      - sensor.pressure_living
+      - sensor.humidity_living
+      - sensor.temp_kitchen
+      - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+      - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+      - sensor.mediarasp_cpu_thermal_1_temp
+      - device_tracker.thermostat
+      - device_tracker.controlcenter
+      - binary_sensor.living_door_motion
+      - binary_sensor.living_main_motion
+      - sensor.living_main_lux
+
+# Enables a map showing the location of tracked devices
+map:
+
+# Track the sun
+sun:
+
+# Text to speech
+tts:
+  - platform: amazon_polly
+    voice: Bianca
+    region_name: eu-west-3
+    text_type: ssml
+    aws_access_key_id: !secret aws_tts_access_key_id
+    aws_secret_access_key: !secret aws_tts_secret_access_key
+
+mqtt:
+  broker: localhost
+  discovery: true
+
+# Strumenti di notifica
+notify:
+  - name: everything
+    platform: group
+    services:
+      - service: kodi
+      - service: kontalk_daniele
+  - platform: kodi
+    name: kodi
+    host: rasp
+  - platform: xmpp
+    name: kontalk_daniele
+    sender: !secret xmpp_username
+    password: !secret xmpp_password
+    recipient: !secret xmpp_recipient_daniele
+
+zha:
+  usb_path: /dev/ttyACM0
+  radio_type: deconz
+  database_path: /home/homeassistant/.homeassistant/zigbee.db
+
+system_health:
+wake_on_lan:
+
+lovelace:
+  mode: yaml
+  resources:
+    # tracked
+    - url: /hacsfiles/lovelace-card-mod/card-mod.js
+      type: module
+    - url: /hacsfiles/button-card/button-card.js
+      type: module
+    - url: /hacsfiles/lovelace-fold-entity-row/fold-entity-row.js
+      type: module
+    - url: /hacsfiles/custom-header/custom-header.js
+      type: module
+    - url: /hacsfiles/mini-graph-card/mini-graph-card-bundle.js
+      type: module
+    - url: /hacsfiles/travel-time-card/travel-time-card.js
+      type: js
+    - url: /hacsfiles/text-divider-row/text-divider-row.js
+      type: module
+    - url: /hacsfiles/bar-card/bar-card.js
+      type: js
+    - url: /hacsfiles/vertical-stack-in-card/vertical-stack-in-card.js
+      type: js
+    - url: /hacsfiles/circle-sensor-card/circle-sensor-card.js
+      type: module
+    - url: /hacsfiles/lovelace-card-tools/card-tools.js
+      type: js
+    - url: /hacsfiles/lovelace-layout-card/layout-card.js
+      type: js
+    - url: /hacsfiles/weather-card/weather-card.js
+      type: module
+    - url: /hacsfiles/list-card/list-card.js
+      type: js
+    # untracked
+    - url: /local/ui/custom_ui/moment-with-locales.js?v=2.24.0
+      type: js
+    - url: /local/ui/custom_ui/thermostat-card.js?v=1
+      type: module
+    # Customizzata!! NON AGGIORNARE!
+    - url: /local/ui/custom_ui/clock-card.js?track=false&v=1
+      type: module

@@ -1,0 +1,103 @@
+# House environmental sensors
+
+homeassistant:
+  customize:
+    sensor.temp_kitchen:
+      friendly_name: Cucina
+
+    sensor.temp_bedroom:
+      friendly_name: Camera
+
+    sensor.humidity_bedroom:
+      friendly_name: Camera
+
+    sensor.pressure_bedroom:
+      friendly_name: Camera
+
+    sensor.temp_living:
+      friendly_name: Salone
+
+    sensor.humidity_living:
+      friendly_name: Salone
+
+    sensor.pressure_living:
+      friendly_name: Salone
+
+group:
+  env_bedroom:
+    name: "Ambiente: Camera"
+    entities:
+      - sensor.temp_bedroom
+      - sensor.humidity_bedroom
+      - sensor.pressure_bedroom
+
+  env_living:
+    name: "Ambiente: Salone"
+    entities:
+      - sensor.temp_living
+      - sensor.humidity_living
+      - sensor.pressure_living
+
+  climate:
+    name: Climate
+    icon: mdi:fire
+    entities:
+      - sensor.temp_kitchen
+      - sensor.temp_living
+      - sensor.temp_bedroom
+      - climate.home_boiler
+
+sensor:
+  # rilevato dal termostato
+  - name: temp_kitchen
+    platform: mqtt
+    state_topic: homeassistant/thermorasp/sensor/temp_core/temperature
+    unit_of_measurement: '°C'
+    device_class: temperature
+    value_template: "{{ float(value_json.value) }}"
+
+  - name: temp_average
+    platform: average
+    entities:
+      # la cucina non è affidabile - sensor.temp_kitchen
+      - sensor.temp_bedroom
+      - sensor.temp_living
+
+  - name: humidity_average
+    platform: average
+    entities:
+      - sensor.humidity_bedroom
+      - sensor.humidity_living
+
+binary_sensor:
+
+  - platform: template
+    sensors:
+      # Bisogno di luce in soggiorno
+      living_need_light:
+        entity_id:
+          - sun.sun
+          - sensor.living_main_lux
+        value_template: >-
+          {{ states.sensor.living_main_lux.state|int < 10 or is_state('sun.sun', 'below_horizon') }}
+
+automation:
+  - alias: house_on_fire
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.temp_kitchen
+        above: 42
+      - platform: numeric_state
+        entity_id: sensor.temp_bedroom
+        above: 40
+      - platform: numeric_state
+        entity_id: sensor.temp_living
+        above: 40
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Temperatura ambiente eccessiva!
+          Cucina: {{ states.sensor.temp_kitchen.state_with_unit }}
+          Camera da letto: {{ states.sensor.temp_bedroom.state_with_unit }}

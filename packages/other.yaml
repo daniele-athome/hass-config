@@ -1,0 +1,49 @@
+# Other
+
+homeassistant:
+  customize:
+    sensor.commute_to_home:
+      friendly_name: 'Lavoro-casa'
+      icon: 'mdi:car'
+
+    sensor.commute_to_work:
+      friendly_name: 'Casa-lavoro'
+      icon: 'mdi:car'
+
+    binary_sensor.workmorning_sensor:
+      friendly_name: 'Mattina feriale'
+
+sensor:
+  - platform: waze_travel_time
+    name: commute_to_work
+    origin: zone.home
+    destination: zone.work
+    region: 'EU'
+
+  - platform: waze_travel_time
+    name: commute_to_home
+    origin: zone.work
+    destination: zone.home
+    region: 'EU'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      workmorning_sensor:
+        value_template: >-
+          {% set hour = states('sensor.time').split(':')[0] | int %}
+          {{ is_state('binary_sensor.workday_sensor', 'on') and now().hour >= 5 and now().hour < 10 }}
+
+automation:
+
+  - alias: Attivazione ritardata automazioni
+    initial_state: 'on'
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: '00:02:00'
+      - service: automation.turn_on
+        entity_id:
+          - automation.daniele_arrived
+          - automation.daniele_left

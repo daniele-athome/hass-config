@@ -57,18 +57,23 @@ My views are pretty tailored to my tablet display: I made them so all content
 would fit and I wouldn't need to scroll up and down.
 
 ### Main view/Home
+
 ![Home](lovelace-home.png)
 
 ### Environment/HVAC
+
 ![Environment](lovelace-environment.png)
 
 ### System monitor
+
 ![System](lovelace-system.png)
 
 ### Home automation devices
+
 ![Things](lovelace-things.png)
 
 ### Security
+
 ![Security](lovelace-security.png)
 
 ## Software setup
@@ -219,6 +224,12 @@ Some sensors for weather information in my area.
 ### Zones
 
 Home and work :-)
+
+## Acknowledgements
+
+Many people helped me through this, either by sharing their own configurations
+or by replying to my calls for help on the Home Assistant forum. **Publishing my
+work is a way to thank those people and to give back to this great community.**
 
 ## Copyright
 

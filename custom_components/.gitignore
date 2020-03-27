@@ -1,0 +1,4 @@
+*
+!.gitignore
+!rhasspy_events
+!rhasspy_events/*

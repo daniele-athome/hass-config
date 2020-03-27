@@ -1,0 +1,41 @@
+
+intent_script:
+
+  SetDinnerEating:
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.need_living_utility_light
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_SetDinnerEating.yaml
+
+  AllLightsOff:
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+      - service: light.turn_off
+        entity_id: all
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_AllLightsOff.yaml
+
+  LivingUtilityLightOn:
+    action:
+      service: light.turn_on
+      entity_id: light.living_extra
+
+  GuestModeOn:
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.guest_mode
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_GuestModeOn.yaml
+
+  GuestModeOff:
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.guest_mode
+      - service: script.say_something
+        data_template:
+          message: !include ../../templates/it/assistant_GuestModeOff.yaml
