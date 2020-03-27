@@ -15,8 +15,8 @@ My key principles for home automation are:
 * Use cloud services only when absolutely necessary
 
 I'm always hungry for new ideas about automations, integrations and hardware.
-Please us [my Home Assistant forum thread](...) if you want to contact me or
-need help understanding or using any part of my configuration.
+Please us [my Home Assistant forum thread](https://community.home-assistant.io/t/daniele-athome-my-home-assistant-configuration/181754)
+if you want to contact me or need help understanding or using any part of my configuration.
 
 ## Smart Home diagram
 
