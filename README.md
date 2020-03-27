@@ -98,8 +98,9 @@ can do:
 * good morning/good night with some useful actions for morning and night
 
 I use my own wake word &mdash; trained on my own dataset &mdash; and a
-ReSpeaker microphone array to listen for voice commands. I might publish my
-Rhasspy configuration one day.
+ReSpeaker microphone array to listen for voice commands. Speech recognition is
+possible with Google Speech-to-text API. I might publish my Rhasspy configuration
+one day.
 
 ### Calendar
 
