@@ -56,19 +56,19 @@ I tried pretty much every browser on the tablet and the fastest seems to be Chro
 My views are pretty tailored to my tablet display: I made them so all content
 would fit and I wouldn't need to scroll up and down.
 
-Main view/Home
+### Main view/Home
 ![Home](lovelace-home.png)
 
-Environment/HVAC
+### Environment/HVAC
 ![Environment](lovelace-environment.png)
 
-System monitor
+### System monitor
 ![System](lovelace-system.png)
 
-Home automation devices
+### Home automation devices
 ![Things](lovelace-things.png)
 
-Security
+### Security
 ![Security](lovelace-security.png)
 
 ## Software setup
