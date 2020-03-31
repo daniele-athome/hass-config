@@ -27,19 +27,34 @@ cards:
                         border-radius: var(--ha-card-border-radius);
                       }
 
-              - type: custom:bar-card
+              - type: 'custom:bar-card'
                 title_position: inside
+                align: center
                 entity: sensor.homeserver_uptime
                 title: Uptime
-                align: center
                 indicator: off
                 animation: off
-                padding: 5px
+                style: |
+                  bar-card-card {
+                    margin: 10px;
+                  }
+                  :host {
+                    --bar-card-border-radius: 4px;
+                  }
 
       - type: 'custom:bar-card'
         align: split
         show_icon: true
-        padding: 4px
+        style: |
+          bar-card-card {
+            margin-bottom: 0;
+          }
+          :host {
+            --bar-card-border-radius: 4px
+          }
+          card {
+            padding: 6px 8px;
+          }
         columns: 2
         entities:
           - entity: sensor.homeserver_used_percent
@@ -50,7 +65,16 @@ cards:
       - type: 'custom:bar-card'
         align: split
         show_icon: true
-        padding: 4px
+        style: |
+          bar-card-card {
+            margin-bottom: 0;
+          }
+          :host {
+            --bar-card-border-radius: 4px
+          }
+          card {
+            padding: 6px 8px;
+          }
         columns: 2
         entities:
           - entity: sensor.homeserver_cpu_used
@@ -114,19 +138,34 @@ cards:
                         border-radius: var(--ha-card-border-radius);
                       }
 
-              - type: custom:bar-card
+              - type: 'custom:bar-card'
                 title_position: inside
                 entity: sensor.mediarasp_uptime
                 title: Uptime
-                align: center
                 indicator: off
                 animation: off
-                padding: 5px
+                align: center
+                style: |
+                  bar-card-card {
+                    margin: 10px;
+                  }
+                  :host {
+                    --bar-card-border-radius: 4px;
+                  }
 
       - type: 'custom:bar-card'
         align: split
         show_icon: true
-        padding: 4px
+        style: |
+          bar-card-card {
+            margin-bottom: 0;
+          }
+          :host {
+            --bar-card-border-radius: 4px
+          }
+          card {
+            padding: 6px 8px;
+          }
         columns: 2
         entities:
           - entity: sensor.mediarasp_used_percent

@@ -72,9 +72,13 @@ recorder:
       - sensor.battery_controlcenter
       - sensor.battery_phone
       - sensor.battery_env_bedroom
+      - sensor.battery_env_living
       - sensor.battery_door_main
+      - sensor.battery_motion_living
       - sensor.homeserver_cpu_used
       - sensor.homeserver_ram_used_percent
+      - sensor.core_temperature
+      - sensor.processor_use
       - sensor.outside_humidity
       - sensor.outside_temperature
       - sensor.weather_temperature

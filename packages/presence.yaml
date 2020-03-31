@@ -121,6 +121,9 @@ automation:
       - platform: state
         entity_id: group.living_motion
         to: 'on'
+      - platform: numeric_state
+        entity_id: sensor.living_main_lux
+        below: !secret living_lux_darkness_threshold
     condition:
       condition: and
       conditions:
@@ -131,9 +134,17 @@ automation:
         - condition: state
           entity_id: binary_sensor.cinema_paused_mode
           state: 'off'
+        # Non mi serve luce utility soggiorno
+        - condition: state
+          entity_id: input_boolean.need_living_utility_light
+          state: 'off'
+        # Assicuriamoci che le condizioni del trigger siano tutte rispettate
+        - condition: state
+          entity_id: group.living_motion
+          state: 'on'
         - condition: numeric_state
           entity_id: sensor.living_main_lux
-          below: 5
+          below: !secret living_lux_darkness_threshold
     action:
       - service: scene.turn_on
         entity_id: scene.night_guidance_on

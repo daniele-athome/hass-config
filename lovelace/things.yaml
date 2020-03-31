@@ -34,7 +34,16 @@ cards:
       - type: 'custom:bar-card'
         align: split
         show_icon: true
-        padding: 4px
+        style: |
+          bar-card-card {
+            margin-bottom: 0;
+          }
+          :host {
+            --bar-card-border-radius: 4px
+          }
+          card {
+            padding: 6px 8px;
+          }
         columns: 2
         entities:
           - entity: sensor.disk_use_percent
@@ -45,7 +54,16 @@ cards:
       - type: 'custom:bar-card'
         align: split
         show_icon: true
-        padding: 4px
+        style: |
+          bar-card-card {
+            margin-bottom: 0;
+          }
+          :host {
+            --bar-card-border-radius: 4px
+          }
+          card {
+            padding: 6px 8px;
+          }
         columns: 2
         entities:
           - entity: sensor.processor_use
@@ -61,9 +79,16 @@ cards:
           - type: custom:bar-card
             title_position: inside
             align: center
-            padding: 4px
-            card_style:
-              border-radius: 5px
+            style: |
+              bar-card-card {
+                margin-bottom: 0;
+              }
+              bar-card-container {
+                padding: 4px;
+              }
+              :host {
+                --bar-card-border-radius: 4px
+              }
             columns: 2
             entities:
               - entity: sensor.current_version
@@ -97,9 +122,16 @@ cards:
           - type: custom:bar-card
             title_position: inside
             align: center
-            padding: 4px
-            card_style:
-              border-radius: 5px
+            style: |
+              bar-card-card {
+                margin-bottom: 0;
+              }
+              bar-card-container {
+                padding: 4px;
+              }
+              :host {
+                --bar-card-border-radius: 4px
+              }
             columns: 2
             entities:
               - entity: sensor.battery_core
@@ -126,9 +158,16 @@ cards:
           - type: custom:bar-card
             title_position: inside
             align: center
-            padding: 4px
-            card_style:
-              border-radius: 5px
+            style: |
+              bar-card-card {
+                margin-bottom: 0;
+              }
+              bar-card-container {
+                padding: 4px;
+              }
+              :host {
+                --bar-card-border-radius: 4px
+              }
             columns: 2
             entities:
               - entity: sensor.battery_env_living
