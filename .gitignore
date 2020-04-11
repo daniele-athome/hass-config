@@ -1,6 +1,7 @@
 /secrets.yaml
 /known_devices.yaml
 /www/ui/karen-avatar.jpg
+/www/tts
 /www/github
 /www/community
 *.pyc
