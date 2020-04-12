@@ -72,6 +72,21 @@ light:
 
   # TODO group living_main: -- quando avremo sotto controllo le luci principali
 
+script:
+
+  toggle_living_extra:
+    sequence:
+      - service: light.toggle
+        entity_id: light.living_extra
+      - wait_template: "{{ as_timestamp(now()) - as_timestamp(states.light.living_extra.last_changed) < 1 }}"
+      - service_template: >
+          {% if is_state('light.living_extra', 'on') %}
+          input_boolean.turn_on
+          {% else %}
+          input_boolean.turn_off
+          {% endif %}
+        entity_id: input_boolean.need_living_utility_light
+
 scene:
 
   # Luci guida notturne

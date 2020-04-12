@@ -68,6 +68,28 @@ automation:
         data_template:
           message: !include ../../templates/it/assistant_work_commute_hard.yaml
 
+  - alias: karen_internet_unavailable
+    trigger:
+      - platform: state
+        entity_id: device_tracker.internet
+        from: 'home'
+        to: 'not_home'
+    action:
+      - service: script.say_something_rendered
+        data:
+          url: !secret karen_internet_unavailable_url
+
+  - alias: karen_internet_restored
+    trigger:
+      - platform: state
+        entity_id: device_tracker.internet
+        from: 'not_home'
+        to: 'home'
+    action:
+      - service: script.say_something_rendered
+        data:
+          url: !secret karen_internet_restored_url
+
 script:
 
   # Saluto del buongiorno

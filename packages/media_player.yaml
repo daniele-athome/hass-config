@@ -112,6 +112,8 @@ script:
         entity_id: media_player.tv
       - wait_template: "{{ is_state('media_player.tv', 'on') and is_state('device_tracker.tv', 'home') }}"
         timeout: '00:00:60'
+      - delay:
+          seconds: 5
       - service: media_player.select_source
         data:
           entity_id: media_player.tv
@@ -120,13 +122,13 @@ script:
         timeout: '00:00:30'
       - service: rest_command.tv_channel_favourite_news_digit1
       - delay:
-          seconds: 1
+          milliseconds: 100
       - service: rest_command.tv_channel_favourite_news_digit2
       - delay:
-          seconds: 1
+          milliseconds: 100
       - service: rest_command.tv_channel_favourite_news_digit3
       - delay:
-          seconds: 1
+          milliseconds: 100
       - service: rest_command.tv_channel_favourite_news_digit4
 
   # Pronuncia qualcosa
@@ -143,6 +145,21 @@ script:
         data_template:
           # not supported by Amazon Polly -- language: "{{ language|default('it') }}"
           message: "<speak>{{ message }}</speak>"
+
+  # Pronuncia qualcosa da un audio di TTS pregenerato
+  say_something_rendered:
+    sequence:
+      # Metti tutto in pausa
+      - service: script.suspend_media_for_lounge
+      # Ferma la riproduzione da lounge
+      - service: media_player.media_stop
+        entity_id: media_player.lounge
+      - service: script.set_tts_volume
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.lounge
+          media_content_type: music
+          media_content_id: "{{ url }}"
 
   # Un buon volume per la pronuncia
   set_tts_volume:

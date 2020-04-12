@@ -28,64 +28,102 @@ cards:
                       }
 
               - type: 'custom:bar-card'
-                title_position: inside
-                align: center
-                entity: sensor.homeserver_uptime
-                title: Uptime
-                indicator: off
-                animation: off
-                style: |
-                  bar-card-card {
-                    margin: 10px;
-                  }
+                entities:
+                  - entity: sensor.homeserver_uptime
+                    name: Uptime
+                animation:
+                  state: 'off'
+                positions:
+                  icon: 'off'
+                  indicator: 'off'
+                  minmax: 'off'
+                  title: inside
+                  value: inside
+                style: |-
                   :host {
                     --bar-card-border-radius: 4px;
                   }
+                  :host .card-content {
+                    padding: 0 10px;
+                  }
+                  bar-card-backgroundbar {
+                    padding-bottom: 4px;
+                  }
+                  bar-card-value {
+                    font-weight: bold;
+                    margin-right: auto;
+                    margin-left: auto;
+                    margin-bottom: auto;
+                    margin-top: 0px;
+                  }
+                  bar-card-divider {
+                    display: none;
+                  }
+                  bar-card-contentbar {
+                    flex-direction: column;
+                  }
 
       - type: 'custom:bar-card'
-        align: split
-        show_icon: true
-        style: |
-          bar-card-card {
-            margin-bottom: 0;
-          }
-          :host {
-            --bar-card-border-radius: 4px
-          }
-          card {
-            padding: 6px 8px;
-          }
-        columns: 2
         entities:
           - entity: sensor.homeserver_used_percent
-            title: Disco
           - entity: sensor.homeserver_ram_used_percent
-            title: RAM
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          title: 'off'
+          value: inside
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 0 10px;
+          }
+          bar-card-value {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: 4px;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
       - type: 'custom:bar-card'
-        align: split
-        show_icon: true
-        style: |
-          bar-card-card {
-            margin-bottom: 0;
-          }
-          :host {
-            --bar-card-border-radius: 4px
-          }
-          card {
-            padding: 6px 8px;
-          }
-        columns: 2
         entities:
           - entity: sensor.homeserver_cpu_used
-            title: CPU
+            icon: 'mdi:cpu-64-bit'
           - entity: sensor.homeserver_w83627thf_1_temp
-            title: Temp
-            icon: mdi:thermometer
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          title: 'off'
+          value: inside
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 0 10px;
+          }
+          bar-card-value {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: 4px;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
       - type: 'custom:button-card'
         entity: switch.homeserver
-        icon: mdi:power-sleep
+        icon: 'mdi:power-sleep'
         name: 'Sospendi/Sveglia'
         layout: icon_name
         state:
@@ -98,7 +136,7 @@ cards:
         cards:
 
           - type: 'custom:button-card'
-            icon: mdi:power-cycle
+            icon: 'mdi:power-cycle'
             name: 'Riavvia'
             layout: icon_name
             confirmation:
@@ -108,7 +146,7 @@ cards:
               service: shell_command.homeserver_reboot
 
           - type: 'custom:button-card'
-            icon: mdi:power
+            icon: 'mdi:power'
             name: 'Spegni'
             layout: icon_name
             confirmation:
@@ -139,40 +177,70 @@ cards:
                       }
 
               - type: 'custom:bar-card'
-                title_position: inside
-                entity: sensor.mediarasp_uptime
-                title: Uptime
-                indicator: off
-                animation: off
-                align: center
-                style: |
-                  bar-card-card {
-                    margin: 10px;
-                  }
+                entities:
+                  - entity: sensor.mediarasp_uptime
+                    name: Uptime
+                animation:
+                  state: 'off'
+                positions:
+                  icon: 'off'
+                  indicator: 'off'
+                  minmax: 'off'
+                  title: inside
+                  value: inside
+                style: |-
                   :host {
                     --bar-card-border-radius: 4px;
                   }
+                  :host .card-content {
+                    padding: 0 10px;
+                  }
+                  bar-card-backgroundbar {
+                    padding-bottom: 4px;
+                  }
+                  bar-card-value {
+                    font-weight: bold;
+                    margin-right: auto;
+                    margin-left: auto;
+                    margin-bottom: auto;
+                    margin-top: 0px;
+                  }
+                  bar-card-divider {
+                    display: none;
+                  }
+                  bar-card-contentbar {
+                    flex-direction: column;
+                  }
 
       - type: 'custom:bar-card'
-        align: split
-        show_icon: true
-        style: |
-          bar-card-card {
-            margin-bottom: 0;
-          }
-          :host {
-            --bar-card-border-radius: 4px
-          }
-          card {
-            padding: 6px 8px;
-          }
-        columns: 2
         entities:
           - entity: sensor.mediarasp_used_percent
-            title: Disco
+            icon: 'mdi:cpu-64-bit'
           - entity: sensor.mediarasp_cpu_thermal_1_temp
-            title: Temp
-            icon: mdi:thermometer
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          title: 'off'
+          value: inside
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 0 10px;
+          }
+          bar-card-value {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: 4px;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
       - type: horizontal-stack
         cards:

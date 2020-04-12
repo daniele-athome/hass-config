@@ -32,69 +32,105 @@ cards:
           # ![Karen](/local/ui/karen-avatar.jpg) Karen
 
       - type: 'custom:bar-card'
-        align: split
-        show_icon: true
-        style: |
-          bar-card-card {
-            margin-bottom: 0;
-          }
-          :host {
-            --bar-card-border-radius: 4px
-          }
-          card {
-            padding: 6px 8px;
-          }
-        columns: 2
         entities:
           - entity: sensor.disk_use_percent
-            title: Disco
           - entity: sensor.memory_use_percent
-            title: RAM
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          title: 'off'
+          value: inside
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 0 10px;
+          }
+          bar-card-value {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: 4px;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
       - type: 'custom:bar-card'
-        align: split
-        show_icon: true
-        style: |
-          bar-card-card {
-            margin-bottom: 0;
-          }
-          :host {
-            --bar-card-border-radius: 4px
-          }
-          card {
-            padding: 6px 8px;
-          }
-        columns: 2
         entities:
           - entity: sensor.processor_use
-            title: CPU
+            icon: 'mdi:cpu-64-bit'
           - entity: sensor.core_temperature
-            title: Temp
-            icon: mdi:thermometer
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          title: 'off'
+          value: inside
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 0 10px;
+          }
+          bar-card-value {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: 4px;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
       - type: entities
         entities:
           - type: section
             label: HOME ASSISTANT
           - type: custom:bar-card
-            title_position: inside
-            align: center
-            style: |
-              bar-card-card {
-                margin-bottom: 0;
-              }
-              bar-card-container {
-                padding: 4px;
-              }
-              :host {
-                --bar-card-border-radius: 4px
-              }
-            columns: 2
             entities:
               - entity: sensor.current_version
-                title: Corrente
+                name: Corrente
               - entity: sensor.latest_version
-                title: Ultima
+                name: Ultima
+            columns: 2
+            animation:
+              state: 'off'
+            positions:
+              icon: 'off'
+              indicator: 'off'
+              minmax: 'off'
+              title: inside
+              value: inside
+            style: |-
+              :host {
+                --bar-card-border-radius: 4px;
+              }
+              :host .card-content {
+                padding: 0 10px;
+              }
+              bar-card-backgroundbar {
+                padding-bottom: 4px;
+              }
+              bar-card-value {
+                font-weight: bold;
+                margin-right: auto;
+                margin-left: auto;
+                margin-bottom: auto;
+                margin-top: 0px;
+              }
+              bar-card-divider {
+                display: none;
+              }
+              bar-card-contentbar {
+                flex-direction: column;
+              }
 
           - type: custom:fold-entity-row
             head: sensor.potential_breaking_changes
@@ -120,71 +156,89 @@ cards:
             label: CONTROLLER
 
           - type: custom:bar-card
-            title_position: inside
-            align: center
-            style: |
-              bar-card-card {
-                margin-bottom: 0;
-              }
-              bar-card-container {
-                padding: 4px;
-              }
-              :host {
-                --bar-card-border-radius: 4px
-              }
-            columns: 2
             entities:
-              - entity: sensor.battery_core
-                show_value: false
-              - entity: sensor.status_controlcenter
-                show_value: false
-              - entity: sensor.status_thermostat
-                show_value: false
-              - entity: sensor.status_mediarasp
-                show_value: false
-                animation: 'off'
-                indicator: 'off'
+              - sensor.battery_core
+              - sensor.status_controlcenter
+              - sensor.status_thermostat
+              - sensor.status_mediarasp
             severity:
-              - value: 15
-                color: '#bf4040'
-              - value: 75
-                color: '#bf9540'
-              - value: 100
-                color: '#1db954'
+              - color: '#bf4040'
+                from: 0
+                to: 15
+              - color: '#bf9540'
+                from: 16
+                to: 75
+              - color: '#1db954'
+                from: 76
+                to: 100
+            columns: 2
+            positions:
+              icon: 'off'
+              indicator: 'off'
+              minmax: 'off'
+              title: 'inside'
+              value: 'off'
+            style: |-
+              :host {
+                --bar-card-border-radius: 4px;
+              }
+              :host .card-content {
+                padding: 0 10px;
+              }
+              bar-card-title {
+                font-size: 13px;
+                font-weight: bold;
+                text-shadow: 1px 1px #0008;
+                margin-left: auto;
+                margin-right: auto;
+              }
+              bar-card-divider {
+                display: none;
+              }
 
           - type: section
             label: SENSORI
 
           - type: custom:bar-card
-            title_position: inside
-            align: center
-            style: |
-              bar-card-card {
-                margin-bottom: 0;
-              }
-              bar-card-container {
-                padding: 4px;
-              }
-              :host {
-                --bar-card-border-radius: 4px
-              }
-            columns: 2
             entities:
-              - entity: sensor.battery_env_living
-                show_value: false
-              - entity: sensor.battery_env_bedroom
-                show_value: false
-              - entity: sensor.battery_door_main
-                show_value: false
-              - entity: sensor.battery_motion_living
-                show_value: false
+              - sensor.battery_env_living
+              - sensor.battery_env_bedroom
+              - sensor.battery_door_main
+              - sensor.battery_motion_living
             severity:
-              - value: 15
-                color: '#bf4040'
-              - value: 75
-                color: '#bf9540'
-              - value: 100
-                color: '#1db954'
+              - color: '#bf4040'
+                from: 0
+                to: 15
+              - color: '#bf9540'
+                from: 16
+                to: 75
+              - color: '#1db954'
+                from: 76
+                to: 100
+            columns: 2
+            positions:
+              icon: 'off'
+              indicator: 'off'
+              minmax: 'off'
+              title: 'inside'
+              value: 'off'
+            style: |-
+              :host {
+                --bar-card-border-radius: 4px;
+              }
+              :host .card-content {
+                padding: 0 10px;
+              }
+              bar-card-title {
+                font-size: 13px;
+                font-weight: bold;
+                text-shadow: 1px 1px #0008;
+                margin-left: auto;
+                margin-right: auto;
+              }
+              bar-card-divider {
+                display: none;
+              }
 
           # TODO non so se queste vanno qui...
           - type: section
@@ -195,3 +249,6 @@ cards:
             icon: mdi:lightbulb
             tap_action:
               action: toggle
+            hold_action:
+              action: call-service
+              service: script.toggle_living_extra

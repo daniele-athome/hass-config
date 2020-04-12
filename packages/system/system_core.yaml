@@ -4,6 +4,8 @@ homeassistant:
   customize:
     sensor.battery_core:
       friendly_name: Scatola
+    device_tracker.internet:
+      friendly_name: Internet
 
 sensor:
   - platform: linux_battery
@@ -33,3 +35,11 @@ binary_sensor:
       core_battery_discharging:
         friendly_name: "Batteria core in scaricamento"
         value_template: "{{ states.sensor.ac_status_core.state == '0' }}"
+
+device_tracker:
+  - platform: ping
+    hosts:
+      internet: 8.8.8.8
+    count: 2
+    interval_seconds: 30
+    consider_home: 0

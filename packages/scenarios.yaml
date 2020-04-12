@@ -104,7 +104,6 @@ automation:
       - platform: state
         entity_id: 'media_player.kodi'
         from: 'playing'
-        # TODO paused only? Sure?
         to: 'paused'
     condition:
       condition: and
@@ -114,6 +113,21 @@ automation:
           state: 'on'
         - condition: template
           value_template: '{{ states.media_player.kodi.attributes.media_content_type in ["movie","tvshow","video"] }}'
+    action:
+      - service: light.turn_on
+        entity_id: light.living_ceiling
+
+  # Accendi luce utility se fermiamo Kodi
+  # TODO solo se stavo riproducendo video prima (come lo memorizzo? input_select?)
+  - alias: media_stopped
+    trigger:
+      - platform: state
+        entity_id: 'media_player.kodi'
+        to: 'idle'
+    condition:
+      condition: state
+      entity_id: binary_sensor.living_need_light
+      state: 'on'
     action:
       - service: light.turn_on
         entity_id: light.living_ceiling

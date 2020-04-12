@@ -134,6 +134,10 @@ automation:
         - condition: state
           entity_id: binary_sensor.cinema_paused_mode
           state: 'off'
+        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
+        - condition: state
+          entity_id: media_player.tv
+          state: 'off'
         # Non mi serve luce utility soggiorno
         - condition: state
           entity_id: input_boolean.need_living_utility_light
@@ -164,6 +168,10 @@ automation:
           state: 'off'
         - condition: state
           entity_id: binary_sensor.cinema_paused_mode
+          state: 'off'
+        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
+        - condition: state
+          entity_id: media_player.tv
           state: 'off'
         # Non mi serve luce utility soggiorno
         - condition: state
