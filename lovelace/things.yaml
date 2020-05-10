@@ -40,20 +40,20 @@ cards:
           icon: 'outside'
           indicator: 'inside'
           minmax: 'off'
-          title: 'off'
+          name: 'off'
           value: inside
         style: |-
           :host {
             --bar-card-border-radius: 4px;
           }
           :host .card-content {
-            padding: 0 10px;
+            padding: 6px 10px;
           }
           bar-card-value {
             font-size: 13px;
             font-weight: bold;
             text-shadow: 1px 1px #0008;
-            margin-left: 4px;
+            margin-left: 4px !important;
           }
           bar-card-divider {
             display: none;
@@ -70,20 +70,20 @@ cards:
           icon: 'outside'
           indicator: 'inside'
           minmax: 'off'
-          title: 'off'
+          name: 'off'
           value: inside
         style: |-
           :host {
             --bar-card-border-radius: 4px;
           }
           :host .card-content {
-            padding: 0 10px;
+            padding: 6px 10px;
           }
           bar-card-value {
             font-size: 13px;
             font-weight: bold;
             text-shadow: 1px 1px #0008;
-            margin-left: 4px;
+            margin-left: 4px !important;
           }
           bar-card-divider {
             display: none;
@@ -106,8 +106,9 @@ cards:
               icon: 'off'
               indicator: 'off'
               minmax: 'off'
-              title: inside
+              name: inside
               value: inside
+            height: '40px'
             style: |-
               :host {
                 --bar-card-border-radius: 4px;
@@ -115,8 +116,11 @@ cards:
               :host .card-content {
                 padding: 0 10px;
               }
-              bar-card-backgroundbar {
-                padding-bottom: 4px;
+              bar-card-card {
+                padding: 9px;
+              }
+              bar-card-name {
+                margin: 2px 0 0 0;
               }
               bar-card-value {
                 font-weight: bold;
@@ -129,7 +133,7 @@ cards:
                 display: none;
               }
               bar-card-contentbar {
-                flex-direction: column;
+                flex-direction: column !important;
               }
 
           - type: custom:fold-entity-row
@@ -176,16 +180,16 @@ cards:
               icon: 'off'
               indicator: 'off'
               minmax: 'off'
-              title: 'inside'
+              name: 'inside'
               value: 'off'
             style: |-
               :host {
                 --bar-card-border-radius: 4px;
               }
               :host .card-content {
-                padding: 0 10px;
+                padding: 6px 10px;
               }
-              bar-card-title {
+              bar-card-name {
                 font-size: 13px;
                 font-weight: bold;
                 text-shadow: 1px 1px #0008;
@@ -220,16 +224,16 @@ cards:
               icon: 'off'
               indicator: 'off'
               minmax: 'off'
-              title: 'inside'
+              name: 'inside'
               value: 'off'
             style: |-
               :host {
                 --bar-card-border-radius: 4px;
               }
               :host .card-content {
-                padding: 0 10px;
+                padding: 6px 10px;
               }
-              bar-card-title {
+              bar-card-name {
                 font-size: 13px;
                 font-weight: bold;
                 text-shadow: 1px 1px #0008;

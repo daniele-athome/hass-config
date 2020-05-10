@@ -118,16 +118,20 @@ automation:
         entity_id: light.living_ceiling
 
   # Accendi luce utility se fermiamo Kodi
-  # TODO solo se stavo riproducendo video prima (come lo memorizzo? input_select?)
   - alias: media_stopped
     trigger:
       - platform: state
         entity_id: 'media_player.kodi'
         to: 'idle'
     condition:
-      condition: state
-      entity_id: binary_sensor.living_need_light
-      state: 'on'
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.living_need_light
+          state: 'on'
+        # Solo se stavo riproducendo video prima
+        - condition: template
+          value_template: '{{ states.input_select.kodi_last_media.state in ["movie","tvshow","video"] }}'
     action:
       - service: light.turn_on
         entity_id: light.living_ceiling

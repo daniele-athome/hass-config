@@ -4,45 +4,6 @@ timer:
     name: Timer
     icon: mdi:timer
 
-intent_script:
-
-  SetCountdownAlarm:
-    action:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_SetCountdownAlarm.yaml
-      - service: timer.cancel
-        data:
-          entity_id: timer.spoken
-      - service: timer.start
-        data_template:
-          entity_id: timer.spoken
-          duration: "{{ duration }}"
-
-  ClearCountdownAlarm:
-    action:
-      # TODO controllo timer in esecuzione
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_ClearCountdownAlarm.yaml
-      - service: timer.cancel
-        data:
-          entity_id: timer.spoken
-
-  GetCountdownAlarm:
-    action:
-      # Trucchetto per ottenere il tempo rimanente aggiornato
-      - service: timer.pause
-        data:
-          entity_id: timer.spoken
-      - service: timer.start
-        data:
-          entity_id: timer.spoken
-      # TODO controllo timer in esecuzione
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_GetCountdownAlarm.yaml
-
 automation:
 
   - alias: TimerFinished

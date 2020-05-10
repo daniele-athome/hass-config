@@ -14,13 +14,13 @@ script:
   # Pronuncia l'ora
   say_time:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_say_time.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: say_time
 
   # Pronuncia la data
   say_date:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_say_date.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: say_date

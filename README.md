@@ -88,10 +88,10 @@ like to share about that, feel free to write to me on the Home Assistant forum.
 
 ### Assistant
 
-Meet **Karen**, my voice assistant made with [Rhasspy](https://github.com/synesthesiam/rhasspy).
-HASS receives intents from Rhasspy which are processed by doing something
-and speaking some reply. No conversations support yet. What my voice commands
-can do:
+Meet **Karen**, my voice assistant made with [Rhasspy](https://github.com/rhasspy).
+Everything is done through MQTT using the [Hermes protocol](https://docs.snips.ai/reference/hermes).
+I built a somewhat primitive implementation of "skills" that do something and speak
+some reply. What my voice commands can do:
 
 * say date or time
 * get weather/environment information (temperature, some forecasts)
@@ -100,10 +100,20 @@ can do:
 * commute traffic information
 * good morning/good night with some useful actions for morning and night
 
+There is some dialogue support provided by a few AppDaemon apps but it requires
+patching Rhasspy 2.5 (pull requests pending). Anyway Rhasspy 2.5 is still in a very
+alpha stage. In time, I hope those "skills" could contribute to a framework that would
+simplify the implementation.
+
 I use my own wake word &mdash; trained on my own dataset &mdash; and a
 ReSpeaker microphone array to listen for voice commands. Speech recognition is
 possible with Google Speech-to-text API. I might publish my Rhasspy configuration
 one day.
+
+Speech templates for Karen lives in a specific directory that I won't publish.
+To introduce some sense of "nuisance" in Karen, I created multiple versions for
+each type of sentence to be spoken. Templates are used by the Assistant Speak app
+in `apps/assistant_speak.py`.
 
 ### Calendar
 
@@ -142,6 +152,35 @@ Some fun with my media players:
 
 It contains mainly utility scripts for handling those players and a few sensors
 that help some automations elsewhere.
+
+### Night mode
+
+Night mode is an environment state where:
+
+* all lights are off
+* all media players are off
+* my media server is suspended
+* no assistant warnings are fired unless it's an emergency
+* I'm sleeping :)
+
+Night mode can be triggered manually by saying goodnight to Karen. Otherwise, starting 23:00, Home Assistant will check every minute that:
+
+* all lights are off
+* all media players are off
+* no motion but in bedroom
+* no light everywhere
+* my phone is charging
+* my notebook is turned off or idle
+
+Those are my very personal conditions for which I can be declared sleeping or going to sleep.
+If all those conditions are met, Home Assistant will start a 3 minutes timer and send a push notification to my phone warning me that night mode is about to be activated.
+The notification will have 3 actions:
+
+1. Snooze: delay night mode for 15 minutes (after 12 minutes another notification will be sent)
+2. Enable now: enable night mode immediately
+3. Cancel: disable night mode for tonight
+
+If no action is taken, night mode will be enabled automatically after the timer expires.
 
 ### Other
 

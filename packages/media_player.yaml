@@ -184,3 +184,25 @@ script:
         data:
           entity_id: media_player.tv
           is_volume_muted: true
+
+input_select:
+  kodi_last_media:
+    options:
+      - none
+      - movie
+      - tvshow
+      - video
+      - music
+
+automation:
+
+  - alias: update_kodi_last_media
+    trigger:
+      - platform: state
+        entity_id: 'media_player.kodi'
+        to: 'playing'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.kodi_last_media
+          option: "{{ states.media_player.kodi.attributes.media_content_type }}"

@@ -6,5 +6,23 @@ appdaemon:
   plugins:
     HASS:
       type: hass
+      namespace: hass
       ha_url: !secret app_url
       token: !secret appdaemon_token
+    MQTT:
+      type: mqtt
+      namespace: mqtt
+
+logs:
+  assistant:
+    name: assistant
+  hermes:
+    name: hermes
+
+http:
+  url: http://127.0.0.1:5050
+
+api:
+admin:
+  title: AppDaemon
+  stats_update: realtime

@@ -8,6 +8,8 @@ homeassistant:
       friendly_name: Striscia soffitto
     light.living_extra:
       friendly_name: Soggiorno extra
+    light.bedroom_main:
+      friendly_name: Camera
 
 automation:
   - alias: "Sync Tasmota states on start-up"
@@ -25,12 +27,25 @@ light:
 
   - platform: mqtt
     name: "living_stand"
-    state_topic: "stat/piantana/RESULT"
+    state_topic: "homeassistant/tasmota/stat/piantana/RESULT"
     value_template: "{{ value_json.POWER }}"
-    command_topic: "cmnd/piantana/POWER"
+    command_topic: "homeassistant/tasmota/cmnd/piantana/POWER"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "tele/piantana/LWT"
+    availability_topic: "homeassistant/tasmota/tele/piantana/LWT"
+    payload_available: "Online"
+    payload_not_available: "Offline"
+    qos: 1
+    retain: false
+
+  - platform: mqtt
+    name: "bedroom_main"
+    state_topic: "homeassistant/tasmota/stat/bedroom/RESULT"
+    value_template: "{{ value_json.POWER }}"
+    command_topic: "homeassistant/tasmota/cmnd/bedroom/POWER"
+    payload_on: "ON"
+    payload_off: "OFF"
+    availability_topic: "homeassistant/tasmota/tele/bedroom/LWT"
     payload_available: "Online"
     payload_not_available: "Offline"
     qos: 1

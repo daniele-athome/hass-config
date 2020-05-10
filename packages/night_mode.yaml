@@ -1,0 +1,247 @@
+homeassistant:
+  customize:
+    script.night_mode:
+      friendly_name: Modalità notte
+      icon: mdi:weather-night
+
+script:
+
+  night_mode:
+    sequence:
+      # Usato per far capire all'automazione che non deve attivarsi
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.night_mode_disabled_today
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+      - service: light.turn_off
+        entity_id: all
+      - service: switch.turn_off
+        entity_id: switch.homeserver
+
+  night_mode_warning_start:
+    sequence:
+      - service: timer.cancel
+        data:
+          entity_id: timer.night_mode_warning
+      - service: timer.start
+        data:
+          entity_id: timer.night_mode_warning
+          duration: "00:03:00"
+
+  # Notifica l'utente che sta per attivarsi la modalità notte
+  notify_night_mode_warning:
+    sequence:
+      - service: notify.mobile_app_daniele_payton
+        data_template:
+          title: 'Modalità notte'
+          message: 'Sto per attivare la modalità notte!'
+          data:
+            tag: night_mode_warning
+            sticky: true
+            actions:
+              # Rimanda di 15 minuti
+              - action: night_mode_snooze
+                title: Rimanda
+              # Attiva ora
+              - action: night_mode_enable_now
+                title: Attiva
+              # Annulla per questa notte
+              - action: night_mode_cancel
+                title: Annulla
+
+  # Cancella la notifica della modalità notte
+  cancel_night_mode_warning:
+    sequence:
+      - service: notify.mobile_app_daniele_payton
+        data_template:
+          message: clear_notification
+          data:
+            tag: night_mode_warning
+
+automation:
+
+  # Avvisami che sta per attivarsi la modalità notte
+  # Se non ci saranno cambiamenti si attiverà automaticamente in 3 minuti
+  - alias: night_mode_warning
+    trigger:
+      platform: time_pattern
+      # FIXME hard-coding variables
+      # because secrets in templates are not supported
+      minutes: "*"
+    condition:
+      # Le condizioni sono solo in questa automazione perché
+      # dopo il primo triggering la cancellazione viene delegata all'utente.
+      condition: and
+      conditions:
+        # Ora notturna
+        - condition: time
+          # FIXME hard-coding variables: night_mode_hour_start, night_mode_hour_end
+          # because secrets in templates are not supported
+          after: '23:00:00'
+          before: '04:00:00'
+        # Modalità notte non disabilitata
+        - condition: state
+          entity_id: input_boolean.night_mode_disabled_today
+          state: 'off'
+        # Timer warning non attivo
+        - condition: template
+          value_template: "{{ not is_state('timer.night_mode_warning', 'active') }}"
+        # Timer snooze non attivo
+        - condition: template
+          value_template: "{{ not is_state('timer.night_mode_snooze', 'active') }}"
+        # Tutte le luci spente
+        - condition: template
+          value_template: >
+            {% set domain = 'light' %}
+            {% set state = 'off' %}
+            {{ states[domain] | count == states[domain] | selectattr('state','eq', state) | list | count }}
+        # Tutte i media idle
+        - condition: state
+          entity_id: media_player.kodi
+          state: idle
+        - condition: state
+          entity_id: media_player.tv
+          state: 'off'
+        - condition: state
+          entity_id: device_tracker.tv
+          state: 'not_home'
+        - condition: template
+          value_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'off') }}"
+        # Ogni movimento tranne in camera da letto cessato
+        - condition: state
+          entity_id: group.all_but_bedroom_motion
+          state: 'off'
+        # Cellulare in carica
+        - condition: template
+          value_template: "{{ is_state_attr('sensor.daniele_payton_battery_state', 'is_charging', true) }}"
+        # TODO Cellulare in standby (non in uso)
+        # ...
+        # Luminosità bassa in tutte le stanze
+        - condition: numeric_state
+          entity_id: sensor.living_main_lux
+          below: !secret living_lux_darkness_threshold
+        # TODO bedroom_lux
+        # ...
+        # Notebook spento o idle
+        - condition: state
+          entity_id: binary_sensor.notebook_active
+          state: 'off'
+    action:
+      - service: script.night_mode_warning_start
+
+  # Attivazione modalità notte per scadenza del timer
+  - alias: night_mode_enable
+    trigger:
+      platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.night_mode_warning
+    action:
+      - service: script.cancel_night_mode_warning
+      - service: script.night_mode
+
+  # Timer warning modalità notte partito
+  - alias: night_mode_warning_started
+    trigger:
+      platform: event
+      event_type: timer.started
+      event_data:
+        entity_id: timer.night_mode_warning
+    action:
+      # Notifica per override/snooze
+      - service: script.notify_night_mode_warning
+
+  # Annullamento del timer di warning della modalità notte
+  - alias: night_mode_cancelled
+    trigger:
+      platform: event
+      event_type: timer.cancelled
+      event_data:
+        entity_id: timer.night_mode_warning
+    action:
+      - service: script.cancel_night_mode_warning
+
+  # Utente ha richiesto snooze, riavvia il timer per 15 minuti (12 snooze + 3 warning)
+  - alias: night_mode_snooze
+    trigger:
+      - event_data:
+          action: night_mode_snooze
+        event_type: mobile_app_notification_action
+        platform: event
+    action:
+      - service: timer.cancel
+        data:
+          entity_id: timer.night_mode_warning
+      - service: timer.cancel
+        data:
+          entity_id: timer.night_mode_snooze
+      - service: timer.start
+        data_template:
+          entity_id: timer.night_mode_snooze
+          duration: "00:12:00"
+
+  # Scadenza dello snooze della modalità notte
+  - alias: night_mode_snoozed
+    trigger:
+      platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.night_mode_snooze
+    action:
+      # Riavvia timer warning
+      - service: script.night_mode_warning_start
+
+  # Utente ha richiesto attivazione immediata
+  - alias: night_mode_enable_now
+    trigger:
+      - event_data:
+          action: night_mode_enable_now
+        event_type: mobile_app_notification_action
+        platform: event
+    action:
+      - service: timer.finish
+        data:
+          entity_id: timer.night_mode_warning
+
+  # Utente ha richiesto annullamento per stanotte
+  - alias: night_mode_cancel
+    trigger:
+      - event_data:
+          action: night_mode_cancel
+        event_type: mobile_app_notification_action
+        platform: event
+    action:
+      # Imposta qualche flag per evitare che night_mode_warning si riattivi
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.night_mode_disabled_today
+      - service: timer.cancel
+        data:
+          entity_id: timer.night_mode_warning
+
+  # Abilita modalità notte disattivata dall'utente la sera prima
+  - alias: night_mode_disabled_enable
+    trigger:
+      platform: time
+      at: "06:00:00"
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.night_mode_disabled_today
+
+timer:
+
+  night_mode_warning:
+    name: Timer notte
+    icon: mdi:weather-night
+
+  night_mode_snooze:
+    name: Timer snooze notte
+    icon: mdi:alarm-snooze
+
+input_boolean:
+
+  night_mode_disabled_today:
+    name: 'Modalità notte disattivata per oggi'
+    initial: off
+    icon: mdi:weather-night

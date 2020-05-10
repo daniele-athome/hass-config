@@ -1,0 +1,25 @@
+app_hermes_tts:
+  module: hermes_tts
+  class: HermesTTS
+  log: hermes
+  log_level: DEBUG
+  dependencies:
+    - app_hermes_dialogue
+  speak_device: media_player.lounge
+
+app_hermes_dialogue:
+  module: hermes_dialogue
+  class: HermesDialogue
+  log: hermes
+  log_level: DEBUG
+
+app_assistant_speak:
+  module: assistant_speak
+  class: AssistantSpeak
+  log: assistant
+  log_level: DEBUG
+  dependencies:
+    - app_hermes_dialogue
+    - app_hermes_tts
+  templates_path: /home/homeassistant/.homeassistant/templates
+  language: it

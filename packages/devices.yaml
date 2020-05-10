@@ -122,6 +122,16 @@ binary_sensor:
     state_topic: homeassistant/camera/living_door/motion
     device_class: motion
 
+  # Sensore idleness computer
+  - platform: command_line
+    name: notebook_active
+    # FIXME non so perché ma è necessario il tr...
+    command: >-
+      ping -W 1 -c 1 notebook > /dev/null 2>&1 && (
+      idle=$(/usr/bin/ssh daniele@notebook 2>/dev/null | tr -d '\n\r'); [ "$idle" -lt 60000 ] && echo 1 || echo 0) ||
+      echo 0
+    value_template: '{{ value != "0" }}'
+
 proximity:
   prox_home_daniele:
     devices:
@@ -176,3 +186,8 @@ group:
     entities:
       - binary_sensor.living_door_motion
       - binary_sensor.living_main_motion
+
+  all_but_bedroom_motion:
+    name: All motion but bedroom
+    entities:
+      - group.living_motion

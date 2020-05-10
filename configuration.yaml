@@ -163,7 +163,7 @@ lovelace:
     - url: /hacsfiles/text-divider-row/text-divider-row.js
       type: module
     - url: /hacsfiles/bar-card/bar-card.js
-      type: js
+      type: module
     - url: /hacsfiles/vertical-stack-in-card/vertical-stack-in-card.js
       type: js
     - url: /hacsfiles/circle-sensor-card/circle-sensor-card.js

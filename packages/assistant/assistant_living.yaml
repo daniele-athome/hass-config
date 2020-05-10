@@ -15,9 +15,9 @@ intent_script:
         entity_id: input_boolean.need_living_utility_light
       - service: light.turn_off
         entity_id: all
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_AllLightsOff.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: AllLightsOff
 
   LivingUtilityLightOn:
     action:

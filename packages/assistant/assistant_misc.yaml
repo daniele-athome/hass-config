@@ -20,23 +20,27 @@ intent_script:
 
   GreetingGeneral:
     action:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_GreetingGeneral.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: GreetingGeneral
 
   Thankyou:
     action:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_Thankyou.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: thankyou
 
   AnnounceGoingAway:
     action:
       - service: script.announce_going_away
 
+  # Saluto della buonanotte
   GreetingGoodNight:
     action:
-      - service: script.goodnight
+      - service: script.night_mode
+      - event: assistant_speak_tts
+        event_data:
+          template: goodnight
 
 input_boolean:
 
@@ -95,9 +99,9 @@ script:
   # Saluto del buongiorno
   goodmorning:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_goodmorning.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: goodmorning
       - condition: template
         value_template: '{{ 4 <= now().hour < 10 }}'
       - delay:
@@ -116,27 +120,12 @@ script:
             https://cdn.rtl.it/RTLFM/on-demand/giornale-orario/go_{{ hour }}.mp3
           media_content_type: music
 
-  # Saluto della buonanotte
-  goodnight:
-    sequence:
-      - service: media_player.turn_off
-        entity_id: media_player.kodi
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_goodnight.yaml
-      - service: input_boolean.turn_off
-        entity_id: input_boolean.need_living_utility_light
-      - service: light.turn_off
-        entity_id: all
-      - service: switch.turn_off
-        entity_id: switch.homeserver
-
   # Bentornato a casa
   welcome_home:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_welcome_home.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: welcome_home
       - condition: template
         value_template: '{{ (now().hour == 20 and now().minute < 10) or (now().hour == 19 and now().minute > 50) }}'
       - delay:
