@@ -10,9 +10,11 @@ intent_script:
     action:
       - service: input_boolean.turn_on
         entity_id: input_boolean.trash_reminder_morning
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_TrashReminderMorning.yaml
+      - event: assistant_speak_tts
+        event_data_template:
+          template: TrashReminderMorning
+          variables:
+            when_raw: "{{ when }}"
 
   GreetingGoodMorning:
     action:
@@ -68,9 +70,9 @@ automation:
           entity_id: sensor.people_home_count
           above: '0'
     action:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_work_commute_hard.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: work_commute_hard
 
   - alias: karen_internet_unavailable
     trigger:
@@ -140,9 +142,9 @@ script:
   # TODO variazioni di testo
   announce_going_away:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_announce_going_away.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: announce_going_away
       - service: input_boolean.turn_off
         entity_id: input_boolean.trash_reminder_morning
       - service: switch.turn_on

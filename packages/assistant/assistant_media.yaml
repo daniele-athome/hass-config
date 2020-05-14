@@ -3,9 +3,13 @@ intent_script:
 
   StartMusicPlaylist:
     action:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_StartMusicPlaylist.yaml
+      - event: assistant_speak_tts
+        event_data_template:
+          template: StartMusicPlaylist
+          variables:
+            playlist: "{{ playlist }}"
+      - delay:
+          seconds: 5
       - service: media_player.play_media
         data_template:
           entity_id: media_player.kodi

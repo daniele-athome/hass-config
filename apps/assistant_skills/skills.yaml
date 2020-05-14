@@ -6,18 +6,51 @@ skill_countdown_timer:
   log: assistant
   log_level: DEBUG
   dependencies:
-    - app_assistant_speak
+    - app_hermes_dialogue
+    - app_hermes_tts
+    - app_assistant_template
   global_dependencies:
     - util
   timer_entity: timer.spoken
+  cancel_intent: CancelCommand
   intents:
     set: SetCountdownAlarm
     get: GetCountdownAlarm
     cancel: ClearCountdownAlarm
+    slot_duration: slot_duration
   templates:
-    set_ok: SetCountdownAlarm
-    set_noduration: SetCountdownAlarm_noduration
-    get_ok: GetCountdownAlarm
-    get_notimer: GetCountdownAlarm_notimer
-    cancel_ok: ClearCountdownAlarm
-    cancel_notimer: GetCountdownAlarm_notimer
+    set_ok: assistant_SetCountdownAlarm
+    set_noduration: assistant_SetCountdownAlarm_noduration
+    get_ok: assistant_GetCountdownAlarm
+    get_notimer: assistant_GetCountdownAlarm_notimer
+    cancel_ok: assistant_ClearCountdownAlarm
+    cancel_notimer: assistant_GetCountdownAlarm_notimer
+
+skill_call_service:
+  module: skill_call_service
+  class: CallServiceSkill
+  log: assistant
+  log_level: DEBUG
+  dependencies:
+    - app_hermes_dialogue
+    - app_hermes_tts
+    - app_assistant_template
+  global_dependencies:
+    - util
+  confirm_intent: ConfirmCommand
+  cancel_intent: CancelCommand
+  intents:
+    SuspendHomeserver:
+      service: homeassistant/turn_off
+      arguments:
+        entity_id: switch.homeserver
+      namespace: hass
+      confirm: true
+      confirm_template: SuspendHomeserver_confirm
+      cancel_template: CancelCommand
+    TurnOnHomeserver:
+      service: homeassistant/turn_on
+      arguments:
+        entity_id: switch.homeserver
+      namespace: hass
+      # TODO ok_template: ....

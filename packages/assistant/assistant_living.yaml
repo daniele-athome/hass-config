@@ -5,9 +5,9 @@ intent_script:
     action:
       - service: input_boolean.turn_on
         entity_id: input_boolean.need_living_utility_light
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_SetDinnerEating.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: SetDinnerEating
 
   AllLightsOff:
     action:
@@ -28,14 +28,14 @@ intent_script:
     action:
       - service: input_boolean.turn_on
         entity_id: input_boolean.guest_mode
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_GuestModeOn.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: GuestModeOn
 
   GuestModeOff:
     action:
       - service: input_boolean.turn_off
         entity_id: input_boolean.guest_mode
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_GuestModeOff.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: GuestModeOff

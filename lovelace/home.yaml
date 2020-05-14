@@ -21,7 +21,7 @@ cards:
             entities:
               - person.daniele
               - type: divider
-              - sensor.battery_phone
+              - sensor.daniele_payton_battery_level
 
           - type: 'custom:button-card'
             entity: input_boolean.guest_mode

@@ -3,8 +3,6 @@ import appdaemon.plugins.mqtt.mqttapi as mqtt
 
 import json
 
-import hermes_dialogue
-
 #
 # App implementing the Hermes protocol for the TTS part.
 #
@@ -17,7 +15,6 @@ class HermesTTS(mqtt.Mqtt):
 
     # noinspection PyTypeChecker
     def initialize(self):
-        self.hermes_dialogue: hermes_dialogue.HermesDialogue = self.get_app('app_hermes_dialogue')
         self.tts_id = None
 
         self.mqtt_tts_say_event = self.listen_event(self.tts_say_event, 'MQTT_MESSAGE',
@@ -33,17 +30,16 @@ class HermesTTS(mqtt.Mqtt):
 
     def tts_say_event(self, event, data, kwargs):
         message = json.loads(data['payload'])
-        if 'id' in message:
-            self.tts_id = message['id']
-        else:
-            self.tts_id = None
+        self.tts_id = message.get('id')
         self.call_service('script/say_something', message=message['text'], namespace='hass')
 
+    # TODO handle multiple sessions (for satellites)
     def media_finished(self, entity, attribute, old, new, kwargs):
         self.log('Media finished: entity=%s, attribute=%s, old=%s, new=%s', entity, attribute, old, new, level='DEBUG')
         message = {}
         if self.tts_id:
             message['id'] = self.tts_id
-        if self.hermes_dialogue.session_id:
-            message['sessionId'] = self.hermes_dialogue.session_id
+        # TODO session id doesn't make sense here because the device we speak through is only one
+        #if self.hermes_dialogue.session_id:
+        #    message['sessionId'] = self.hermes_dialogue.session_id
         self.mqtt_publish('hermes/tts/sayFinished', json.dumps(message), namespace='mqtt')

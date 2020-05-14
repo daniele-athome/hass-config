@@ -12,7 +12,7 @@ homeassistant:
     device_tracker.daniele_paytonble:
       friendly_name: Payton (BLE)
 
-    sensor.battery_phone:
+    sensor.daniele_payton_battery_level:
       friendly_name: Telefono
 
     sensor.battery_controlcenter:
@@ -66,11 +66,6 @@ sensor:
 
   - platform: template
     sensors:
-      battery_phone:
-        unit_of_measurement: "%"
-        device_class: battery
-        value_template: "{{ state_attr('device_tracker.daniele_paytongps', 'battery_level') }}"
-
       # FIXME NaN al riavvio
       battery_controlcenter:
         #unit_of_measurement: "%"

@@ -71,7 +71,7 @@ recorder:
       - person.daniele
       - climate.home_boiler
       - sensor.battery_controlcenter
-      - sensor.battery_phone
+      - sensor.daniele_payton_battery_level
       - sensor.battery_env_bedroom
       - sensor.battery_env_living
       - sensor.battery_door_main

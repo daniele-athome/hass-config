@@ -6,14 +6,21 @@ homeassistant:
       friendly_name: Daniele
       entity_picture: !secret daniele_picture
 
+device_tracker:
+  - platform: composite
+    name: daniele_composite
+    time_as: local
+    entity_id:
+      - device_tracker.daniele_paytongps
+      - device_tracker.daniele_paytonwifi
+      - device_tracker.daniele_paytonble
+
 person:
   - name: daniele
     id: daniele
     user_id: !secret userid_daniele
     device_trackers:
-      - device_tracker.daniele_paytongps
-      - device_tracker.daniele_paytonwifi
-      - device_tracker.daniele_paytonble
+      - device_tracker.daniele_composite
 
 group:
   daniele_devices:

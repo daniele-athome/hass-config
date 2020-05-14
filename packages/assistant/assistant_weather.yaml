@@ -10,6 +10,6 @@ script:
   # Pronuncia la temperatura esterna locale attuale
   say_external_temperature:
     sequence:
-      - service: script.say_something
-        data_template:
-          message: !include ../../templates/it/assistant_say_external_temperature.yaml
+      - event: assistant_speak_tts
+        event_data:
+          template: say_external_temperature

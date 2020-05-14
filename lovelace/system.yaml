@@ -48,10 +48,19 @@ cards:
                     padding: 0 10px;
                   }
                   bar-card-card {
-                    padding: 9px;
+                    padding: 14px;
                   }
                   bar-card-name {
                     margin: 2px 0 0 0;
+                  }
+                  @media (min-width: 576px) {
+                    bar-card-name {
+                      overflow: visible;
+                      margin: 2px 0 0 0;
+                    }
+                    bar-card-card {
+                      padding: 9px;
+                    }
                   }
                   bar-card-value {
                     font-weight: bold;
@@ -201,10 +210,19 @@ cards:
                     padding: 0 10px;
                   }
                   bar-card-card {
-                    padding: 9px;
+                    padding: 14px;
                   }
                   bar-card-name {
                     margin: 2px 0 0 0;
+                  }
+                  @media (min-width: 576px) {
+                    bar-card-name {
+                      overflow: visible;
+                      margin: 2px 0 0 0;
+                    }
+                    bar-card-card {
+                      padding: 9px;
+                    }
                   }
                   bar-card-value {
                     font-weight: bold;

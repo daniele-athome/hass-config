@@ -1,4 +1,6 @@
 
+import appdaemon.adapi as adapi
+
 from datetime import timedelta
 
 
@@ -55,3 +57,10 @@ def normalize_duration(slot: {}) -> (timedelta, str):
         minutes=delta_parts['minute'],
         seconds=delta_parts['second'],
     ), ', '.join(text_parts)
+
+
+def render_template(app: adapi.ADAPI, template: str, variables=None):
+    return app.call_service('assistant/template',
+                            template=template,
+                            variables=variables,
+                            namespace='assistant')
