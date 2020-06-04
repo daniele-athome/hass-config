@@ -26,16 +26,30 @@ intent_script:
 
   GuestModeOn:
     action:
-      - service: input_boolean.turn_on
-        entity_id: input_boolean.guest_mode
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: guest
       - event: assistant_speak_tts
         event_data:
           template: GuestModeOn
 
   GuestModeOff:
     action:
-      - service: input_boolean.turn_off
-        entity_id: input_boolean.guest_mode
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.house_mode
+          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
       - event: assistant_speak_tts
         event_data:
           template: GuestModeOff
+
+  DNDModeOn:
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: dnd
+      - event: assistant_speak_tts
+        event_data:
+          template: DNDModeOn

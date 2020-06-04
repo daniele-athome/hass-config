@@ -205,10 +205,13 @@ cards:
 
           - type: custom:bar-card
             entities:
-              - sensor.battery_env_living
+              - sensor.env_living_battery
               - sensor.battery_env_bedroom
+              - sensor.battery_env_external
               - sensor.battery_door_main
               - sensor.battery_motion_living
+              - sensor.battery_motion_entrance
+              - sensor.battery_motion_bedroom
             severity:
               - color: '#bf4040'
                 from: 0

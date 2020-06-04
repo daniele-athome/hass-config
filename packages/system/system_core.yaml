@@ -43,3 +43,19 @@ device_tracker:
     count: 2
     interval_seconds: 30
     consider_home: 0
+
+automation:
+
+  - alias: core_on_fire
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.core_temperature
+        above: 70
+        for:
+          minutes: 10
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Temperatura core eccessiva: {{ states.sensor.core_temperature.state_with_unit }}

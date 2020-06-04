@@ -22,6 +22,7 @@ cards:
         entities:
           - binary_sensor.living_door_motion
           - binary_sensor.living_main_motion
+          - binary_sensor.living_entrance_motion
           - binary_sensor.door_main
         camera_image: camera.living_door
 

@@ -22,7 +22,7 @@ intent_script:
           # FIXME hard-coding variables: guest_mode_volume, no_guest_mode_volume
           # because secrets in templates are not supported
           volume_level: >-
-            {%- if is_state('input_boolean.guest_mode', 'on') -%}
+            {%- if is_state('input_select.house_mode', 'guest') -%}
             0.5
             {%- else -%}
             0.8

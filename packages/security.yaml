@@ -9,9 +9,9 @@ alarm_control_panel:
   - platform: manual
     name: main
     code: !secret alarm_code
-    pending_time: 120
-    triggered:
-      pending_time: 60
+    arming_time: 120
+    armed_away:
+      delay_time: 60
 
 automation:
 

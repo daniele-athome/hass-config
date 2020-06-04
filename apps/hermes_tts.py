@@ -1,25 +1,27 @@
+import importer
 
-import appdaemon.plugins.mqtt.mqttapi as mqtt
+import hermes.constants as hermes_constants
+import hermes.hermesapi as hermes
 
-import json
+from rhasspyhermes.tts import TtsSay
+
 
 #
 # App implementing the Hermes protocol for the TTS part.
 #
-# When receiving a "say" message from MQTT, it will emit an HASS event on a configured topic.
-# When receiving a "tts_finished" event, it will publish a "sayFinished" message to MQTT.
+# Use the speak_device argument to define the entity ID of the media player for speaking
 
 
 # noinspection PyAttributeOutsideInit
-class HermesTTS(mqtt.Mqtt):
+class HermesTTS(hermes.Hermes):
 
     # noinspection PyTypeChecker
     def initialize(self):
         self.tts_id = None
 
-        self.mqtt_tts_say_event = self.listen_event(self.tts_say_event, 'MQTT_MESSAGE',
-                                                    topic='hermes/tts/say',
-                                                    namespace='mqtt')
+        self.mqtt_tts_say_event = self.listen_event(self.tts_say_event,
+                                                    hermes_constants.TTS_SAY_EVENT,
+                                                    namespace='hermes')
         self.hass_media_finished_event = self.listen_state(self.media_finished, self.args['speak_device'],
                                                            namespace='hass', old='playing', new='idle')
         self.log("Hermes TTS support started", level='INFO')
@@ -28,18 +30,14 @@ class HermesTTS(mqtt.Mqtt):
         self.cancel_listen_event(self.mqtt_tts_say_event)
         self.cancel_listen_state(self.hass_media_finished_event)
 
-    def tts_say_event(self, event, data, kwargs):
-        message = json.loads(data['payload'])
-        self.tts_id = message.get('id')
-        self.call_service('script/say_something', message=message['text'], namespace='hass')
+    def tts_say_event(self, event, data: dict, kwargs):
+        message: TtsSay = data['message']
+        self.tts_id = message.id
+        self.call_service('script/say_something', message=message.text, namespace='hass')
 
-    # TODO handle multiple sessions (for satellites)
+    # TODO handle multiple sessions (for sites)
     def media_finished(self, entity, attribute, old, new, kwargs):
         self.log('Media finished: entity=%s, attribute=%s, old=%s, new=%s', entity, attribute, old, new, level='DEBUG')
-        message = {}
-        if self.tts_id:
-            message['id'] = self.tts_id
         # TODO session id doesn't make sense here because the device we speak through is only one
-        #if self.hermes_dialogue.session_id:
-        #    message['sessionId'] = self.hermes_dialogue.session_id
-        self.mqtt_publish('hermes/tts/sayFinished', json.dumps(message), namespace='mqtt')
+        # if self.hermes_dialogue.session_id: ...
+        self.tts_say_finished(self.tts_id, namespace='hermes')

@@ -1,24 +1,10 @@
 homeassistant:
   customize:
-    script.night_mode:
-      friendly_name: Modalità notte
+    input_boolean.night_mode_disabled_today:
+      friendly_name: 'Modalità notte disattivata per oggi'
       icon: mdi:weather-night
 
 script:
-
-  night_mode:
-    sequence:
-      # Usato per far capire all'automazione che non deve attivarsi
-      - service: input_boolean.turn_on
-        entity_id: input_boolean.night_mode_disabled_today
-      - service: media_player.turn_off
-        entity_id: media_player.kodi
-      - service: input_boolean.turn_off
-        entity_id: input_boolean.need_living_utility_light
-      - service: light.turn_off
-        entity_id: all
-      - service: switch.turn_off
-        entity_id: switch.homeserver
 
   night_mode_warning_start:
     sequence:
@@ -39,7 +25,9 @@ script:
           message: 'Sto per attivare la modalità notte!'
           data:
             tag: night_mode_warning
-            sticky: true
+            sticky: 'true'
+            priority: high
+            ttl: 180
             actions:
               # Rimanda di 15 minuti
               - action: night_mode_snooze
@@ -58,6 +46,7 @@ script:
         data_template:
           message: clear_notification
           data:
+            priority: high
             tag: night_mode_warning
 
 automation:
@@ -122,8 +111,9 @@ automation:
         - condition: numeric_state
           entity_id: sensor.living_main_lux
           below: !secret living_lux_darkness_threshold
-        # TODO bedroom_lux
-        # ...
+        - condition: numeric_state
+          entity_id: sensor.bedroom_lux
+          below: !secret bedroom_lux_darkness_threshold
         # Notebook spento o idle
         - condition: state
           entity_id: binary_sensor.notebook_active
@@ -140,7 +130,10 @@ automation:
         entity_id: timer.night_mode_warning
     action:
       - service: script.cancel_night_mode_warning
-      - service: script.night_mode
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: night
 
   # Timer warning modalità notte partito
   - alias: night_mode_warning_started
@@ -242,6 +235,4 @@ timer:
 input_boolean:
 
   night_mode_disabled_today:
-    name: 'Modalità notte disattivata per oggi'
     initial: off
-    icon: mdi:weather-night

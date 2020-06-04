@@ -12,6 +12,11 @@ appdaemon:
     MQTT:
       type: mqtt
       namespace: mqtt
+      client_topics:
+        - 'hermes/intent/#'
+    HERMES:
+      type: hermes
+      namespace: hermes
 
 logs:
   assistant:

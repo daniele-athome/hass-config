@@ -134,6 +134,12 @@ me if the house is on fire :fire:
 
 Firmware update notifications.
 
+### House mode
+
+Configuration data and some automations for what I call the *house mode*. Basically it's the current state of my home.
+Each state represents specific behaviors that my place will have, automations to be enabled, stuff to turn on and off,
+and so on. The house mode input_select is used throughout the packages.
+
 ### HVAC
 
 Integration with [my homemade thermostat](https://github.com/daniele-athome/thermorasp-docs).
@@ -155,7 +161,7 @@ that help some automations elsewhere.
 
 ### Night mode
 
-Night mode is an environment state where:
+A *house mode* for the night. It is an environment state where:
 
 * all lights are off
 * all media players are off
@@ -216,7 +222,7 @@ to help me moving through the living room.
 A few nice automations here. Not all lights are under Home Assistant control yet
 though.
 
-Scenarios are mainly for my living room, since is the room where most of my home
+Most scenarios are for my living room, since is the room where most of my home
 automation hardware is installed at the moment.
 
 When I watch something, all lights are turned off &mdash; I call this *cinema mode*.
@@ -227,6 +233,9 @@ when I'm watching something while eating &mdash; I do that a lot :spaghetti:
 
 Controlled lights are turned off automatically when too much light is detected in
 the room.
+
+I try to keep room-related configuration in their respective `scenario_<room>.yaml`
+files.
 
 #### Guest mode
 
@@ -261,6 +270,14 @@ Some sensors for weather information in my area.
 ### Zones
 
 Home and work :-)
+
+## AppDaemon
+
+I use AppDaemon mainly for my assistant. Basic question-answer skills are handled
+directly in Home Assistant, but more complex stuff required some coding, so I've
+implemented a few apps for those.  
+Since I use Rhasspy, I've been developing a Hermes plugin for AppDaemon which
+I will contribute when it will reach a mature state.
 
 ## Acknowledgements
 

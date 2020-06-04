@@ -39,6 +39,7 @@ automation:
       - wait_template: "{{ is_state('binary_sensor.door_main', 'off') }}"
       - delay:
           seconds: 10
+      # Annuncia
       - service: script.welcome_home
 
   - alias: daniele_left
@@ -56,6 +57,32 @@ automation:
         entity_id: media_player.tv
       - service: switch.turn_on
         entity_id: switch.homeserver
+
+  - alias: house_empty
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.people_home_count
+        below: '1'
+    action:
+      # Modalità casa vuota
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: away
+
+  - alias: house_full
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.people_home_count
+        above: '0'
+    action:
+      # Modalità giorno
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.house_mode
+          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
+
+  # TODO house_empty_extended
 
   # Porta di ingresso aperta
   # Se nessuno presente, fai qualcosa e fa scattare lo scan di arrivo
@@ -210,10 +237,3 @@ script:
       - service: mqtt.publish
         data:
           topic: 'homeassistant/monitor/scan/DEPART'
-
-input_boolean:
-
-  guest_mode:
-    name: 'Ospiti in casa'
-    initial: off
-    icon: mdi:coffee

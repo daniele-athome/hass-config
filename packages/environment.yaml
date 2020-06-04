@@ -14,10 +14,10 @@ homeassistant:
     sensor.pressure_bedroom:
       friendly_name: Camera
 
-    sensor.temp_living:
+    sensor.env_living_temperature:
       friendly_name: Salone
 
-    sensor.humidity_living:
+    sensor.env_living_humidity:
       friendly_name: Salone
 
     sensor.pressure_living:
@@ -34,16 +34,22 @@ group:
   env_living:
     name: "Ambiente: Salone"
     entities:
-      - sensor.temp_living
-      - sensor.humidity_living
-      - sensor.pressure_living
+      - sensor.env_living_temperature
+      - sensor.env_living_humidity
+
+  env_external:
+    name: "Ambiente: Esterno"
+    entities:
+      - sensor.temp_external
+      - sensor.humidity_external
+      - sensor.pressure_external
 
   climate:
     name: Climate
     icon: mdi:fire
     entities:
       - sensor.temp_kitchen
-      - sensor.temp_living
+      - sensor.env_living_temperature
       - sensor.temp_bedroom
       - climate.home_boiler
 
@@ -61,13 +67,23 @@ sensor:
     entities:
       # la cucina non è affidabile - sensor.temp_kitchen
       - sensor.temp_bedroom
-      - sensor.temp_living
+      - sensor.env_living_temperature
 
   - name: humidity_average
     platform: average
     entities:
       - sensor.humidity_bedroom
-      - sensor.humidity_living
+      - sensor.env_living_humidity
+
+  - platform: mitemp_bt
+    mac: '58:2D:34:3A:0E:84'
+    name: env_living
+    monitored_conditions:
+      - temperature
+      - humidity
+      - battery
+    median: 1
+    adapter: hci1
 
 binary_sensor:
 
@@ -91,7 +107,7 @@ automation:
         entity_id: sensor.temp_bedroom
         above: 40
       - platform: numeric_state
-        entity_id: sensor.temp_living
+        entity_id: sensor.env_living_temperature
         above: 40
     action:
       service: notify.kontalk_daniele

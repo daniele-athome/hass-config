@@ -1,7 +1,9 @@
+import importer
 
-import appdaemon.plugins.hass.hassapi as hass
+import hermes.constants as hermes_constants
+import hermes.hermesapi as hermes
 
-import json
+from rhasspyhermes.dialogue import DialogueSessionStarted, DialogueSessionEnded
 
 #
 # App used by the smart assistant for speaking.
@@ -12,13 +14,36 @@ import json
 
 
 # noinspection PyAttributeOutsideInit
-# @deprecated
-class AssistantSpeak(hass.Hass):
+class AssistantSpeak(hermes.Hermes):
 
     def initialize(self):
-        self.listen_event(self.tts_event, 'assistant_speak_tts', namespace='hass')
+        self.session_id = None
+        self.events = [
+            self.listen_event(self.tts_event,
+                              'assistant_speak_tts',
+                              namespace='hass'),
+            self.listen_event(self.session_started,
+                              hermes_constants.DIALOGUE_SESSION_STARTED_EVENT,
+                              namespace='hermes'),
+            self.listen_event(self.session_ended,
+                              hermes_constants.DIALOGUE_SESSION_ENDED_EVENT,
+                              namespace='hermes'),
+        ]
         self.register_service('assistant/speak', self.tts_speak, namespace='assistant')
         self.log("Assistant Speak support started", level='INFO')
+
+    def terminate(self):
+        for e in self.events:
+            self.cancel_listen_event(e)
+
+    def session_started(self, event, data: dict, kwargs):
+        self.session_id = data['session_id']
+        self.log("Starting assistant speak session", level='INFO')
+
+    def session_ended(self, event, data: dict, kwargs):
+        if data['session_id'] == self.session_id:
+            self.log("Ending assistant speak session", level='INFO')
+            self.session_id = None
 
     def tts_event(self, event, data, kwargs):
         if 'template' in data:
@@ -28,7 +53,6 @@ class AssistantSpeak(hass.Hass):
     def tts_speak(self, namespace, domain, service, data):
         self.log("Service: %r", data, level='DEBUG')
         tmpl_name = data['template']
-        session_continue = data.get('continue_session')
         tmpl_variables = data.get('variables', {})
         custom_data = data.get('custom_data')
 
@@ -39,24 +63,12 @@ class AssistantSpeak(hass.Hass):
                                           namespace='assistant')
         else:
             tmpl_text = None
-        self.speak_template(tmpl_text, tmpl_variables, session_continue, custom_data)
+        self.speak_template(tmpl_text, tmpl_variables, custom_data)
 
-    def speak_template(self, tmpl_text, variables, intent_filter=None, custom_data=None):
+    def speak_template(self, tmpl_text, variables, custom_data=None):
         self.log('Speaking template text: %r', tmpl_text)
-        if intent_filter and intent_filter != 'NONE':
-            self.call_service('dialogue/continue',
-                              text=tmpl_text,
-                              intent_filter=intent_filter,
-                              custom_data=custom_data,
-                              namespace='hermes')
+        if self.session_id:
+            return self.end_session(self.session_id, text=tmpl_text, namespace='hermes')
         else:
-            if not self.call_service('dialogue/end',
-                                     text=tmpl_text,
-                                     custom_data=custom_data,
-                                     namespace='hermes'):
-                # no session active, use low-level TTS
-                message = {'text': tmpl_text}
-                self.call_service('mqtt/publish',
-                                  topic='hermes/tts/say',
-                                  payload=json.dumps(message),
-                                  namespace='mqtt')
+            # no session active, use low-level TTS
+            return self.tts_say(tmpl_text, namespace='hermes')

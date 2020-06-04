@@ -1,3 +1,5 @@
+# Assistant skills
+
 global_modules: util
 
 skill_countdown_timer:
@@ -54,3 +56,8 @@ skill_call_service:
         entity_id: switch.homeserver
       namespace: hass
       # TODO ok_template: ....
+    # TODO andrebbe fatta una skill che controlla l'orario
+    PutTVNewsOn:
+      service: script/tv_channel_favourite_news
+      namespace: hass
+      ok_template: PutTVNewsOn_ok

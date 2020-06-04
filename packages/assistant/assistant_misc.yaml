@@ -39,7 +39,10 @@ intent_script:
   # Saluto della buonanotte
   GreetingGoodNight:
     action:
-      - service: script.night_mode
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: night
       - event: assistant_speak_tts
         event_data:
           template: goodnight
@@ -80,6 +83,14 @@ automation:
         entity_id: device_tracker.internet
         from: 'home'
         to: 'not_home'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ states.input_select.house_mode.state not in ['dnd','guest'] }}"
+        - condition: numeric_state
+          entity_id: sensor.people_home_count
+          above: '0'
     action:
       - service: script.say_something_rendered
         data:
@@ -91,16 +102,56 @@ automation:
         entity_id: device_tracker.internet
         from: 'not_home'
         to: 'home'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ states.input_select.house_mode.state not in ['dnd','guest'] }}"
+        - condition: numeric_state
+          entity_id: sensor.people_home_count
+          above: '0'
     action:
       - service: script.say_something_rendered
         data:
           url: !secret karen_internet_restored_url
+
+  # Avviso vocale chiamata in arrivo sul cellulare
+  - alias: payton_phone_call_incoming
+    trigger:
+      - platform: template
+        value_template: '{{ states.sensor.payton_phone_call_incoming_caller.state|length > 0 }}'
+    condition:
+      condition: and
+      conditions:
+        # Solo in modalità giorno normale
+        - condition: template
+          value_template: "{{ states.input_select.house_mode.state in ['day_working','day_not_working'] }}"
+        # Se non ci sono media in riproduzione in TV
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'off'
+    action:
+      - event: assistant_speak_tts
+        event_data_template:
+          template: incoming_phone_call
+          variables:
+            caller: "{{ states.sensor.payton_phone_call_incoming_caller.state }}"
+
+sensor:
+  - name: payton_phone_call_incoming_caller
+    platform: mqtt
+    state_topic: homeassistant/payton/device/phone/state
+    value_template: "{{ value_json.caller_name if value_json.state == 'ringing' else '' }}"
 
 script:
 
   # Saluto del buongiorno
   goodmorning:
     sequence:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.house_mode
+          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
       - event: assistant_speak_tts
         event_data:
           template: goodmorning

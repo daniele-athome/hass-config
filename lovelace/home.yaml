@@ -14,6 +14,10 @@ cards:
 
       - type: 'custom:clock-card'
 
+      - type: entities
+        entities:
+          - input_select.house_mode
+
       - type: horizontal-stack
         cards:
           - type: entities
@@ -22,11 +26,6 @@ cards:
               - person.daniele
               - type: divider
               - sensor.daniele_payton_battery_level
-
-          - type: 'custom:button-card'
-            entity: input_boolean.guest_mode
-            tap_action:
-              action: toggle
 
           # other people here
 

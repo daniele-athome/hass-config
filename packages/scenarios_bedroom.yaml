@@ -1,0 +1,50 @@
+# Entity state scenes and scenarios for bedroom
+
+automation:
+
+  # Troppa luce in camera: spegni la luce
+  - alias: bedroom_too_much_light
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.bedroom_lux
+        # Questa soglia è superabile solo con la luce del sole
+        above: !secret bedroom_lux_too_much_threshold
+    action:
+      - service: light.turn_off
+        entity_id: light.bedroom_main
+
+  - alias: motion_bedroom_day
+    trigger:
+      - platform: state
+        entity_id: group.bedroom_motion
+        to: 'on'
+      - platform: numeric_state
+        entity_id: sensor.bedroom_lux
+        below: !secret bedroom_lux_darkness_threshold
+    condition:
+      condition: and
+      conditions:
+        # Non applicare di notte
+        - condition: template
+          value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
+        # Assicuriamoci che le condizioni del trigger siano tutte rispettate
+        - condition: state
+          entity_id: group.bedroom_motion
+          state: 'on'
+        - condition: numeric_state
+          entity_id: sensor.bedroom_lux
+          below: !secret bedroom_lux_darkness_threshold
+    action:
+      - service: light.turn_on
+        entity_id: light.bedroom_main
+
+  - alias: motion_bedroom_day_ended
+    trigger:
+      - platform: state
+        entity_id: group.bedroom_motion
+        from: 'on'
+        to: 'off'
+        for: "00:05:00"
+    action:
+      - service: light.turn_off
+        entity_id: light.bedroom_main

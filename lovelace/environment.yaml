@@ -24,8 +24,8 @@ cards:
         cards:
           - type: custom:mini-graph-card
             entities:
-              - sensor.weather_temperature
-              - entity: sensor.weather_humidity
+              - sensor.temp_external
+              - entity: sensor.humidity_external
                 show_state: true
                 show_graph: false
             name: Esterno
@@ -95,8 +95,8 @@ cards:
 
           - type: custom:mini-graph-card
             entities:
-              - sensor.temp_living
-              - entity: sensor.humidity_living
+              - sensor.env_living_temperature
+              - entity: sensor.env_living_humidity
                 show_state: true
                 show_graph: false
             name: Salone

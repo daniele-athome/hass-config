@@ -1,3 +1,5 @@
+# Applications
+
 app_hermes_tts:
   module: hermes_tts
   class: HermesTTS
@@ -22,3 +24,12 @@ app_assistant_template:
   log_level: DEBUG
   templates_path: /home/homeassistant/.homeassistant/templates
   language: it
+
+app_assistant_speak:
+  module: assistant_speak
+  class: AssistantSpeak
+  log: assistant
+  log_level: DEBUG
+  dependencies:
+    - app_assistant_template
+    - app_hermes_tts

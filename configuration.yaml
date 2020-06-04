@@ -12,6 +12,9 @@ homeassistant:
   time_zone: !secret timezone_home
   auth_mfa_modules:
     - type: totp
+  external_url: !secret app_url
+  # TODO might not work when communicating with lounge media player
+  internal_url: !secret app_url
   packages: !include_dir_named packages
 
 # Show links to resources in log and frontend
@@ -33,7 +36,6 @@ config:
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 http:
   server_host: 127.0.0.1
-  base_url: !secret app_url
 
 # Checks for available updates
 # Note: This component will send some information about your system to
@@ -47,6 +49,8 @@ updater:
 # Community store
 hacs:
   token: !secret github_token
+  sidepanel_icon: 'mdi:package-variant'
+  experimental: true
 
 # Discover some devices automatically
 #discovery:
@@ -73,7 +77,7 @@ recorder:
       - sensor.battery_controlcenter
       - sensor.daniele_payton_battery_level
       - sensor.battery_env_bedroom
-      - sensor.battery_env_living
+      - sensor.env_living_battery
       - sensor.battery_door_main
       - sensor.battery_motion_living
       - sensor.homeserver_cpu_used
@@ -82,15 +86,17 @@ recorder:
       - sensor.processor_use
       - sensor.outside_humidity
       - sensor.outside_temperature
+      - sensor.temp_external
+      - sensor.humidity_external
       - sensor.weather_temperature
       - sensor.weather_apparent_temperature
       - sensor.homeserver_w83627thf_1_temp
       - sensor.temp_bedroom
       - sensor.pressure_bedroom
       - sensor.humidity_bedroom
-      - sensor.temp_living
+      - sensor.env_living_temperature
       - sensor.pressure_living
-      - sensor.humidity_living
+      - sensor.env_living_humidity
       - sensor.temp_kitchen
       - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
       - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
@@ -99,6 +105,7 @@ recorder:
       - device_tracker.controlcenter
       - binary_sensor.living_door_motion
       - binary_sensor.living_main_motion
+      - binary_sensor.living_entrance_motion
       - sensor.living_main_lux
 
 # Enables a map showing the location of tracked devices
@@ -137,8 +144,6 @@ notify:
     recipient: !secret xmpp_recipient_daniele
 
 zha:
-  usb_path: /dev/ttyACM0
-  radio_type: deconz
   database_path: /home/homeassistant/.homeassistant/zigbee.db
 
 system_health:

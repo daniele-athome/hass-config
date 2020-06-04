@@ -1,0 +1,100 @@
+homeassistant:
+  customize:
+    input_select.house_mode:
+      friendly_name: Modalità casa
+      icon: mdi:home-assistant
+
+input_select:
+  house_mode:
+    options:
+      # -- Stati a casa --
+      # Lavorativo
+      - day_working
+      # Non lavorativo
+      - day_not_working
+      # Notte
+      - night
+      # Ospiti
+      - guest
+      # Non disturbare
+      - dnd
+      # -- Stati fuori casa --
+      # Casa vuota
+      - away
+      # Casa vuota per più di 48 ore
+      - extended_away
+
+automation:
+
+  - alias: mode_select_night
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+      to: night
+    action:
+      # Usato per far capire all'automazione che non deve attivarsi
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.night_mode_disabled_today
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+      - service: light.turn_off
+        entity_id: all
+      - service: switch.turn_off
+        entity_id: switch.homeserver
+
+  - alias: mode_select_day_working
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+      to: day_working
+    action:
+      - service: switch.turn_on
+        entity_id: switch.homeserver
+
+  - alias: mode_select_day_not_working
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+      to: day_not_working
+    action:
+      - service: switch.turn_on
+        entity_id: switch.homeserver
+
+  # Impostazione automatica modalità giorno al mattino (risveglio)
+  - alias: mode_auto_day
+    trigger:
+      # Rilevato movimento in salone
+      platform: state
+      entity_id: group.living_motion
+      to: 'on'
+    condition:
+      condition: and
+      conditions:
+        # Entro una certa ora di "mattina"
+        - condition: time
+          after: '06:00:00'
+          before: '16:00:00'
+        # Eravamo in modalità notte
+        - condition: state
+          entity_id: input_select.house_mode
+          state: night
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.house_mode
+          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
+
+  # Per debug: notifica cambio house mode
+  - alias: notify_mode_change
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Info"
+        message: |-
+          House mode: {{ states.input_select.house_mode.state }}

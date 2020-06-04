@@ -18,7 +18,10 @@ homeassistant:
     sensor.battery_controlcenter:
       friendly_name: Centro di controllo
 
-    sensor.battery_env_living:
+    sensor.battery_env_external:
+      friendly_name: 'Ambiente: Esterno'
+
+    sensor.env_living_battery:
       friendly_name: 'Ambiente: Salone'
 
     sensor.battery_env_bedroom:
@@ -32,6 +35,21 @@ homeassistant:
 
     sensor.battery_motion_living:
       friendly_name: 'Movimento: Salone'
+
+    sensor.battery_motion_bedroom:
+      friendly_name: 'Movimento: Camera'
+
+    sensor.battery_motion_entrance:
+      friendly_name: 'Movimento: Ingresso'
+
+    binary_sensor.living_main_motion:
+      friendly_name: 'Movimento: Salone'
+
+    binary_sensor.living_door_motion:
+      friendly_name: 'Movimento: Entrata'
+
+    binary_sensor.living_entrance_motion:
+      friendly_name: 'Movimento: Ingresso'
 
     automation.control_center_low_battery:
       friendly_name: Centro di controllo scarico
@@ -181,6 +199,12 @@ group:
     entities:
       - binary_sensor.living_door_motion
       - binary_sensor.living_main_motion
+      - binary_sensor.living_entrance_motion
+
+  bedroom_motion:
+    name: Bedroom motion
+    entities:
+      - binary_sensor.bedroom_motion
 
   all_but_bedroom_motion:
     name: All motion but bedroom

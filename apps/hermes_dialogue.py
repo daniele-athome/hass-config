@@ -1,10 +1,16 @@
+import importer
+
 from dataclasses import dataclass
 
 import appdaemon.adapi as adapi
 import appdaemon.adbase as adbase
-import appdaemon.plugins.mqtt.mqttapi as mqtt
 
 import json
+
+import hermes.constants as hermes_constants
+import hermes.hermesapi as hermes
+
+from rhasspyhermes.nlu import NluIntent
 
 #
 # App implementing the Hermes protocol for the Dialogue Manager part.
@@ -13,95 +19,91 @@ import json
 
 
 # noinspection PyAttributeOutsideInit
-class HermesDialogue(mqtt.Mqtt):
+class HermesDialogue(hermes.Hermes):
 
-    # TODO handle multiple sessions (for satellites)
+    # TODO handle multiple sessions (for sites)
 
     def initialize(self):
         self.sessions = {}
         self.cancel_template = self.args['cancel_template']
-        self.listen_event(self.session_started, 'MQTT_MESSAGE',
-                          topic='hermes/dialogueManager/sessionStarted',
-                          namespace='mqtt')
-        self.listen_event(self.session_ended, 'MQTT_MESSAGE',
-                          topic='hermes/dialogueManager/sessionEnded',
-                          namespace='mqtt')
-        self.listen_event(self.cancel_intent, 'MQTT_MESSAGE',
-                          topic='hermes/intent/' + self.args['cancel_intent'],
-                          namespace='mqtt')
-        self.register_service('dialogue/continue', self.continue_session, namespace='hermes')
-        self.register_service('dialogue/end', self.end_session, namespace='hermes')
+
+        self.events = [
+            self.listen_event(self.session_started,
+                              hermes_constants.DIALOGUE_SESSION_STARTED_EVENT,
+                              namespace='hermes'),
+            self.listen_event(self.session_ended,
+                              hermes_constants.DIALOGUE_SESSION_ENDED_EVENT,
+                              namespace='hermes'),
+            self.listen_event(self.cancel_intent,
+                              hermes_constants.INTENT_EVENT,
+                              intent=self.args['cancel_intent'],
+                              namespace='hermes'),
+        ]
+        # TODO these services should be in HermesPlugin
+        self.register_service('dialogue/continue', self.service_continue_session, namespace='hermes')
+        self.register_service('dialogue/end', self.service_end_session, namespace='hermes')
         self.log("Hermes Dialogue support started", level='INFO')
 
-    def register_session(self, session_id: str, app: adbase.ADBase, custom_data: {} = None):
+    def terminate(self):
+        for e in self.events:
+            self.cancel_listen_event(e)
+
+    def register_session(self, session_id: str, app: adbase.ADBase):
         """Associate a session with the given app."""
         self.log("Registering app %s as owner for session %s", app.name, session_id)
         self.sessions[session_id].owner_app = app.name
-        self.sessions[session_id].custom_data = custom_data or {}
 
-    def session_started(self, event, data, kwargs):
-        message = json.loads(data['payload'])
-        session_id = message['sessionId']
+    def session_started(self, event, data: dict, kwargs):
+        session_id = data['session_id']
         self.sessions[session_id] = DialogueSession(session_id)
 
-    def session_ended(self, event, data, kwargs):
-        message = json.loads(data['payload'])
-        session_id = message['sessionId']
+    def session_ended(self, event, data: dict, kwargs):
+        session_id = data['session_id']
         try:
             del self.sessions[session_id]
         except KeyError:
             pass
 
-    def cancel_intent(self, event, data, kwargs):
-        tmpl_text = self.call_service('assistant/template',
-                                      template=self.cancel_template,
-                                      namespace='assistant')
-        message = json.loads(data['payload'])
-        session_id = message['sessionId']
-        if session_id in self.sessions and self.sessions[session_id].owner_app is None:
+    def cancel_intent(self, event, data: dict, kwargs):
+        intent_data: NluIntent = data['message']
+        session_id = intent_data.session_id
+        try:
+            custom_data = json.loads(intent_data.custom_data)
+            handle_cancel = custom_data.get('handleCancel', False)
+        except:
+            handle_cancel = False
+
+        if not handle_cancel or (session_id in self.sessions and self.sessions[session_id].owner_app is None):
+            tmpl_text = self.call_service('assistant/template',
+                                          template=self.cancel_template,
+                                          namespace='assistant')
             if not self.call_service('dialogue/end', session_id=session_id, text=tmpl_text, namespace='hermes'):
                 # no session active, use low-level TTS
-                message = {'text': tmpl_text}
-                self.call_service('mqtt/publish',
-                                  topic='hermes/tts/say',
-                                  payload=json.dumps(message),
-                                  namespace='mqtt')
+                self.tts_say(tmpl_text)
         else:
             self.log("Session currently owned by another app, not handling cancel intent", level='DEBUG')
 
-    def continue_session(self, namespace, domain, service, data):
+    def service_continue_session(self, namespace, domain, service, data):
         session_id = data['session_id']
         if session_id not in self.sessions:
             return False
 
-        message = {
-            'sessionId': session_id,
-            'text': data['text'],
-        }
         if 'intent_filter' in data and data['intent_filter']:
-            intent_filter = data['intent_filter']
-            message['intentFilter'] = intent_filter if not isinstance(intent_filter, str) else [intent_filter]
-        if 'custom_data' in data and data['custom_data']:
-            message['customData'] = data['custom_data']
+            intent_filter = data['intent_filter'] if not isinstance(data['intent_filter'], str) else [data['intent_filter']]
+        else:
+            intent_filter = None
+        custom_data = data['custom_data'] if 'custom_data' in data else None
 
-        self.mqtt_publish('hermes/dialogueManager/continueSession', json.dumps(message), namespace='mqtt')
-        return True
+        return self.continue_session(session_id, data['text'], intent_filter, custom_data, namespace='hermes')
 
-    def end_session(self, namespace, domain, service, data):
+    def service_end_session(self, namespace, domain, service, data):
         session_id = data['session_id']
         if session_id not in self.sessions:
             return False
 
-        message = {
-            'sessionId': session_id,
-        }
-        if 'text' in data and data['text']:
-            message['text'] = data['text']
-        if 'custom_data' in data and data['custom_data']:
-            message['customData'] = data['custom_data']
+        text = data['text'] if 'text' in data else None
 
-        self.mqtt_publish('hermes/dialogueManager/endSession', json.dumps(message), namespace='mqtt')
-        return True
+        return self.end_session(session_id, text, namespace='hermes')
 
 
 # noinspection PyAttributeOutsideInit
@@ -115,14 +117,9 @@ class DialogueSupport(adapi.ADAPI):
         # noinspection PyTypeChecker
         self.app_dialogue: HermesDialogue = self.get_app('app_hermes_dialogue')
 
-    def session_start(self, session_id: str, custom_data: {} = None):
+    def session_start(self, session_id: str):
         # noinspection PyTypeChecker
-        self.app_dialogue.register_session(session_id, self, custom_data)
-
-    def get_session_data(self, session_id: str) -> {}:
-        if self.is_session_owner(session_id):
-            return self.app_dialogue.sessions[session_id].custom_data
-        return None
+        self.app_dialogue.register_session(session_id, self)
 
     def is_session_owner(self, session_id: str) -> bool:
         try:
@@ -168,6 +165,3 @@ class DialogueSession:
 
     session_id: str
     owner_app: str = None
-    custom_data: {} = None
-
-

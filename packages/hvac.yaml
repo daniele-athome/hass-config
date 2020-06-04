@@ -21,7 +21,7 @@ shell_command:
     mosquitto_pub
     -h thermostat.local
     -t homeassistant/thermorasp/sensor/temp_living/control
-    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_living.state }}}'
+    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.env_living_temperature.state }}}'
 
 automation:
 
@@ -72,7 +72,7 @@ automation:
   - alias: thermorasp_publish_temp_living
     trigger:
       - platform: state
-        entity_id: sensor.temp_living
+        entity_id: sensor.env_living_temperature
       # Il termostato richiede comunque un aggiornamento ogni 900 secondi
       - platform: time_pattern
         minutes: "/10"
@@ -81,7 +81,7 @@ automation:
       #- service: mqtt.publish
       #  data_template:
       #    topic: "homeassistant/thermorasp/sensor/temp_living/control"
-      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_living.state }}}'
+      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.env_living_temperature.state }}}'
 
 # Termostato principale
 climate:

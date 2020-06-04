@@ -39,3 +39,5 @@ sensor:
 binary_sensor:
   - platform: workday
     country: IT
+    add_holidays:
+      - 2020-06-01
