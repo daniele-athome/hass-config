@@ -110,6 +110,9 @@ ReSpeaker microphone array to listen for voice commands. Speech recognition is
 possible with Google Speech-to-text API. I might publish my Rhasspy configuration
 one day.
 
+I can also talk to Karen via XMPP by either texting or sending a voice recording.
+In both cases text replies are sent back through XMPP.
+
 Speech templates for Karen lives in a specific directory that I won't publish.
 To introduce some sense of "nuisance" in Karen, I created multiple versions for
 each type of sentence to be spoken. Templates are used by the Assistant Speak app
