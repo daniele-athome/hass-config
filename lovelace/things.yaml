@@ -11,23 +11,26 @@ cards:
   # Column 1
 
       - type: markdown
-        style: |
-          .markdown.no-header {
-            padding: 0 !important;
-          }
-          ha-markdown {
-            padding: 0;
-          }
-          ha-markdown h1 {
-            line-height: 64px;
-          }
-          ha-markdown img {
-            width: 64px;
-            height: 64px;
-            border-radius: var(--ha-card-border-radius);
-            vertical-align: top;
-            margin-right: 10px;
-          }
+        style:
+          .: |
+            ha-markdown.no-header {
+              padding: 0 !important;
+            }
+            ha-markdown {
+              padding: 0;
+            }
+          'ha-markdown':
+            $: |
+              ha-markdown-element h1 {
+                line-height: 64px;
+              }
+              ha-markdown-element img {
+                width: 64px;
+                height: 64px;
+                border-radius: var(--ha-card-border-radius);
+                vertical-align: top;
+                margin-right: 10px;
+              }
         content: >
           # ![Karen](/local/ui/karen-avatar.jpg) Karen
 
@@ -212,6 +215,7 @@ cards:
               - sensor.battery_motion_living
               - sensor.battery_motion_entrance
               - sensor.battery_motion_bedroom
+              - sensor.battery_leak_bathroom
             severity:
               - color: '#bf4040'
                 from: 0

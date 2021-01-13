@@ -7,10 +7,13 @@ homeassistant:
       entity_picture: !secret daniele_picture
 
 device_tracker:
+  # TEST
   - platform: composite
     name: daniele_composite
     time_as: local
+    require_movement: true
     entity_id:
+      - device_tracker.daniele_paytongps
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
 
@@ -23,10 +26,13 @@ person:
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
 
-group:
-  daniele_devices:
-    name: Daniele trackers
-    entities:
+# quando GPS==Home, usa solo ble/wifi (i dati di location della persona saranno comunque aggiornati)
+# quando GPS!=Home, usa tracker più recente
+person2:
+  - name: daniele
+    id: daniele
+    user_id: !secret userid_daniele
+    device_trackers:
       - device_tracker.daniele_paytongps
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble

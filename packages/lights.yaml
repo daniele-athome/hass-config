@@ -54,7 +54,6 @@ light:
   - platform: template
     lights:
       living_ceiling:
-        entity_id: light.living_ceiling_real
         value_template: "{{ states('light.living_ceiling_real') }}"
         level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int }}"
         temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int }}"
@@ -104,19 +103,6 @@ script:
 
 scene:
 
-  # Luci guida notturne
-  - name: night_guidance_on
-    entities:
-      light.living_ceiling:
-        state: on
-        brightness: 40
-        color_temp: 400
-
-  - name: night_guidance_off
-    entities:
-      light.living_ceiling:
-        state: off
-
   # Luci ingresso in casa
   - name: house_entrance
     entities:
@@ -125,4 +111,6 @@ scene:
         brightness: 255
         color_temp: 400
       light.living_stand:
+        state: on
+      input_boolean.house_entrance_lights:
         state: on

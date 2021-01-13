@@ -5,6 +5,10 @@ intent_script:
     action:
       - service: script.say_external_temperature
 
+  WeatherToday:
+    action:
+      - service: script.say_weather_today
+
 script:
 
   # Pronuncia la temperatura esterna locale attuale
@@ -13,3 +17,9 @@ script:
       - event: assistant_speak_tts
         event_data:
           template: say_external_temperature
+
+  say_weather_today:
+    sequence:
+      - event: assistant_speak_tts
+        event_data:
+          template: weather_today

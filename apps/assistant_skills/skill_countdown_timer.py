@@ -89,8 +89,8 @@ class CountdownTimerSkill(hass.Hass, hermes_dialogue.DialogueSupport):
         if timer_state['state'] == 'active':
             # workaround to update current remaining time
             self.call_service('timer/pause', entity_id=self.timer_entity, namespace='hass')
-            self.call_service('timer/start', entity_id=self.timer_entity, namespace='hass')
             timer_state = self.get_state(self.timer_entity, 'all', namespace='hass')
+            self.call_service('timer/start', entity_id=self.timer_entity, namespace='hass')
 
             self.end_session(session_id=message.session_id,
                              text=util.render_template(self, self.tts_templates['get_ok'],

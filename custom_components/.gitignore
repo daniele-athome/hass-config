@@ -2,3 +2,6 @@
 !.gitignore
 !rhasspy_events
 !rhasspy_events/*
+!person2
+!person2/*
+!person2/translations/*

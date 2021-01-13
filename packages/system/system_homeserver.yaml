@@ -36,6 +36,7 @@ sensor:
     scan_interval: 300
 
 automation:
+
   - alias: server_on_fire
     trigger:
       - platform: numeric_state
@@ -56,6 +57,27 @@ automation:
           Core: {{ states.sensor.homeserver_w83627thf_1_temp.state_with_unit }}
           Disco 1: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732.state_with_unit }}
           Disco 2: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143.state_with_unit }}
+
+  - alias: house_mode_system_homeserver_day
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: day_working
+      - platform: state
+        entity_id: input_select.house_mode
+        to: day_not_working
+    action:
+      - service: switch.turn_on
+        entity_id: switch.homeserver
+
+  - alias: house_mode_system_homeserver_night
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: night
+    action:
+      - service: switch.turn_off
+        entity_id: switch.homeserver
 
 switch:
   - platform: wake_on_lan

@@ -14,10 +14,6 @@ cards:
 
       - type: 'custom:clock-card'
 
-      - type: entities
-        entities:
-          - input_select.house_mode
-
       - type: horizontal-stack
         cards:
           - type: entities
@@ -39,6 +35,110 @@ cards:
       - break
 
       # Column 2
+
+      - type: horizontal-stack
+        cards:
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: day_working
+            icon: mdi:briefcase-variant
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: day_working
+            state:
+              - value: day_working
+                color: red
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: day_not_working
+            icon: mdi:soccer
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: day_not_working
+            state:
+              - value: day_not_working
+                color: red
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: night
+            icon: mdi:power-sleep
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: night
+            state:
+              - value: night
+                color: red
+
+      - type: horizontal-stack
+        cards:
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: guest
+            icon: mdi:account-heart
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: guest
+            state:
+              - value: guest
+                color: red
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: dnd
+            icon: mdi:do-not-disturb
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: dnd
+            state:
+              - value: dnd
+                color: red
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: away
+            icon: mdi:home-export-outline
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: away
+            state:
+              - value: away
+                color: red
+
+          - type: 'custom:button-card'
+            entity: input_select.house_mode
+            name: extended_away
+            icon: mdi:clock-alert
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.house_mode
+                option: extended_away
+            state:
+              - value: extended_away
+                color: red
 
       - type: custom:weather-card
         entity: weather.home

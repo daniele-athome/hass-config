@@ -15,8 +15,11 @@ homeassistant:
     sensor.daniele_payton_battery_level:
       friendly_name: Telefono
 
-    sensor.battery_controlcenter:
+    sensor.controlcenter_battery_level:
       friendly_name: Centro di controllo
+
+    sensor.battery_leak_bathroom:
+      friendly_name: 'Perdita: bagno'
 
     sensor.battery_env_external:
       friendly_name: 'Ambiente: Esterno'
@@ -51,6 +54,9 @@ homeassistant:
     binary_sensor.living_entrance_motion:
       friendly_name: 'Movimento: Ingresso'
 
+    binary_sensor.leak_bathroom:
+      friendly_name: 'Perdita: bagno'
+
     automation.control_center_low_battery:
       friendly_name: Centro di controllo scarico
 
@@ -84,22 +90,13 @@ sensor:
 
   - platform: template
     sensors:
-      # FIXME NaN al riavvio
-      battery_controlcenter:
-        #unit_of_measurement: "%"
-        device_class: battery
-        value_template: ""
-
       # da usare in UI per rappresentare stato assente
       status_controlcenter:
         unit_of_measurement: "%"
         device_class: battery
-        entity_id:
-          - sensor.battery_controlcenter
-          - device_tracker.controlcenter
         value_template: >-
           {% if is_state('device_tracker.controlcenter', 'home') %}
-          {{ states.sensor.battery_controlcenter.state }}
+          {{ states.sensor.controlcenter_battery_level.state }}
           {% else %}
           0
           {% endif %}
@@ -107,8 +104,6 @@ sensor:
       status_thermostat:
         unit_of_measurement: "%"
         device_class: battery
-        entity_id:
-          - device_tracker.thermostat
         value_template: >-
           {% if is_state('device_tracker.thermostat', 'home') %}
           100
@@ -119,8 +114,6 @@ sensor:
       status_mediarasp:
         unit_of_measurement: "%"
         device_class: battery
-        entity_id:
-          - device_tracker.rasp
         value_template: >-
           {% if is_state('device_tracker.rasp', 'home') %}
           100
@@ -143,7 +136,8 @@ binary_sensor:
       ping -W 1 -c 1 notebook > /dev/null 2>&1 && (
       idle=$(/usr/bin/ssh daniele@notebook 2>/dev/null | tr -d '\n\r'); [ "$idle" -lt 60000 ] && echo 1 || echo 0) ||
       echo 0
-    value_template: '{{ value != "0" }}'
+    payload_on: "1"
+    payload_off: "0"
 
 proximity:
   prox_home_daniele:
@@ -172,14 +166,14 @@ automation:
   - alias: control_center_low_battery
     trigger:
       - platform: numeric_state
-        entity_id: sensor.battery_controlcenter
+        entity_id: sensor.controlcenter_battery_level
         below: 10
     action:
       service: notify.kontalk_daniele
       data_template:
         title: "Allarme"
         message: |-
-          Batteria del centro di controllo bassa: {{ states.sensor.battery_controlcenter.state_with_unit }}
+          Batteria del centro di controllo bassa: {{ states.sensor.controlcenter_battery_level.state_with_unit }}
 
 alert:
   core_battery_discharging:

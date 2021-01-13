@@ -1,13 +1,19 @@
 # Presence automations
 
+input_boolean:
+
+  # Luci per qualcuno entrato in casa (da casa vuota)
+  house_entrance_lights:
+    name: 'Luci accese per ingresso in casa'
+    initial: off
+    icon: mdi:door-open
+
 sensor:
 
   # Numero di persone note in casa
   - platform: template
     sensors:
       people_home_count:
-        entity_id:
-          - person.daniele
         value_template: >-
           {% set count = 0 %}
           {% if is_state("person.daniele", "home") %}
@@ -49,12 +55,6 @@ automation:
         entity_id: person.daniele
         to: 'not_home'
     action:
-      - service: light.turn_off
-        entity_id: all
-      - service: media_player.turn_off
-        entity_id: media_player.kodi
-      - service: media_player.turn_off
-        entity_id: media_player.tv
       - service: switch.turn_on
         entity_id: switch.homeserver
 
@@ -103,8 +103,8 @@ automation:
         - condition: template
           value_template: '{{ (as_timestamp(now()) - as_timestamp(states.sensor.people_home_count.last_changed)) < 120 }}'
     action:
-      - service: script.people_arrival
       - service: script.scan_arrival
+      - service: script.people_arrival
 
   # Porta di ingresso aperta
   # Se qualcuno presente, fai scattare lo scan di partenza dopo 60 secondi
@@ -129,7 +129,7 @@ automation:
   - alias: motion_stopped
     trigger:
       - platform: state
-        entity_id: binary_sensor.living_door_motion
+        entity_id: group.living_motion
         to: 'off'
     condition:
       condition: and
@@ -142,71 +142,29 @@ automation:
     action:
       - service: script.scan_departure
 
-  # Accendi una lieve luce notturna in caso di movimento
-  - alias: motion_night
+  # Disattiva le automazioni di luci di movimento se è appena entrato qualcuno in casa
+  - alias: motion_house_entrance_disable
     trigger:
       - platform: state
-        entity_id: group.living_motion
+        entity_id: input_boolean.house_entrance_lights
         to: 'on'
-      - platform: numeric_state
-        entity_id: sensor.living_main_lux
-        below: !secret living_lux_darkness_threshold
-    condition:
-      condition: and
-      conditions:
-        # Modalità cinema off
-        - condition: state
-          entity_id: binary_sensor.cinema_mode
-          state: 'off'
-        - condition: state
-          entity_id: binary_sensor.cinema_paused_mode
-          state: 'off'
-        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
-        - condition: state
-          entity_id: media_player.tv
-          state: 'off'
-        # Non mi serve luce utility soggiorno
-        - condition: state
-          entity_id: input_boolean.need_living_utility_light
-          state: 'off'
-        # Assicuriamoci che le condizioni del trigger siano tutte rispettate
-        - condition: state
-          entity_id: group.living_motion
-          state: 'on'
-        - condition: numeric_state
-          entity_id: sensor.living_main_lux
-          below: !secret living_lux_darkness_threshold
     action:
-      - service: scene.turn_on
-        entity_id: scene.night_guidance_on
+      - service: automation.turn_off
+        entity_id:
+          - automation.living_motion_night
+          - automation.living_motion_night_end
 
-  # Spegni la luce notturna quando il movimento è cessato
-  - alias: motion_night_end
+  # Riattiva le automazioni di luci di movimento dopo il passaggio del grace period dopo ingresso in casa
+  - alias: motion_house_entrance_enable
     trigger:
       - platform: state
-        entity_id: group.living_motion
+        entity_id: input_boolean.house_entrance_lights
         to: 'off'
-    condition:
-      condition: and
-      conditions:
-        # Modalità cinema off
-        - condition: state
-          entity_id: binary_sensor.cinema_mode
-          state: 'off'
-        - condition: state
-          entity_id: binary_sensor.cinema_paused_mode
-          state: 'off'
-        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
-        - condition: state
-          entity_id: media_player.tv
-          state: 'off'
-        # Non mi serve luce utility soggiorno
-        - condition: state
-          entity_id: input_boolean.need_living_utility_light
-          state: 'off'
     action:
-      - service: scene.turn_on
-        entity_id: scene.night_guidance_off
+      - service: automation.turn_on
+        entity_id:
+          - automation.living_motion_night
+          - automation.living_motion_night_end
 
 script:
 
@@ -219,10 +177,18 @@ script:
         state: 'on'
       - service: scene.turn_on
         entity_id: scene.house_entrance
+      # Grace period luci accese
       - delay:
           minutes: 10
       # Aspetta che il movimento sia cessato oppure che le luci extra si siano spente perché troppa luce in ambiente (accensione luci principali)
       - wait_template: "{{ is_state('group.living_motion', 'off') or is_state('light.living_extra', 'off') }}"
+      # Possiamo uscire dal grace period
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.house_entrance_lights
+      # Se abbiamo chiesto di mantenere accese le luci non proseguire
+      - condition: state
+        entity_id: binary_sensor.need_living_utility_light
+        state: 'off'
       - service: light.turn_off
         entity_id: light.living_extra
 

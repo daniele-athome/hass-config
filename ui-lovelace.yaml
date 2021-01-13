@@ -2,14 +2,6 @@ title: Casaricci
 
 #background: center / cover no-repeat url("/local/ui/background_19.png") fixed
 
-custom_header:
-  compact_mode: true
-  background: var(--app-header-background-color)
-  elements_color: var(--app-header-text-color)
-  active_tab_color: var(--state-icon-active-color)
-  tab_indicator_color: var(--state-icon-active-color)
-  voice_hide: true
-
 views:
   - !include lovelace/home.yaml
   - !include lovelace/environment.yaml

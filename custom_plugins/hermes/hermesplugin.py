@@ -92,8 +92,13 @@ class HermesPlugin(MqttPlugin):
         message.text = kwargs['text']
         message.intent_filter = kwargs.get('intent_filter', None)
         message.custom_data = kwargs.get('custom_data', None)
-        message.send_intent_not_recognized = kwargs('send_intent_not_recognized', False)
+        message.send_intent_not_recognized = kwargs.get('send_intent_not_recognized', False)
         message.slot = kwargs.get('slot', None)
+        kwargs = {
+            'topic': message.topic(),
+            'payload': message.to_json()
+        }
+        return await self.call_plugin_service(namespace, 'mqtt', 'publish', kwargs)
 
     async def end_session_service(self, namespace, domain, service, kwargs):
         if 'session_id' in kwargs:

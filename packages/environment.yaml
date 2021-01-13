@@ -85,15 +85,21 @@ sensor:
     median: 1
     adapter: hci1
 
+  - name: kitchen_gas_level
+    platform: mqtt
+    state_topic: shellies/gas-kitchen/sensor/gas
+
+  - name: kitchen_gas_concentration
+    platform: mqtt
+    state_topic: shellies/gas-kitchen/sensor/concentration
+    unit_of_measurement: 'PPM'
+
 binary_sensor:
 
   - platform: template
     sensors:
       # Bisogno di luce in soggiorno
       living_need_light:
-        entity_id:
-          - sun.sun
-          - sensor.living_main_lux
         value_template: >-
           {{ states.sensor.living_main_lux.state|int < 10 or is_state('sun.sun', 'below_horizon') }}
 
@@ -117,3 +123,36 @@ automation:
           Temperatura ambiente eccessiva!
           Cucina: {{ states.sensor.temp_kitchen.state_with_unit }}
           Camera da letto: {{ states.sensor.temp_bedroom.state_with_unit }}
+
+  - alias: bathroom_flooded
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.leak_bathroom
+        from: 'off'
+        to: 'on'
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Bagno allagato!
+
+  - alias: gas_leak
+    trigger:
+      - platform: state
+        entity_id: sensor.kitchen_gas_level
+        to: 'mild'
+      - platform: state
+        entity_id: sensor.kitchen_gas_level
+        to: 'heavy'
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Perdita di gas in cucina!
+          Livello: {{ states.sensor.kitchen_gas_level.state }}
+          Concentrazione: {{ states.sensor.kitchen_gas_concentration.state_with_unit }}
+      # TODO invia email
+      # TODO invia notifica push HASS
+      # TODO fai parlare karen ripetutamente se c'è qualcuno in casa

@@ -17,6 +17,7 @@ class HermesTTS(hermes.Hermes):
 
     # noinspection PyTypeChecker
     def initialize(self):
+        self.site_id = self.args['site_id']
         self.tts_id = None
 
         self.mqtt_tts_say_event = self.listen_event(self.tts_say_event,
@@ -32,8 +33,9 @@ class HermesTTS(hermes.Hermes):
 
     def tts_say_event(self, event, data: dict, kwargs):
         message: TtsSay = data['message']
-        self.tts_id = message.id
-        self.call_service('script/say_something', message=message.text, namespace='hass')
+        if message.site_id == self.site_id:
+            self.tts_id = message.id
+            self.call_service('script/say_something', message=message.text, namespace='hass')
 
     # TODO handle multiple sessions (for sites)
     def media_finished(self, entity, attribute, old, new, kwargs):

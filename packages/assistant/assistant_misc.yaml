@@ -84,13 +84,9 @@ automation:
         from: 'home'
         to: 'not_home'
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ states.input_select.house_mode.state not in ['dnd','guest'] }}"
-        - condition: numeric_state
-          entity_id: sensor.people_home_count
-          above: '0'
+      condition: numeric_state
+      entity_id: sensor.people_home_count
+      above: '0'
     action:
       - service: script.say_something_rendered
         data:
@@ -103,13 +99,9 @@ automation:
         from: 'not_home'
         to: 'home'
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ states.input_select.house_mode.state not in ['dnd','guest'] }}"
-        - condition: numeric_state
-          entity_id: sensor.people_home_count
-          above: '0'
+      condition: numeric_state
+      entity_id: sensor.people_home_count
+      above: '0'
     action:
       - service: script.say_something_rendered
         data:
@@ -123,9 +115,6 @@ automation:
     condition:
       condition: and
       conditions:
-        # Solo in modalità giorno normale
-        - condition: template
-          value_template: "{{ states.input_select.house_mode.state in ['day_working','day_not_working'] }}"
         # Se non ci sono media in riproduzione in TV
         - condition: state
           entity_id: binary_sensor.cinema_mode
@@ -136,6 +125,58 @@ automation:
           template: incoming_phone_call
           variables:
             caller: "{{ states.sensor.payton_phone_call_incoming_caller.state }}"
+
+  # Alterazioni di stato della casa
+
+  - alias: house_mode_assistant_misc_day
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: day_working
+      - platform: state
+        entity_id: input_select.house_mode
+        to: day_not_working
+    action:
+      - service: automation.turn_on
+        entity_id:
+          - automation.work_commute_hard
+          - automation.karen_internet_unavailable
+          - automation.karen_internet_restored
+          - automation.payton_phone_call_incoming
+
+  - alias: house_mode_assistant_misc_quiet1
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: night
+      - platform: state
+        entity_id: input_select.house_mode
+        to: dnd
+      - platform: state
+        entity_id: input_select.house_mode
+        to: away
+      - platform: state
+        entity_id: input_select.house_mode
+        to: extended_away
+    action:
+      - service: automation.turn_off
+        entity_id:
+          - automation.work_commute_hard
+          - automation.karen_internet_unavailable
+          - automation.karen_internet_restored
+          - automation.payton_phone_call_incoming
+
+  - alias: house_mode_assistant_misc_quiet2
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: guest
+    action:
+      - service: automation.turn_off
+        entity_id:
+          - automation.work_commute_hard
+          - automation.karen_internet_unavailable
+          - automation.karen_internet_restored
 
 sensor:
   - name: payton_phone_call_incoming_caller

@@ -21,8 +21,8 @@ script:
     sequence:
       - service: notify.mobile_app_daniele_payton
         data_template:
-          title: 'Modalità notte'
-          message: 'Sto per attivare la modalità notte!'
+          title: "Modalità notte"
+          message: "Sto per attivare la modalità notte!"
           data:
             tag: night_mode_warning
             sticky: 'true'
@@ -38,6 +38,11 @@ script:
               # Annulla per questa notte
               - action: night_mode_cancel
                 title: Annulla
+      # Debug: notifica anche IM
+      - service: notify.kontalk_daniele
+        data_template:
+          title: "Info"
+          message: "Sto per attivare la modalità notte!"
 
   # Cancella la notifica della modalità notte
   cancel_night_mode_warning:
@@ -70,10 +75,17 @@ automation:
           # because secrets in templates are not supported
           after: '23:00:00'
           before: '04:00:00'
+        # Non siamo già in modalità notte
+        - condition: template
+          value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
         # Modalità notte non disabilitata
         - condition: state
           entity_id: input_boolean.night_mode_disabled_today
           state: 'off'
+        # Qualcuno in casa
+        - condition: numeric_state
+          entity_id: sensor.people_home_count
+          above: '0'
         # Timer warning non attivo
         - condition: template
           value_template: "{{ not is_state('timer.night_mode_warning', 'active') }}"
@@ -104,7 +116,7 @@ automation:
           state: 'off'
         # Cellulare in carica
         - condition: template
-          value_template: "{{ is_state_attr('sensor.daniele_payton_battery_state', 'is_charging', true) }}"
+          value_template: "{{ is_state('sensor.daniele_payton_battery_state', 'charging') }}"
         # TODO Cellulare in standby (non in uso)
         # ...
         # Luminosità bassa in tutte le stanze
@@ -222,6 +234,31 @@ automation:
       - service: input_boolean.turn_off
         entity_id: input_boolean.night_mode_disabled_today
 
+  - alias: house_mode_night_mode_night
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        to: night
+    action:
+      # Usato per far capire all'automazione che non deve attivarsi
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.night_mode_disabled_today
+      # Inutile stare a controllare le condizioni della night mode se ci siamo già
+      - service: automation.turn_off
+        entity_id:
+          - automation.night_mode_warning
+
+  - alias: house_mode_night_mode_not_night
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        from: night
+    action:
+      # Riattiva i controlli per la night mode automatica
+      - service: automation.turn_on
+        entity_id:
+          - automation.night_mode_warning
+
 timer:
 
   night_mode_warning:
@@ -234,5 +271,6 @@ timer:
 
 input_boolean:
 
+  # TODO automazione basata su questo booleano che attiva/disattiva le altre (invece di usare il booleano come condizione)
   night_mode_disabled_today:
     initial: off

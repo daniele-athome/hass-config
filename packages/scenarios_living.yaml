@@ -21,6 +21,19 @@ scene:
       # TODO light.living_main_light: off
       # TODO light.living_table_light: off
 
+  # Luci guida notturne
+  - name: living_night_guidance_on
+    entities:
+      light.living_ceiling:
+        state: on
+        brightness: 40
+        color_temp: 400
+
+  - name: living_night_guidance_off
+    entities:
+      light.living_ceiling:
+        state: off
+
 automation:
 
   - alias: need_utility_light_on
@@ -94,6 +107,10 @@ automation:
         - condition: state
           entity_id: binary_sensor.cinema_mode
           state: 'on'
+        # Evitiamo di spegnere tutto se siamo appena rientrati
+        - condition: state
+          entity_id: input_boolean.house_entrance_lights
+          state: 'off'
     action:
       - service: scene.turn_on
         entity_id: scene.cinema_mode
@@ -132,11 +149,14 @@ automation:
         # Solo se stavo riproducendo video prima
         - condition: template
           value_template: '{{ states.input_select.kodi_last_media.state in ["movie","tvshow","video"] }}'
+        # Solo se non siamo in modalità notte (spegnimento kodi causa night mode)
+        - condition: template
+          value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
     action:
       - service: light.turn_on
         entity_id: light.living_ceiling
 
-  - alias: guestmode_on
+  - alias: house_mode_living_guest
     trigger:
       - platform: state
         entity_id: input_select.house_mode
@@ -154,7 +174,7 @@ automation:
           entity_id: media_player.kodi
           volume_level: !secret guest_mode_volume
 
-  - alias: guestmode_off
+  - alias: house_mode_living_not_guest
     trigger:
       - platform: state
         entity_id: input_select.house_mode
@@ -176,3 +196,111 @@ automation:
     action:
       - service: light.turn_off
         entity_id: light.living_extra
+
+  - alias: house_mode_living_night
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+      to: night
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      # Questo potrebbe fallire quindi lo mettiamo per ultimo
+      - service: media_player.turn_off
+        entity_id: media_player.tv
+
+  - alias: house_mode_living_away
+    trigger:
+      platform: state
+      entity_id: input_select.house_mode
+      to: away
+    action:
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      - service: media_player.turn_off
+        entity_id: media_player.tv
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.need_living_utility_light
+
+  # Accendi una lieve luce notturna in caso di movimento in salone
+  - alias: living_motion_night
+    trigger:
+      - platform: state
+        entity_id: group.living_motion
+        to: 'on'
+      - platform: numeric_state
+        entity_id: sensor.living_main_lux
+        below: !secret living_lux_darkness_threshold
+    condition:
+      condition: and
+      conditions:
+        # Modalità cinema off
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.cinema_paused_mode
+          state: 'off'
+        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
+        - condition: state
+          entity_id: media_player.tv
+          state: 'off'
+        # Non mi serve luce utility soggiorno
+        - condition: state
+          entity_id: input_boolean.need_living_utility_light
+          state: 'off'
+        # Luce utility spenta
+        - condition: state
+          entity_id: light.living_extra
+          state: 'off'
+        # Assicuriamoci che le condizioni del trigger siano tutte rispettate
+        - condition: state
+          entity_id: group.living_motion
+          state: 'on'
+        - condition: numeric_state
+          entity_id: sensor.living_main_lux
+          below: !secret living_lux_darkness_threshold
+    action:
+      - service: scene.turn_on
+        entity_id: scene.living_night_guidance_on
+
+  # Spegni la luce notturna quando il movimento in salone è cessato
+  - alias: living_motion_night_end
+    trigger:
+      - platform: state
+        entity_id: group.living_motion
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.notebook_active
+        to: 'off'
+    condition:
+      condition: and
+      conditions:
+        # Modalità cinema off
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.cinema_paused_mode
+          state: 'off'
+        # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
+        - condition: state
+          entity_id: media_player.tv
+          state: 'off'
+        # Non mi serve luce utility soggiorno
+        - condition: state
+          entity_id: input_boolean.need_living_utility_light
+          state: 'off'
+        # Movimento in salone assente
+        - condition: state
+          entity_id: group.living_motion
+          state: 'off'
+        # Notebook spento o idle
+        - condition: state
+          entity_id: binary_sensor.notebook_active
+          state: 'off'
+    action:
+      - service: scene.turn_on
+        entity_id: scene.living_night_guidance_off

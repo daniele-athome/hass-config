@@ -6,6 +6,7 @@ app_hermes_tts:
   log: hermes
   log_level: DEBUG
   speak_device: media_player.lounge
+  site_id: default
 
 app_hermes_dialogue:
   module: hermes_dialogue
@@ -33,3 +34,15 @@ app_assistant_speak:
   dependencies:
     - app_assistant_template
     - app_hermes_tts
+
+app_assistant_xmpp_daniele:
+  module: assistant_xmpp
+  class: AssistantXMPP
+  log: assistant
+  log_level: DEBUG
+  xmpp_username: !secret xmpp_username
+  xmpp_password: !secret xmpp_password
+  site_id: xmpp_daniele
+  allowed_senders:
+    - sender1@server.com
+    - sender2@server.com

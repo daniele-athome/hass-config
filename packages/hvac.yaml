@@ -83,6 +83,61 @@ automation:
       #    topic: "homeassistant/thermorasp/sensor/temp_living/control"
       #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.env_living_temperature.state }}}'
 
+  - alias: thermorasp_set_target_temperature
+    trigger:
+      - platform: mqtt
+        topic: 'homeassistant/_internal/thermorasp/target_temperature'
+    action:
+      - service: script.home_boiler_set_target_temperature
+        data:
+          temperature: '{{ trigger.payload }}'
+
+rest_command:
+
+  # 12:34:00.787 XHRPOSThttp://thermostat.local/api/schedules/active/volatile
+  #    {"name":"generic.TargetTemperatureBehavior","order":0,"start_time":7954,"end_time":8640,"config":{"target_temperature":22.5},"sensors":["temp_bedroom"],"devices":["home_boiler"]}
+
+  home_boiler_set_active_volatile_generic:
+    url: !secret thermostat_set_active_volatile_url
+    method: post
+    payload: >-
+      {
+        "name": "generic.TargetTemperatureBehavior",
+        "order": 0,
+        "start_time": {{start_time}},
+        "end_time": {{end_time}},
+        "config": {
+          "target_temperature": {{target_temperature}}
+        },
+        "sensors": [{{sensors}}],
+        "devices":[{{devices}}]
+      }
+    content_type:  'application/json; charset=utf-8'
+
+sensor:
+
+  - platform: command_line
+    name: current_minute_for_hvac
+    command: "bin/current_minute.py"
+
+  - platform: command_line
+    name: today_last_minute_for_hvac
+    command: "bin/today_last_minute.py"
+
+script:
+
+  home_boiler_set_target_temperature:
+    sequence:
+      - service: rest_command.home_boiler_set_active_volatile_generic
+        data:
+          start_time: '{{ states.sensor.current_minute_for_hvac.state }}'
+          end_time: '{{ states.sensor.today_last_minute_for_hvac.state }}'
+          target_temperature: '{{ temperature }}'
+          # FIXME not pretty
+          sensors: '"temp_living","temp_bedroom"'
+          # FIXME not pretty
+          devices: '"home_boiler"'
+
 # Termostato principale
 climate:
   - platform: mqtt
@@ -100,3 +155,4 @@ climate:
     mode_state_template: "{{ 'heat' if value_json.enabled else 'off' }}"
     temperature_state_topic: 'homeassistant/thermorasp/behavior/active'
     temperature_state_template: '{{ value_json.config.target_temperature }}'
+    temperature_command_topic: 'homeassistant/_internal/thermorasp/target_temperature'

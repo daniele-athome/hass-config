@@ -108,7 +108,7 @@ cards:
         entities:
           - entity: sensor.homeserver_cpu_used
             icon: 'mdi:cpu-64-bit'
-          - entity: sensor.homeserver_w83627thf_1_temp
+          - entity: sensor.homeserver_w83627thf_1_temperature
             icon: 'mdi:thermometer'
         columns: 2
         positions:
@@ -240,9 +240,9 @@ cards:
 
       - type: 'custom:bar-card'
         entities:
-          - entity: sensor.mediarasp_used_percent
+          - entity: sensor.mediarasp_cpu_used
             icon: 'mdi:cpu-64-bit'
-          - entity: sensor.mediarasp_cpu_thermal_1_temp
+          - entity: sensor.mediarasp_cpu_thermal_1_temperature
             icon: 'mdi:thermometer'
         columns: 2
         positions:
@@ -317,43 +317,6 @@ cards:
             show_header_toggle: off
             entities:
               - type: section
-                label: INTERNAL
-              - type: 'custom:hui-horizontal-stack-card'
-                cards:
-                  - type: custom:circle-sensor-card
-                    entity: sensor.homeserver_home_used_percent
-                    max: 100
-                    min: 0
-                    stroke_width: 15
-                    gradient: true
-                    fill: '#383C45'
-                    name: /home
-                    units: '%'
-                    color_stops:
-                      80: '#09C7E8'
-                      95: '#5294E2'
-                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
-
-                  - type: custom:circle-sensor-card
-                    entity: sensor.homeserver_var_used_percent
-                    max: 100
-                    min: 0
-                    stroke_width: 15
-                    gradient: true
-                    fill: '#383C45'
-                    name: /var
-                    units: '%'
-                    color_stops:
-                      80: '#09C7E8'
-                      95: '#5294E2'
-                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
-
-          - type: entities
-            show_header_toggle: off
-            entities:
-              - type: section
                 label: EXTERNAL
               - type: 'custom:hui-horizontal-stack-card'
                 cards:
@@ -380,6 +343,43 @@ cards:
                     gradient: true
                     fill: '#383C45'
                     name: external2
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+
+          - type: entities
+            show_header_toggle: off
+            entities:
+              - type: section
+                label: EXTERNAL-SEC
+              - type: 'custom:hui-horizontal-stack-card'
+                cards:
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_media_external1_sec_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: external1_sec
+                    units: '%'
+                    color_stops:
+                      80: '#09C7E8'
+                      95: '#5294E2'
+                    font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                    style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+
+                  - type: custom:circle-sensor-card
+                    entity: sensor.homeserver_media_external2_sec_used_percent
+                    max: 100
+                    min: 0
+                    stroke_width: 15
+                    gradient: true
+                    fill: '#383C45'
+                    name: external2_sec
                     units: '%'
                     color_stops:
                       80: '#09C7E8'
