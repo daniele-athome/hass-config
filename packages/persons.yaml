@@ -36,3 +36,13 @@ person2:
       - device_tracker.daniele_paytongps
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
+
+sensor:
+  - platform: history_stats
+    name: presence_daniele_ratio
+    entity_id: person.daniele
+    state: "home"
+    type: ratio
+    duration:
+      days: 28
+    end: "{{ now() }}"

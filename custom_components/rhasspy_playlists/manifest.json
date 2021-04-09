@@ -1,0 +1,7 @@
+{
+  "domain": "rhasspy_playlists",
+  "name": "Rhasspy playlists translation",
+  "dependencies": [],
+  "codeowners": ["@daniele-athome"],
+  "requirements": []
+}

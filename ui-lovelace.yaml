@@ -7,4 +7,6 @@ views:
   - !include lovelace/environment.yaml
   - !include lovelace/system.yaml
   - !include lovelace/things.yaml
+  - !include lovelace/network.yaml
+  - !include lovelace/chores.yaml
   - !include lovelace/security.yaml

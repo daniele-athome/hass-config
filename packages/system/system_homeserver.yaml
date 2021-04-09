@@ -2,13 +2,14 @@
 
 homeassistant:
   customize:
-    sensor.homeserver_w83627thf_1_temp:
+    # FIXME generato da integrazione, dovremmo cambiarla?
+    sensor.homeserver_w83627thf_1_temperature:
       friendly_name: Temperatura CPU server
-    sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732:
+    sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732:
       friendly_name: Disco 1
-    sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143:
+    sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143:
       friendly_name: Disco 2
-    sensor.homeserver_uptime:
+    sensor.uptime_homeserver:
       friendly_name: Uptime
     automation.server_on_fire:
       friendly_name: Server caldo
@@ -22,7 +23,7 @@ glances:
 sensor:
 
   - platform: hddtemp
-    name: homeserver_hddtemp
+    name: hddtemp_homeserver
     host: server
     disks:
       - /dev/disk/by-id/ata-WDC_WD1002FAEX-00Z3A0_WD-WCATR9149732
@@ -31,7 +32,7 @@ sensor:
   # Unsupported by Glances integration
   - platform: rest
     resource: http://server:61208/api/3/uptime
-    name: homeserver_uptime
+    name: uptime_homeserver
     value_template: '{{ value_json }}'
     scan_interval: 300
 
@@ -40,13 +41,13 @@ automation:
   - alias: server_on_fire
     trigger:
       - platform: numeric_state
-        entity_id: sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+        entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
         above: 50
       - platform: numeric_state
-        entity_id: sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+        entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
         above: 50
       - platform: numeric_state
-        entity_id: sensor.homeserver_w83627thf_1_temp
+        entity_id: sensor.homeserver_w83627thf_1_temperature
         above: 50
     action:
       service: notify.kontalk_daniele
@@ -54,9 +55,9 @@ automation:
         title: "Allarme"
         message: |-
           Temperatura server eccessiva!
-          Core: {{ states.sensor.homeserver_w83627thf_1_temp.state_with_unit }}
-          Disco 1: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732.state_with_unit }}
-          Disco 2: {{ states.sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143.state_with_unit }}
+          Core: {{ states.sensor.homeserver_w83627thf_1_temperature.state_with_unit }}
+          Disco 1: {{ states.sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732.state_with_unit }}
+          Disco 2: {{ states.sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143.state_with_unit }}
 
   - alias: house_mode_system_homeserver_day
     trigger:

@@ -18,17 +18,23 @@ homeassistant:
     sensor.controlcenter_battery_level:
       friendly_name: Centro di controllo
 
-    sensor.battery_leak_bathroom:
-      friendly_name: 'Perdita: bagno'
+    sensor.battery_water_bathroom1:
+      friendly_name: 'Acqua: bagno'
 
     sensor.battery_env_external:
       friendly_name: 'Ambiente: Esterno'
 
-    sensor.env_living_battery:
+    sensor.battery_env_living:
       friendly_name: 'Ambiente: Salone'
+
+    sensor.battery_env_bathroom1:
+      friendly_name: 'Ambiente: Bagno'
 
     sensor.battery_env_bedroom:
       friendly_name: 'Ambiente: Camera'
+
+    sensor.battery_env_kitchen:
+      friendly_name: 'Ambiente: Cucina'
 
     sensor.battery_door_main:
       friendly_name: 'Porta: Entrata'
@@ -48,14 +54,14 @@ homeassistant:
     binary_sensor.living_main_motion:
       friendly_name: 'Movimento: Salone'
 
-    binary_sensor.living_door_motion:
+    binary_sensor.motion_living_door:
       friendly_name: 'Movimento: Entrata'
 
     binary_sensor.living_entrance_motion:
       friendly_name: 'Movimento: Ingresso'
 
-    binary_sensor.leak_bathroom:
-      friendly_name: 'Perdita: bagno'
+    binary_sensor.water_bathroom1:
+      friendly_name: 'Acqua: bagno'
 
     automation.control_center_low_battery:
       friendly_name: Centro di controllo scarico
@@ -69,9 +75,16 @@ homeassistant:
     sensor.status_mediarasp:
       friendly_name: Media center
 
+    sensor.low_batteries:
+      friendly_name: Batterie scariche
+
 device_tracker:
   - platform: nmap_tracker
-    hosts: 192.168.0.0/24
+    hosts:
+      # Private VLAN
+      - 192.168.0.0/24
+      # Domonet
+      - 192.168.100.0/24
     home_interval: 3
     scan_options: --privileged -PR -n -sn --host-timeout 10s
     track_new_devices: false
@@ -80,6 +93,7 @@ device_tracker:
     exclude:
       - server
       - scatola
+      - 192.168.100.1
 
   - platform: mqtt
     devices:
@@ -90,6 +104,18 @@ sensor:
 
   - platform: template
     sensors:
+      # Device con batteria scarica
+      low_batteries:
+        value_template: >
+          {%- set threshold = 15 -%}
+          {%- set domains = ['sensor', 'binary_sensor'] -%}
+          {%- for domain in domains -%}
+          {%- for item in states[domain] if 'iphone' not in item.entity_id and 'health' not in item.entity_id and ((item.attributes.battery_level is defined and item.attributes['battery_level'] | int < threshold) or ("battery" in item.name | lower and ((item.state | int < threshold and item.state|int != 0) or item.state | lower == "low" or item.state | lower == "unknown"))) -%}
+              {{ item.entity_id }}{%- if not loop.last %}
+          {% endif -%}
+          {%- endfor -%}
+          {%- endfor -%}
+
       # da usare in UI per rappresentare stato assente
       status_controlcenter:
         unit_of_measurement: "%"
@@ -123,14 +149,14 @@ sensor:
 
 binary_sensor:
 
-  - name: living_door_motion
+  - name: motion_living_door
     platform: mqtt
     state_topic: homeassistant/camera/living_door/motion
     device_class: motion
 
   # Sensore idleness computer
   - platform: command_line
-    name: notebook_active
+    name: activity_notebook_daniele
     # FIXME non so perché ma è necessario il tr...
     command: >-
       ping -W 1 -c 1 notebook > /dev/null 2>&1 && (
@@ -162,6 +188,10 @@ image_processing:
       - entity_id: camera.living_door
         name: deepstack_person_detector
 
+shell_command:
+  start_living_door_camera: sudo systemctl start motion.service
+  stop_living_door_camera: sudo systemctl stop motion.service
+
 automation:
   - alias: control_center_low_battery
     trigger:
@@ -175,12 +205,38 @@ automation:
         message: |-
           Batteria del centro di controllo bassa: {{ states.sensor.controlcenter_battery_level.state_with_unit }}
 
+  - alias: alert_low_batteries
+    trigger:
+      platform: time_pattern
+      hours: "/1"
+    condition:
+      condition: template
+      value_template: "{% if states('sensor.low_batteries') %}true{% endif %}"
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: Batterie scariche
+          message: "{{ states('sensor.low_battery') }}"
+          notification_id: alert_low_batteries
+
+  - alias: alert_low_batteries_dismiss
+    trigger:
+      platform: time_pattern
+      hours: "/1"
+    condition:
+      condition: template
+      value_template: "{% if not states('sensor.low_batteries') %}true{% endif %}"
+    action:
+      - service: persistent_notification.dismiss
+        data_template:
+          notification_id: alert_low_batteries
+
 alert:
-  core_battery_discharging:
-    name: Batteria core in scaricamento
-    message: 'Batteria core in scaricamento: {{ states.sensor.battery_core.state_with_unit }}'
-    done_message: 'Batteria core carica.'
-    entity_id: binary_sensor.core_battery_discharging
+  battery_discharging_scatola:
+    name: Batteria scatola in scaricamento
+    message: 'Batteria scatola in scaricamento: {{ states.sensor.battery_scatola.state_with_unit }}'
+    done_message: 'Batteria scatola carica.'
+    entity_id: binary_sensor.battery_discharging_scatola
     state: 'on'
     repeat: 5
     can_acknowledge: true
@@ -188,19 +244,19 @@ alert:
       - kontalk_daniele
 
 group:
-  living_motion:
+  motion_living:
     name: Living room motion
     entities:
-      - binary_sensor.living_door_motion
+      - binary_sensor.motion_living_door
       - binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
 
-  bedroom_motion:
+  motion_bedroom:
     name: Bedroom motion
     entities:
-      - binary_sensor.bedroom_motion
+      - binary_sensor.motion_bedroom
 
-  all_but_bedroom_motion:
+  motion_not_bedroom:
     name: All motion but bedroom
     entities:
-      - group.living_motion
+      - group.motion_living

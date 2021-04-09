@@ -1,0 +1,62 @@
+# HASS core (scatola)
+
+homeassistant:
+  customize:
+    sensor.battery_scatola:
+      friendly_name: Scatola
+    device_tracker.internet:
+      friendly_name: Internet
+
+sensor:
+  - platform: linux_battery
+    name: battery_scatola
+    battery: 0
+
+  - platform: command_line
+    name: ac_status_scatola
+    command: 'cat /sys/class/power_supply/AC/online'
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_use_percent
+      - type: processor_use
+
+  - platform: command_line
+    name: cputemp_scatola
+    command: '/usr/bin/sensors -j'
+    value_template: '{{ value_json["coretemp-isa-0000"]["Package id 0"]["temp1_input"] }}'
+    unit_of_measurement: '°C'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      battery_discharging_scatola:
+        friendly_name: "Batteria scatola in scaricamento"
+        value_template: "{{ states.sensor.ac_status_scatola.state == '0' }}"
+
+device_tracker:
+  - platform: ping
+    hosts:
+      # Cloudflare DNS
+      internet: 1.1.1.1
+    count: 2
+    interval_seconds: 30
+    consider_home: 0
+
+automation:
+
+  - alias: scatola_on_fire
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.cputemp_scatola
+        above: 70
+        for:
+          minutes: 10
+    action:
+      service: notify.kontalk_daniele
+      data_template:
+        title: "Allarme"
+        message: |-
+          Temperatura scatola eccessiva: {{ states.sensor.cputemp_scatola.state_with_unit }}

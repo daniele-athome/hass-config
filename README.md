@@ -20,25 +20,36 @@ if you want to contact me or need help understanding or using any part of my con
 
 ## Smart Home diagram
 
-TODO some nice diagram with draw.io maybe
+### Home automation view
+
+TODO home automation view diagram
+
+### Technology view
+
+![Technology diagram](technology-view.png)
 
 ## Hardware used
 
 * An unused 2012 laptop running Home Assistant and Rhasspy
 * ConBee II ZigBee USB controller attached to the laptop
-* Raspberry Pi 3B+ running Kodi
+* Raspberry Pi 3B running Kodi
 * A cheap Android tablet as my control center
 * Google Home (used only as speaker)
 * Sonoff Basic flashed with Tasmota
 * Shelly One flashed with Tasmota
+* Shelly Gas
+* Xiaomi Mi Bluetooth LE sensors
 * ZigBee Aqara temperature sensors
-* ZigBee Aqara motion sensor
+* ZigBee Aqara motion sensors
 * ZigBee Aqara door sensor
 * ZigBee RGB LED strips
 
-TODO also include a wishlist or planning to buy
+TODO also include a wishlist or planning to buy  
+TODO include custom built hardware
 
 ## Lovelace interface
+
+> Screenshots are outdated.
 
 I view this mainly from my tablet hanging on a wall. I had to take some measures
 to make it work on the tablet because a complex web application like Lovelace
@@ -69,6 +80,14 @@ would fit and I wouldn't need to scroll up and down.
 ### Home automation devices
 
 ![Things](lovelace-things.png)
+
+### Network monitor
+
+TODO network view screenshot
+
+### Chores
+
+TODO chores view
 
 ### Security
 
@@ -110,18 +129,25 @@ ReSpeaker microphone array to listen for voice commands. Speech recognition is
 possible with Google Speech-to-text API. I might publish my Rhasspy configuration
 one day.
 
-I can also talk to Karen via XMPP by either texting or sending a voice recording.
-In both cases text replies are sent back through XMPP.
-
 Speech templates for Karen lives in a specific directory that I won't publish.
 To introduce some sense of "nuisance" in Karen, I created multiple versions for
 each type of sentence to be spoken. Templates are used by the Assistant Speak app
 in `apps/assistant_speak.py`.
 
+### Alarm clock
+
+A simple alarm clock synced with the alarm clock I set on my phone. My favorite radio station
+is streamed through a home-made speaker in my bedroom.
+
 ### Calendar
 
 Just a few calendar sensor. Nothing really useful by itself, it's just data
 used by other automations elsewhere.
+
+### Chores
+
+A very rough and very home-made chores management package. I still have to figure out
+some stuff, you should avoid looking at this for now.
 
 ### Devices
 
@@ -149,18 +175,20 @@ Integration with [my homemade thermostat](https://github.com/daniele-athome/ther
 
 ### Lights
 
-Some smart light entities and a few scenes that are used in automations elsewhere.
+Some light entities and a few scenes that are used in automations elsewhere.
 
 ### Media Player
 
 Some fun with my media players:
 
-* Kodi on a Raspberry PI
-* Philips TV set
-* Google Home (used only for Karen's voice)
+* :cinema: Kodi on a Raspberry PI
+* :tv: Philips TV set
+* :speaker: Google Home (used only for Karen's voice)
+* :musical_note: House music system powered by Mopidy and Snapcast
 
-It contains mainly utility scripts for handling those players and a few sensors
-that help some automations elsewhere.
+It contains mainly utility scripts for handling those players and a few sensors that
+help some automations elsewhere. Interactions between media players are also handled
+here (e.g. pause music when playing videos on Kodi and vice versa).
 
 ### Night mode
 
@@ -236,6 +264,11 @@ when I'm watching something while eating &mdash; I do that a lot :spaghetti:
 
 Controlled lights are turned off automatically when too much light is detected in
 the room.
+
+The bedroom has an experimental time-of-flight sensor at the side of the door that
+can detect passage (and direction!). It is used to turn off and on the main light
+or the bed light, depending on the time of day. The bedroom speaker is also controlled
+by this automation (no need to play anything if nobody is in the room).
 
 I try to keep room-related configuration in their respective `scenario_<room>.yaml`
 files.

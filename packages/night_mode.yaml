@@ -84,24 +84,30 @@ automation:
           state: 'off'
         # Qualcuno in casa
         - condition: numeric_state
-          entity_id: sensor.people_home_count
+          entity_id: sensor.people_count_home
           above: '0'
+        # Tutte i presenti in camera
+        - condition: template
+          value_template: '{{ states.input_number.people_count_bedroom.state | float == states.sensor.people_count_home.state | float }}'
         # Timer warning non attivo
         - condition: template
           value_template: "{{ not is_state('timer.night_mode_warning', 'active') }}"
         # Timer snooze non attivo
         - condition: template
           value_template: "{{ not is_state('timer.night_mode_snooze', 'active') }}"
-        # Tutte le luci spente
+        # Tutte le luci spente (tranne la luce del letto)
         - condition: template
           value_template: >
             {% set domain = 'light' %}
             {% set state = 'off' %}
-            {{ states[domain] | count == states[domain] | selectattr('state','eq', state) | list | count }}
+            {{ states[domain] | rejectattr('entity_id','eq', 'light.bedroom_left') | list | count ==
+              states[domain] | selectattr('state','eq', state) | rejectattr('entity_id','eq', 'light.bedroom_left') | list | count }}
         # Tutte i media idle
         - condition: state
           entity_id: media_player.kodi
           state: idle
+        - condition: template
+          value_template: "{{ is_state('media_player.music', 'off') or is_state('media_player.music', 'paused') }}"
         - condition: state
           entity_id: media_player.tv
           state: 'off'
@@ -112,7 +118,7 @@ automation:
           value_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'off') }}"
         # Ogni movimento tranne in camera da letto cessato
         - condition: state
-          entity_id: group.all_but_bedroom_motion
+          entity_id: group.motion_not_bedroom
           state: 'off'
         # Cellulare in carica
         - condition: template
@@ -128,7 +134,7 @@ automation:
           below: !secret bedroom_lux_darkness_threshold
         # Notebook spento o idle
         - condition: state
-          entity_id: binary_sensor.notebook_active
+          entity_id: binary_sensor.activity_notebook_daniele
           state: 'off'
     action:
       - service: script.night_mode_warning_start

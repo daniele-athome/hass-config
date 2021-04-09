@@ -1,0 +1,51 @@
+# lovelace_gen
+path: chores
+title: Faccende
+icon: mdi:broom
+type: custom:vertical-layout
+layout:
+  max_cols: 2
+cards:
+
+  # Column 1
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: PULIZIA
+
+      {% set clean_chores = [
+          'chore_bedroom_floor_dust',
+          'chore_water_closet_clean',
+          'chore_surfaces_dust',
+          'chore_living_floor_clean',
+          'chore_balcony_clean',
+          'chore_garage_clean',
+      ] %}
+
+      {% for chore_sensor in clean_chores %}
+      - !include
+        - include/chore_button.yaml
+        - chore_name: {{ chore_sensor }}
+      {% endfor %}
+
+  - type: custom:layout-break
+
+  # Column 2
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: ALTRO
+
+      {% set other_chores = [
+          'chore_change_sheets',
+      ] %}
+
+      {% for chore_sensor in other_chores %}
+      - !include
+        - include/chore_button.yaml
+        - chore_name: {{ chore_sensor }}
+      {% endfor %}

@@ -50,7 +50,7 @@ automation:
     trigger:
       # Rilevato movimento in salone
       - platform: state
-        entity_id: group.living_motion
+        entity_id: group.motion_living
         to: 'on'
     condition:
       condition: and

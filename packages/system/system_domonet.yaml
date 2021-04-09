@@ -1,0 +1,97 @@
+# Domotics Network management
+
+homeassistant:
+
+# TODO probabilmente è sufficiente la domonet_interface; external_interface è ridondante
+# cerchiamo di usare più gli IP in generale
+shell_command:
+  domonet_device_allow_internet: >-
+    bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} {{ host_address }} "{{ host_description }}"
+  domonet_device_disallow_internet: >-
+    bin/domonet_disallow.sh {{ host_address }}
+  domonet_global_allow_internet: >-
+    bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} 0.0.0.0 "(all devices)"
+  domonet_global_disallow_internet: >-
+    bin/domonet_disallow_global.sh {{ domonet_interface }} {{ external_interface }} "(all devices)"
+
+script:
+
+  domonet_device_enable_internet:
+    description: "Enable Internet access for a Domonet device"
+    fields:
+      host_address:
+        description: "Device address"
+        example: "192.168.100.220"
+      host_description:
+        description: "Device description (it will be added as iptables rule comment)"
+        example: "Google Home"
+    sequence:
+      - service: shell_command.domonet_device_allow_internet
+        data:
+          domonet_interface: !secret domonet_interface
+          external_interface: !secret external_interface
+          host_address: "{{ host_address }}"
+          host_description: "{{ host_description }}"
+
+  domonet_device_disable_internet:
+    description: "Disable Internet access for a Domonet device"
+    fields:
+      host_address:
+        description: "Device address"
+        example: "192.168.100.220"
+    sequence:
+      - service: shell_command.domonet_device_disallow_internet
+        data:
+          host_address: "{{ host_address }}"
+
+  domonet_all_enable_internet:
+    description: "Enable Internet access for all Domonet devices"
+    sequence:
+      - service: shell_command.domonet_global_allow_internet
+        data:
+          domonet_interface: !secret domonet_interface
+          external_interface: !secret external_interface
+      - service: homeassistant.update_entity
+        entity_id: binary_sensor.domonet_allowed_global
+
+  domonet_all_disable_internet:
+    description: "Disable Internet access for all Domonet devices"
+    sequence:
+      - service: shell_command.domonet_global_disallow_internet
+        data:
+          domonet_interface: !secret domonet_interface
+          external_interface: !secret external_interface
+      - service: homeassistant.update_entity
+        entity_id: binary_sensor.domonet_allowed_global
+
+sensor:
+
+  - platform: template
+    sensors:
+      domonet_interface:
+        value_template: !secret domonet_interface
+      external_interface:
+        value_template: !secret external_interface
+
+  - platform: command_line
+    name: domonet_devices
+    command: bin/domonet_clients.sh {{ states.sensor.domonet_interface.state }}
+    scan_interval: 15
+    value_template: "{{ value_json.clients | length }}"
+    json_attributes:
+      - clients
+
+binary_sensor:
+
+  - platform: command_line
+    name: domonet_allowed_global
+    scan_interval: 60
+    command: bin/domonet_check_global.sh {{ states.sensor.domonet_interface.state }} {{ states.sensor.external_interface.state }} "(all devices)"
+    payload_on: "1"
+    payload_off: "0"
+
+  # TODO device noti? Oppure c'è un modo per ciclare quelli elencati in domonet_devices
+  # oppure una bella integration che sarebbe ora :)
+  #- platform: template
+  #  sensors:
+  #    domonet_thermostat_allowed:

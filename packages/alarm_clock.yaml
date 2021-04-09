@@ -1,0 +1,15 @@
+# Alarm clock automations
+
+automation:
+
+  - alias: trigger_alarm_clock
+    trigger:
+      # Data e ora correnti corrispondono all'orario del prossimo allarme configurato sul telefono
+      - platform: template
+        value_template: "{{ as_timestamp(states.sensor.date_time_iso.state) | timestamp_custom('%Y-%m-%dT%H:%M') == as_timestamp(states.sensor.daniele_payton_next_alarm.state) | timestamp_custom('%Y-%m-%dT%H:%M') }}"
+    action:
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.bedroom
+          media_content_id: !secret alarm_clock_radio_station
+          media_content_type: music

@@ -2,9 +2,10 @@
 
 homeassistant:
   customize:
-    sensor.mediarasp_cpu_thermal_1_temp:
+    # FIXME generato da integrazione, dovremmo cambiarla?
+    sensor.mediarasp_cpu_thermal_1_temperature:
       friendly_name: Temperatura CPU Media Rasp
-    sensor.mediarasp_uptime:
+    sensor.uptime_mediarasp:
       friendly_name: Uptime
     automation.media_rasp_on_fire:
       friendly_name: Media Rasp calda
@@ -20,7 +21,7 @@ sensor:
   # Unsupported by Glances integration
   - platform: rest
     resource: http://rasp:61208/api/3/uptime
-    name: mediarasp_uptime
+    name: uptime_mediarasp
     value_template: '{{ value_json }}'
     scan_interval: 300
 
@@ -29,7 +30,7 @@ automation:
   - alias: media_rasp_on_fire
     trigger:
       - platform: numeric_state
-        entity_id: sensor.mediarasp_cpu_thermal_1_temp
+        entity_id: sensor.mediarasp_cpu_thermal_1_temperature
         above: 75
         for:
           minutes: 15
@@ -38,4 +39,4 @@ automation:
       data_template:
         title: "Allarme"
         message: |-
-          Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temp.state_with_unit }}
+          Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temperature.state_with_unit }}

@@ -1,0 +1,43 @@
+# lovelace_gen
+path: network
+title: Rete
+icon: mdi:lan
+type: custom:vertical-layout
+layout:
+  max_cols: 2
+cards:
+
+  # Column 1
+
+  - type: custom:layout-break
+
+  # Column 2
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: INTERNET ACCESS
+
+      - type: 'custom:button-card'
+        entity: binary_sensor.domonet_allowed_global
+        name: Domonet
+        icon: mdi:home-automation
+        tap_action:
+          action: call-service
+          service: '[[[ if (entity.state === "on") return "script.domonet_all_disable_internet"; else return "script.domonet_all_enable_internet" ]]]'
+        state:
+          - value: 'on'
+            color: green
+
+      - type: custom:bar-card
+        entities:
+          {% set domonet_devices = [
+              {'address': '192.168.1.250', 'name': 'Termostato'},
+              {'address': '192.168.1.220', 'name': 'Google Home'},
+          ] %}
+          {% for device in domonet_devices %}
+          - !include
+            - include/domonet_dev_button.yaml
+            - device: device
+          {% endfor %}

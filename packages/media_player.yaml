@@ -9,7 +9,22 @@ homeassistant:
       friendly_name: TV
 
     media_player.lounge:
-      friendly_name: Lounge
+      friendly_name: Music - Lounge
+
+    media_player.snapcast_living:
+      friendly_name: Music - Living
+
+    media_player.snapcast_bedroom:
+      friendly_name: Music - Bedroom
+
+    media_player.snapcast_bathroom:
+      friendly_name: Music - Bathroom
+
+    media_player.snapcast_cfba28f0_3339_48ea_80e6_7426830806fe:
+      friendly_name: Music - Mobile Daniele
+
+    media_player.snapcast_kitchen:
+      friendly_name: Music - Kitchen
 
 media_player:
   - platform: kodi
@@ -17,18 +32,14 @@ media_player:
     name: kodi
     # turn_on_action no longer supported
     # turn_off_action no longer supported
-  - platform: philips_js
-    host: !secret tv_ip_address
-    name: tv
-    api_version: 1
-    turn_on_action:
-      service: kodi.call_method
-      data:
-        entity_id: media_player.kodi
-        method: Addons.ExecuteAddon
-        addonid: script.json-cec
-        params:
-          command: activate
+  - platform: mpd
+    host: !secret mediarasp_ip_address
+    name: music
+  - platform: snapcast
+    host: !secret mediarasp_ip_address
+  - platform: mpd
+    host: !secret speaker_bedroom_host
+    name: bedroom
 
 group:
 
@@ -40,14 +51,47 @@ group:
       - media_player.tv
       - media_player.kodi
       - media_player.lounge
+      - media_player.music
+      - media_player.bedroom
 
   # Media non coinvolti nel TTS
   media_non_tts:
-    name: Media
+    name: Media non TTS
     icon: mdi:television-classic
     entities:
       - media_player.tv
       - media_player.kodi
+      - media_player.music
+      - media_player.bedroom
+
+  # Media che producono i suoni principali (living room)
+  # Usato per mettere in pausa quando deve parlare il TTS
+  media_big_sound:
+    name: Media grandi suoni
+    icon: mdi:speaker
+    entities:
+      # Non affidabile: in standby sparisce l'IP; comunque la TV è gestita da Kodi
+      #- media_player.tv
+      - media_player.kodi
+      - media_player.music
+
+  media_audio_only:
+    name: Media solo audio
+    icon: mdi:speaker
+    entities:
+      - media_player.kodi
+      - media_player.music
+      - media_player.bedroom
+
+  # Musica per casa
+  media_music_rooms:
+    name: Musica
+    icon: mdi:music
+    entities:
+      - media_player.snapcast_living
+      - media_player.snapcast_bedroom
+      - media_player.snapcast_kitchen
+      - media_player.snapcast_cfba28f0_3339_48ea_80e6_7426830806fe
 
 binary_sensor:
 
@@ -139,10 +183,10 @@ script:
   # Sospende tutti i media per una riproduzione da lounge imminente
   suspend_media_for_lounge:
     sequence:
-      # Pausa Kodi
+      # Pausa tutti i media grandi suoni
       - service: media_player.media_pause
         data:
-          entity_id: media_player.kodi
+          entity_id: group.media_big_sound
       # Muta la TV
       - condition: state
         entity_id: media_player.tv
@@ -180,7 +224,27 @@ input_select:
       - video
       - music
 
+input_text:
+  volume_preduck:
+    name: Volume pre-duck
+    initial: 0.5
+
 automation:
+
+  - alias: tv_request_turn_on
+    trigger:
+      - platform: device
+        device_id: f689398559355f452b4318b3e9d21947
+        domain: philips_js
+        type: turn_on
+    action:
+      service: kodi.call_method
+      data:
+        entity_id: media_player.kodi
+        method: Addons.ExecuteAddon
+        addonid: script.json-cec
+        params:
+          command: activate
 
   - alias: kodi_request_turn_on
     trigger:
@@ -222,3 +286,81 @@ automation:
         data_template:
           entity_id: input_select.kodi_last_media
           option: "{{ states.media_player.kodi.attributes.media_content_type }}"
+
+  - alias: pause_on_phone_call
+    trigger:
+      - platform: state
+        entity_id: sensor.daniele_payton_phone_state
+        from: 'idle'
+    action:
+      # Chiamata entrante o uscente, pausa i media grandi suoni
+      - service: media_player.media_pause
+        data:
+          entity_id: group.media_big_sound
+      # Muta la TV
+      - condition: state
+        entity_id: media_player.tv
+        state: 'on'
+      - service: script.mute_tv
+
+  - alias: pause_music_on_video_start
+    trigger:
+      - platform: state
+        entity_id: media_player.kodi
+        to: 'playing'
+    action:
+      # Pausa musica
+      - service: media_player.media_pause
+        data:
+          entity_id: media_player.music
+
+  - alias: pause_video_on_music_start
+    trigger:
+      - platform: state
+        entity_id: media_player.music
+        to: 'playing'
+    action:
+      # Pausa Kodi
+      - service: media_player.media_pause
+        data:
+          entity_id: media_player.kodi
+
+  # Abbassa la musica quando non c'è attività in salone
+  - alias: duck_volume_living
+    trigger:
+      - platform: state
+        entity_id: group.motion_living
+        to: 'off'
+    condition:
+    action:
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.volume_preduck
+          value: '{{ states.media_player.snapcast_living.attributes.volume_level }}'
+      # Se abbiamo bisogno di luce in sala non proseguire
+      # Abbiamo comunque impostato il volume pre-duck
+      - condition: state
+        entity_id: input_boolean.need_living_utility_light
+        state: 'off'
+      # Se notebook attivo non proseguire
+      # Abbiamo comunque impostato il volume pre-duck
+      - condition: state
+        entity_id: binary_sensor.activity_notebook_daniele
+        state: 'off'
+      - service: media_player.volume_set
+        data:
+          # Living
+          entity_id: media_player.snapcast_living
+          volume_level: !secret music_duck_volume
+
+  # Ripristina volume della musica quando c'è attività in salone
+  - alias: unduck_volume_living
+    trigger:
+      - platform: state
+        entity_id: group.motion_living
+        to: 'on'
+    action:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.snapcast_living
+          volume_level: '{{ states.input_text.volume_preduck.state }}'

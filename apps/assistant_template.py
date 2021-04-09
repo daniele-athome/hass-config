@@ -16,6 +16,7 @@ import random
 class AssistantTemplate(hass.Hass):
 
     def initialize(self):
+        self.add_namespace('assistant')
         self.register_service('assistant/template', self.template_service, namespace='assistant')
         self.language = self.args['language']
         self.templates_path = self.args['templates_path']

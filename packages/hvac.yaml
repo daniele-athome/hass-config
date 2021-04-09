@@ -2,7 +2,7 @@
 
 homeassistant:
   customize:
-    climate.home_boiler:
+    climate.boiler_main:
       friendly_name: Riscaldamento
     automation.ThermostatDown:
       friendly_name: Termostato irraggiungibile
@@ -11,17 +11,17 @@ homeassistant:
 
 shell_command:
 
-  thermorasp_publish_temp_bedroom: >-
+  thermorasp_publish_temperature_bedroom: >-
     mosquitto_pub
-    -h thermostat.local
+    -h thermostat.domonet
     -t homeassistant/thermorasp/sensor/temp_bedroom/control
-    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_bedroom.state }}}'
+    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_bedroom.state }}}'
 
   thermorasp_publish_temp_living: >-
     mosquitto_pub
-    -h thermostat.local
+    -h thermostat.domonet
     -t homeassistant/thermorasp/sensor/temp_living/control
-    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.env_living_temperature.state }}}'
+    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_living.state }}}'
 
 automation:
 
@@ -40,14 +40,26 @@ automation:
         message: |-
           Termostato non raggiungibile!
 
+  # Termostato up - pubblica le temperature
+  - alias: thermostat_up
+    trigger:
+      - platform: state
+        entity_id: device_tracker.thermostat
+        to: 'home'
+    action:
+      - service: automation.trigger
+        entity_id:
+          - automation.thermorasp_publish_temperature_bedroom
+          - automation.thermorasp_publish_temp_living
+
   # Termostato bloccato (caldaia accesa)
   - alias: thermostat_stuck
     trigger:
       - platform: state
-        entity_id: climate.home_boiler
+        entity_id: climate.boiler_main
         to: 'heat'
         for:
-          hours: 6
+          hours: 8
     action:
       service: notify.kontalk_daniele
       data_template:
@@ -55,15 +67,15 @@ automation:
         message: |-
           Riscaldamento attivo da più di 6 ore!
 
-  - alias: thermorasp_publish_temp_bedroom
+  - alias: thermorasp_publish_temperature_bedroom
     trigger:
       - platform: state
-        entity_id: sensor.temp_bedroom
+        entity_id: sensor.temperature_bedroom
       # Il termostato richiede comunque un aggiornamento ogni 900 secondi
       - platform: time_pattern
         minutes: "/10"
     action:
-      - service: shell_command.thermorasp_publish_temp_bedroom
+      - service: shell_command.thermorasp_publish_temperature_bedroom
       #- service: mqtt.publish
       #  data_template:
       #    topic: "homeassistant/thermorasp/sensor/temp_bedroom/control"
@@ -72,7 +84,7 @@ automation:
   - alias: thermorasp_publish_temp_living
     trigger:
       - platform: state
-        entity_id: sensor.env_living_temperature
+        entity_id: sensor.temperature_living
       # Il termostato richiede comunque un aggiornamento ogni 900 secondi
       - platform: time_pattern
         minutes: "/10"
@@ -81,14 +93,14 @@ automation:
       #- service: mqtt.publish
       #  data_template:
       #    topic: "homeassistant/thermorasp/sensor/temp_living/control"
-      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.env_living_temperature.state }}}'
+      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_living.state }}}'
 
   - alias: thermorasp_set_target_temperature
     trigger:
       - platform: mqtt
         topic: 'homeassistant/_internal/thermorasp/target_temperature'
     action:
-      - service: script.home_boiler_set_target_temperature
+      - service: script.boiler_main_set_target_temperature
         data:
           temperature: '{{ trigger.payload }}'
 
@@ -97,8 +109,9 @@ rest_command:
   # 12:34:00.787 XHRPOSThttp://thermostat.local/api/schedules/active/volatile
   #    {"name":"generic.TargetTemperatureBehavior","order":0,"start_time":7954,"end_time":8640,"config":{"target_temperature":22.5},"sensors":["temp_bedroom"],"devices":["home_boiler"]}
 
-  home_boiler_set_active_volatile_generic:
+  boiler_main_set_active_volatile_generic:
     url: !secret thermostat_set_active_volatile_url
+    verify_ssl: false
     method: post
     payload: >-
       {
@@ -126,9 +139,9 @@ sensor:
 
 script:
 
-  home_boiler_set_target_temperature:
+  boiler_main_set_target_temperature:
     sequence:
-      - service: rest_command.home_boiler_set_active_volatile_generic
+      - service: rest_command.boiler_main_set_active_volatile_generic
         data:
           start_time: '{{ states.sensor.current_minute_for_hvac.state }}'
           end_time: '{{ states.sensor.today_last_minute_for_hvac.state }}'
@@ -138,10 +151,11 @@ script:
           # FIXME not pretty
           devices: '"home_boiler"'
 
-# Termostato principale
 climate:
+
+  # Termostato principale
   - platform: mqtt
-    name: home_boiler
+    name: boiler_main
     precision: 0.1
     temp_step: 0.5
     min_temp: 10
@@ -156,3 +170,39 @@ climate:
     temperature_state_topic: 'homeassistant/thermorasp/behavior/active'
     temperature_state_template: '{{ value_json.config.target_temperature }}'
     temperature_command_topic: 'homeassistant/_internal/thermorasp/target_temperature'
+
+  # Condizionatore salone
+  - platform: tasmota_irhvac
+    name: living_ac
+    command_topic: "homeassistant/tasmota/cmnd/living_ac/irhvac"
+    state_topic: "homeassistant/tasmota/tele/living_ac/RESULT"
+    temperature_sensor: sensor.temperature_living
+    protocol: "GREE"
+    hvac_model: "YAW1F"
+    min_temp: 15
+    max_temp: 30
+    target_temp: 26
+    initial_operation_mode: "off"
+    #away_temp: 24
+    precision: 1.0
+    supported_modes:
+      - heat
+      - cool
+      - dry
+      - fan_only
+      - auto
+      - "off"
+    supported_fan_speeds:
+      #- low
+      - max
+      - medium
+      # - high
+      #- middle
+      #- focus
+      #- diffuse
+      - min
+      - auto
+    supported_swing_list:
+      - "off"
+      - vertical #up to down
+      # auto ?

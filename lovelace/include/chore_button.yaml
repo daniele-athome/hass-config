@@ -1,0 +1,40 @@
+# lovelace_gen
+
+type: 'custom:button-card'
+entity: sensor.{{ chore_name }}
+layout: icon_name_state2nd
+show_state: true
+confirmation:
+  text: '[[[ return `Conferma ${entity.attributes.friendly_name}` ]]]'
+tap_action:
+  action: call-service
+  service: input_datetime.set_datetime
+  service_data:
+    entity_id: input_datetime.{{ chore_name }}_last
+    date: '[[[ return new Date().toISOString().split("T")[0] ]]]'
+
+state:
+  - value: -2
+    operator: '<='
+    icon: mdi:alert-circle
+    styles:
+      card:
+        - background-color: var(--label-badge-red)
+  - value: 0
+    operator: '<='
+    icon: mdi:alert-outline
+    color: black
+    styles:
+      card:
+        - background-color: var(--label-badge-yellow)
+        - color: black
+  - value: 0
+    operator: '>'
+    icon: mdi:checkbox-marked-circle-outline
+    color: var(--label-badge-green)
+styles:
+  card:
+    - height: 80px
+    #- font-size: var(--paper-font-body1_-_font-size)
+  state:
+    - font-size: 1.2rem

@@ -13,7 +13,7 @@ sensor:
   # Numero di persone note in casa
   - platform: template
     sensors:
-      people_home_count:
+      people_count_home:
         value_template: >-
           {% set count = 0 %}
           {% if is_state("person.daniele", "home") %}
@@ -43,6 +43,9 @@ automation:
     action:
       # Aspetta che la porta sia chiusa
       - wait_template: "{{ is_state('binary_sensor.door_main', 'off') }}"
+      # Sicuramente c'è una persona in più in soggiorno
+      - service: input_number.increment
+        entity_id: input_number.people_count_living
       - delay:
           seconds: 10
       # Annuncia
@@ -55,14 +58,27 @@ automation:
         entity_id: person.daniele
         to: 'not_home'
     action:
+      # Sicuramente c'è una persona in meno in soggiorno
+      - service: input_number.decrement
+        entity_id: input_number.people_count_living
       - service: switch.turn_on
         entity_id: switch.homeserver
 
   - alias: house_empty
     trigger:
       - platform: numeric_state
-        entity_id: sensor.people_home_count
+        entity_id: sensor.people_count_home
         below: '1'
+    condition:
+      condition: and
+      conditions:
+        # Porta chiusa...
+        - condition: state
+          entity_id: binary_sensor.door_main
+          state: 'off'
+        # ... meno di 5 minuti fa
+        - condition: template
+          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 300 }}'
     action:
       # Modalità casa vuota
       - service: input_select.select_option
@@ -73,7 +89,7 @@ automation:
   - alias: house_full
     trigger:
       - platform: numeric_state
-        entity_id: sensor.people_home_count
+        entity_id: sensor.people_count_home
         above: '0'
     action:
       # Modalità giorno
@@ -96,40 +112,88 @@ automation:
       conditions:
         # Casa vuota
         - condition: numeric_state
-          entity_id: sensor.people_home_count
+          entity_id: sensor.people_count_home
           below: 1
         # Il numero di persone in casa è variato recentemente
         # Usato nei casi di bluetooth o wifi rilevati prima dell'ingresso in casa
         - condition: template
-          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.sensor.people_home_count.last_changed)) < 120 }}'
+          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.sensor.people_count_home.last_changed)) < 120 }}'
     action:
       - service: script.scan_arrival
       - service: script.people_arrival
 
+  # Movimento rilevato e nessuno in casa: fai partire scan di arrivo
+  # Aiuta nel risolvere le situazioni di stallo derivanti da assenze brevi
+  - alias: motion_fix_empty
+    trigger:
+      # Qualsiasi sensore di movimento scattato
+      - platform: state
+        entity_id: group.motion_living
+        to: 'on'
+    condition:
+      # Casa vuota
+      - condition: numeric_state
+        entity_id: sensor.people_count_home
+        below: 1
+    action:
+      - service: script.scan_arrival
+
+  # Porta aperta per almeno 3 secondi
+  # Attiva scan visuale persone
+  # FIXME non funziona, motion disattivo con gente in casa
+  - alias: main_door_opened_guests
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.door_main
+        to: 'on'
+        for: '00:00:03'
+    action:
+      - service: image_processing.scan
+        entity_id: image_processing.deepstack_person_detector
+
+  # Rilevata più di 1 persona!
+  # Attiva modalità guest
+  - alias: people_detected_guests
+    trigger:
+      platform: event
+      event_type: 'deepstack.object_detected'
+      event_data:
+        object_type: person
+    action:
+      # Debug
+      - service: notify.kontalk_daniele
+        data_template:
+          title: "Info"
+          message: "Persone rilevate: {{ states.image_processing.deepstack_person_detector.state }}"
+      - condition: numeric_state
+        entity_id: image_processing.deepstack_person_detector
+        above: '1'
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: guest
+
   # Porta di ingresso aperta
-  # Se qualcuno presente, fai scattare lo scan di partenza dopo 60 secondi
-  # TODO disattivata per ora, il sensore di movimento cessato è migliore
+  # Metti in pausa tutti i media
   - alias: main_door_opened_full
-    initial_state: false
     trigger:
       - platform: state
         entity_id: binary_sensor.door_main
         to: 'on'
     condition:
       - condition: numeric_state
-        entity_id: sensor.people_home_count
+        entity_id: sensor.people_count_home
         above: '0'
     action:
-      - delay:
-          seconds: 60
-      - service: script.scan_departure
+      - service: media_player.media_pause
+        entity_id: group.media
 
-  # Movimento terminato e porta chiusa meno di 2 minuti fa
+  # Movimento terminato e porta chiusa meno di 2 minuti fa, persone in casa
   # Fai scattare lo scan di partenza
-  - alias: motion_stopped
+  - alias: presence_motion_stopped
     trigger:
       - platform: state
-        entity_id: group.living_motion
+        entity_id: group.motion_living
         to: 'off'
     condition:
       condition: and
@@ -139,8 +203,39 @@ automation:
           state: 'off'
         - condition: template
           value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 120 }}'
+        - condition: numeric_state
+          entity_id: sensor.people_count_home
+          above: '0'
     action:
       - service: script.scan_departure
+
+  # Movimento terminato e porta chiusa meno di 2 minuti fa, nessuno in casa
+  # Passa a house mode away immediatamente
+  # - Automazione particolarmente utile nelle zone morte o quando i device tracker non rilevano niente nonostante
+  #   ci sia gente in casa. Il cessato movimento e la porta chiusa di recente determina con buone possibilità che
+  #   chi c'era prima è uscito e la casa è ora definitivamente vuota, ergo il passaggio diretto ad away.
+  - alias: presence_motion_stopped_empty
+    trigger:
+      - platform: state
+        entity_id: group.motion_living
+        to: 'off'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.door_main
+          state: 'off'
+        - condition: template
+          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 120 }}'
+        - condition: state
+          entity_id: sensor.people_count_home
+          state: '0'
+    action:
+      # Modalità casa vuota
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: away
 
   # Disattiva le automazioni di luci di movimento se è appena entrato qualcuno in casa
   - alias: motion_house_entrance_disable
@@ -181,7 +276,7 @@ script:
       - delay:
           minutes: 10
       # Aspetta che il movimento sia cessato oppure che le luci extra si siano spente perché troppa luce in ambiente (accensione luci principali)
-      - wait_template: "{{ is_state('group.living_motion', 'off') or is_state('light.living_extra', 'off') }}"
+      - wait_template: "{{ is_state('group.motion_living', 'off') or is_state('light.living_extra', 'off') }}"
       # Possiamo uscire dal grace period
       - service: input_boolean.turn_off
         entity_id: input_boolean.house_entrance_lights

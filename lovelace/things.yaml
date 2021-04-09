@@ -1,265 +1,265 @@
-id: 3
+path: things
 title: Oggetti
 icon: mdi:cogs
-panel: true
+type: custom:vertical-layout
+layout:
+  max_cols: 2
 cards:
-
-  - type: custom:layout-card
-    layout: vertical
-    cards:
 
   # Column 1
 
-      - type: markdown
-        style:
-          .: |
-            ha-markdown.no-header {
-              padding: 0 !important;
-            }
-            ha-markdown {
-              padding: 0;
-            }
-          'ha-markdown':
-            $: |
-              ha-markdown-element h1 {
-                line-height: 64px;
-              }
-              ha-markdown-element img {
-                width: 64px;
-                height: 64px;
-                border-radius: var(--ha-card-border-radius);
-                vertical-align: top;
-                margin-right: 10px;
-              }
-        content: >
-          # ![Karen](/local/ui/karen-avatar.jpg) Karen
+  - type: markdown
+    style:
+      .: |
+        ha-markdown.no-header {
+          padding: 0 !important;
+        }
+        ha-markdown {
+          padding: 0;
+        }
+      'ha-markdown':
+        $: |
+          ha-markdown-element h1 {
+            line-height: 64px;
+          }
+          ha-markdown-element img {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--ha-card-border-radius);
+            vertical-align: top;
+            margin-right: 10px;
+          }
+    content: >
+      # ![Karen](/local/ui/karen-avatar.jpg) Karen
 
-      - type: 'custom:bar-card'
+  - type: 'custom:bar-card'
+    entities:
+      - entity: sensor.disk_use_percent
+      - entity: sensor.memory_use_percent
+    columns: 2
+    positions:
+      icon: 'outside'
+      indicator: 'inside'
+      minmax: 'off'
+      name: 'off'
+      value: inside
+    style: |-
+      :host {
+        --bar-card-border-radius: 4px;
+      }
+      :host .card-content {
+        padding: 6px 10px;
+      }
+      bar-card-value {
+        font-size: 13px;
+        font-weight: bold;
+        text-shadow: 1px 1px #0008;
+        margin-left: 4px !important;
+      }
+      bar-card-divider {
+        display: none;
+      }
+
+  - type: 'custom:bar-card'
+    entities:
+      - entity: sensor.processor_use
+        icon: 'mdi:cpu-64-bit'
+      - entity: sensor.cputemp_scatola
+        icon: 'mdi:thermometer'
+    columns: 2
+    positions:
+      icon: 'outside'
+      indicator: 'inside'
+      minmax: 'off'
+      name: 'off'
+      value: inside
+    style: |-
+      :host {
+        --bar-card-border-radius: 4px;
+      }
+      :host .card-content {
+        padding: 6px 10px;
+      }
+      bar-card-value {
+        font-size: 13px;
+        font-weight: bold;
+        text-shadow: 1px 1px #0008;
+        margin-left: 4px !important;
+      }
+      bar-card-divider {
+        display: none;
+      }
+
+  - type: entities
+    entities:
+      - type: section
+        label: HOME ASSISTANT
+      - type: custom:bar-card
         entities:
-          - entity: sensor.disk_use_percent
-          - entity: sensor.memory_use_percent
+          - entity: sensor.current_version
+            name: Corrente
+          - entity: sensor.latest_version
+            name: Ultima
         columns: 2
+        animation:
+          state: 'off'
         positions:
-          icon: 'outside'
-          indicator: 'inside'
+          icon: 'off'
+          indicator: 'off'
           minmax: 'off'
-          name: 'off'
+          name: inside
           value: inside
+        height: '40px'
         style: |-
           :host {
             --bar-card-border-radius: 4px;
           }
           :host .card-content {
-            padding: 6px 10px;
+            padding: 0 10px;
+          }
+          bar-card-card {
+            padding: 9px;
+          }
+          bar-card-name {
+            margin: 2px 0 0 0;
           }
           bar-card-value {
-            font-size: 13px;
             font-weight: bold;
-            text-shadow: 1px 1px #0008;
-            margin-left: 4px !important;
+            margin-right: auto;
+            margin-left: auto;
+            margin-bottom: auto;
+            margin-top: 0px;
           }
           bar-card-divider {
             display: none;
           }
+          bar-card-contentbar {
+            flex-direction: column !important;
+          }
 
-      - type: 'custom:bar-card'
+      - type: custom:fold-entity-row
+        head: sensor.potential_breaking_changes
         entities:
-          - entity: sensor.processor_use
-            icon: 'mdi:cpu-64-bit'
-          - entity: sensor.core_temperature
-            icon: 'mdi:thermometer'
-        columns: 2
-        positions:
-          icon: 'outside'
-          indicator: 'inside'
-          minmax: 'off'
-          name: 'off'
-          value: inside
-        style: |-
-          :host {
-            --bar-card-border-radius: 4px;
-          }
-          :host .card-content {
-            padding: 6px 10px;
-          }
-          bar-card-value {
-            font-size: 13px;
-            font-weight: bold;
-            text-shadow: 1px 1px #0008;
-            margin-left: 4px !important;
-          }
-          bar-card-divider {
-            display: none;
-          }
+          - type: custom:list-card
+            entity: sensor.potential_breaking_changes
+            columns:
+              - title: Component
+                add_link: doclink
+                field: component
+              - title: Description
+                add_link: prlink
+                field: description
 
-      - type: entities
-        entities:
-          - type: section
-            label: HOME ASSISTANT
-          - type: custom:bar-card
-            entities:
-              - entity: sensor.current_version
-                name: Corrente
-              - entity: sensor.latest_version
-                name: Ultima
-            columns: 2
-            animation:
-              state: 'off'
-            positions:
-              icon: 'off'
-              indicator: 'off'
-              minmax: 'off'
-              name: inside
-              value: inside
-            height: '40px'
-            style: |-
-              :host {
-                --bar-card-border-radius: 4px;
-              }
-              :host .card-content {
-                padding: 0 10px;
-              }
-              bar-card-card {
-                padding: 9px;
-              }
-              bar-card-name {
-                margin: 2px 0 0 0;
-              }
-              bar-card-value {
-                font-weight: bold;
-                margin-right: auto;
-                margin-left: auto;
-                margin-bottom: auto;
-                margin-top: 0px;
-              }
-              bar-card-divider {
-                display: none;
-              }
-              bar-card-contentbar {
-                flex-direction: column !important;
-              }
-
-          - type: custom:fold-entity-row
-            head: sensor.potential_breaking_changes
-            entities:
-              - type: custom:list-card
-                entity: sensor.potential_breaking_changes
-                columns:
-                  - title: Component
-                    add_link: doclink
-                    field: component
-                  - title: Description
-                    add_link: prlink
-                    field: description
-
-      - break
+  - type: custom:layout-break
 
   # Column 2
 
-      - type: entities
-        show_header_toggle: off
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: CONTROLLER
+
+      - type: custom:bar-card
         entities:
-          - type: section
-            label: CONTROLLER
+          - sensor.battery_scatola
+          - sensor.status_controlcenter
+          - sensor.status_thermostat
+          - sensor.status_mediarasp
+        severity:
+          - color: '#bf4040'
+            from: 0
+            to: 15
+          - color: '#bf9540'
+            from: 16
+            to: 75
+          - color: '#1db954'
+            from: 76
+            to: 100
+        columns: 2
+        positions:
+          icon: 'off'
+          indicator: 'off'
+          minmax: 'off'
+          name: 'inside'
+          value: 'off'
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 6px 10px;
+          }
+          bar-card-name {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
-          - type: custom:bar-card
-            entities:
-              - sensor.battery_core
-              - sensor.status_controlcenter
-              - sensor.status_thermostat
-              - sensor.status_mediarasp
-            severity:
-              - color: '#bf4040'
-                from: 0
-                to: 15
-              - color: '#bf9540'
-                from: 16
-                to: 75
-              - color: '#1db954'
-                from: 76
-                to: 100
-            columns: 2
-            positions:
-              icon: 'off'
-              indicator: 'off'
-              minmax: 'off'
-              name: 'inside'
-              value: 'off'
-            style: |-
-              :host {
-                --bar-card-border-radius: 4px;
-              }
-              :host .card-content {
-                padding: 6px 10px;
-              }
-              bar-card-name {
-                font-size: 13px;
-                font-weight: bold;
-                text-shadow: 1px 1px #0008;
-                margin-left: auto;
-                margin-right: auto;
-              }
-              bar-card-divider {
-                display: none;
-              }
+      - type: section
+        label: SENSORI
 
-          - type: section
-            label: SENSORI
+      - type: custom:bar-card
+        entities:
+          - sensor.battery_env_living
+          - sensor.battery_env_bedroom
+          - sensor.battery_env_bathroom1
+          - sensor.battery_env_external
+          - sensor.battery_env_kitchen
+          - sensor.battery_door_main
+          - sensor.battery_motion_living
+          - sensor.battery_motion_entrance
+          - sensor.battery_motion_bedroom
+          - sensor.battery_water_bathroom1
+        severity:
+          - color: '#bf4040'
+            from: 0
+            to: 15
+          - color: '#bf9540'
+            from: 16
+            to: 75
+          - color: '#1db954'
+            from: 76
+            to: 100
+        columns: 2
+        positions:
+          icon: 'off'
+          indicator: 'off'
+          minmax: 'off'
+          name: 'inside'
+          value: 'off'
+        style: |-
+          :host {
+            --bar-card-border-radius: 4px;
+          }
+          :host .card-content {
+            padding: 6px 10px;
+          }
+          bar-card-name {
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 1px 1px #0008;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          bar-card-divider {
+            display: none;
+          }
 
-          - type: custom:bar-card
-            entities:
-              - sensor.env_living_battery
-              - sensor.battery_env_bedroom
-              - sensor.battery_env_external
-              - sensor.battery_door_main
-              - sensor.battery_motion_living
-              - sensor.battery_motion_entrance
-              - sensor.battery_motion_bedroom
-              - sensor.battery_leak_bathroom
-            severity:
-              - color: '#bf4040'
-                from: 0
-                to: 15
-              - color: '#bf9540'
-                from: 16
-                to: 75
-              - color: '#1db954'
-                from: 76
-                to: 100
-            columns: 2
-            positions:
-              icon: 'off'
-              indicator: 'off'
-              minmax: 'off'
-              name: 'inside'
-              value: 'off'
-            style: |-
-              :host {
-                --bar-card-border-radius: 4px;
-              }
-              :host .card-content {
-                padding: 6px 10px;
-              }
-              bar-card-name {
-                font-size: 13px;
-                font-weight: bold;
-                text-shadow: 1px 1px #0008;
-                margin-left: auto;
-                margin-right: auto;
-              }
-              bar-card-divider {
-                display: none;
-              }
+      # TODO non so se queste vanno qui...
+      - type: section
+        label: LUCI
 
-          # TODO non so se queste vanno qui...
-          - type: section
-            label: LUCI
-
-          - type: 'custom:button-card'
-            entity: light.living_extra
-            icon: mdi:lightbulb
-            tap_action:
-              action: toggle
-            hold_action:
-              action: call-service
-              service: script.toggle_living_extra
+      - type: 'custom:button-card'
+        entity: light.living_extra
+        icon: mdi:lightbulb
+        tap_action:
+          action: toggle
+        hold_action:
+          action: call-service
+          service: script.toggle_living_extra

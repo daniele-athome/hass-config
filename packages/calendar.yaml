@@ -18,6 +18,8 @@ sensor:
       - time
       - date
       - date_time
+      - date_time_utc
+      - date_time_iso
 
   # Data fatta bene
   - platform: template

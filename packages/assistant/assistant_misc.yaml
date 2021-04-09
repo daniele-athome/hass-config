@@ -9,7 +9,7 @@ intent_script:
   TrashReminderMorning:
     action:
       - service: input_boolean.turn_on
-        entity_id: input_boolean.trash_reminder_morning
+        entity_id: input_boolean.reminder_trash_morning
       - event: assistant_speak_tts
         event_data_template:
           template: TrashReminderMorning
@@ -50,7 +50,7 @@ intent_script:
 input_boolean:
 
   # TODO prevedere variabile per indicare il giorno del reminder
-  trash_reminder_morning:
+  reminder_trash_morning:
     name: 'Porta la spazzatura domattina'
     initial: off
     icon: mdi:recycle
@@ -67,10 +67,10 @@ automation:
       condition: and
       conditions:
         - condition: state
-          entity_id: binary_sensor.workmorning_sensor
+          entity_id: binary_sensor.workmorning
           state: 'on'
         - condition: numeric_state
-          entity_id: sensor.people_home_count
+          entity_id: sensor.people_count_home
           above: '0'
     action:
       - event: assistant_speak_tts
@@ -85,12 +85,12 @@ automation:
         to: 'not_home'
     condition:
       condition: numeric_state
-      entity_id: sensor.people_home_count
+      entity_id: sensor.people_count_home
       above: '0'
     action:
       - service: script.say_something_rendered
         data:
-          url: !secret karen_internet_unavailable_url
+          url: "http://192.168.100.1:8124/local/tts/microsoft_tts/karen_internet_unavailable{{ range(1, 3) | random }}.mp3"
 
   - alias: karen_internet_restored
     trigger:
@@ -100,12 +100,12 @@ automation:
         to: 'home'
     condition:
       condition: numeric_state
-      entity_id: sensor.people_home_count
+      entity_id: sensor.people_count_home
       above: '0'
     action:
       - service: script.say_something_rendered
         data:
-          url: !secret karen_internet_restored_url
+          url: "http://192.168.100.1:8124/local/tts/microsoft_tts/karen_internet_restored{{ range(1, 4) | random }}.mp3"
 
   # Avviso vocale chiamata in arrivo sul cellulare
   - alias: payton_phone_call_incoming
@@ -238,6 +238,6 @@ script:
         event_data:
           template: announce_going_away
       - service: input_boolean.turn_off
-        entity_id: input_boolean.trash_reminder_morning
+        entity_id: input_boolean.reminder_trash_morning
       - service: switch.turn_on
         entity_id: switch.homeserver

@@ -24,6 +24,7 @@ class HermesDialogue(hermes.Hermes):
     # TODO handle multiple sessions (for sites)
 
     def initialize(self):
+        self.add_namespace('hermes')
         self.sessions = {}
         self.cancel_template = self.args['cancel_template']
 

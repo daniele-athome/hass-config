@@ -18,6 +18,7 @@ class AssistantSpeak(hermes.Hermes):
 
     def initialize(self):
         self.session_id = None
+        self.add_namespace('assistant')
         self.events = [
             self.listen_event(self.tts_event,
                               'assistant_speak_tts',

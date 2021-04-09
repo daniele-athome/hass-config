@@ -2,10 +2,19 @@
 
 homeassistant:
   customize:
-    sensor.temp_kitchen:
+    sensor.humidity_external:
+      friendly_name: Esterno
+
+    sensor.temperature_external:
+      friendly_name: Esterno
+
+    sensor.pressure_external:
+      friendly_name: Esterno
+
+    sensor.temperature_kitchen:
       friendly_name: Cucina
 
-    sensor.temp_bedroom:
+    sensor.temperature_bedroom:
       friendly_name: Camera
 
     sensor.humidity_bedroom:
@@ -14,85 +23,107 @@ homeassistant:
     sensor.pressure_bedroom:
       friendly_name: Camera
 
-    sensor.env_living_temperature:
+    sensor.temperature_living:
       friendly_name: Salone
 
-    sensor.env_living_humidity:
+    sensor.humidity_living:
       friendly_name: Salone
+
+    sensor.temperature_bathroom1:
+      friendly_name: Bagno
+
+    sensor.humidity_bathroom1:
+      friendly_name: Bagno
 
     sensor.pressure_living:
       friendly_name: Salone
 
 group:
+  env_kitchen:
+    name: "Ambiente: Cucina"
+    entities:
+      - sensor.temperature_kitchen
+      - sensor.humidity_kitchen
+
   env_bedroom:
     name: "Ambiente: Camera"
     entities:
-      - sensor.temp_bedroom
+      - sensor.temperature_bedroom
       - sensor.humidity_bedroom
       - sensor.pressure_bedroom
 
   env_living:
     name: "Ambiente: Salone"
     entities:
-      - sensor.env_living_temperature
-      - sensor.env_living_humidity
+      - sensor.temperature_living
+      - sensor.humidity_living
+
+  env_bathroom1:
+    name: "Ambiente: bagno 1"
+    entities:
+      - sensor.temperature_bathroom1
+      - sensor.humidity_bathroom1
 
   env_external:
     name: "Ambiente: Esterno"
     entities:
-      - sensor.temp_external
+      - sensor.temperature_external
       - sensor.humidity_external
       - sensor.pressure_external
 
-  climate:
-    name: Climate
-    icon: mdi:fire
-    entities:
-      - sensor.temp_kitchen
-      - sensor.env_living_temperature
-      - sensor.temp_bedroom
-      - climate.home_boiler
-
 sensor:
   # rilevato dal termostato
-  - name: temp_kitchen
+  - name: temperature_thermostat
     platform: mqtt
     state_topic: homeassistant/thermorasp/sensor/temp_core/temperature
     unit_of_measurement: '°C'
     device_class: temperature
     value_template: "{{ float(value_json.value) }}"
 
-  - name: temp_average
+  - name: temperature_average
     platform: average
+    precision: 1
     entities:
-      # la cucina non è affidabile - sensor.temp_kitchen
-      - sensor.temp_bedroom
-      - sensor.env_living_temperature
+      - sensor.temperature_kitchen
+      - sensor.temperature_bedroom
+      - sensor.temperature_living
+      - sensor.temperature_bathroom1
 
   - name: humidity_average
     platform: average
+    precision: 1
     entities:
+      - sensor.humidity_kitchen
       - sensor.humidity_bedroom
-      - sensor.env_living_humidity
+      - sensor.humidity_living
+      - sensor.humidity_bathroom1
 
-  - platform: mitemp_bt
-    mac: '58:2D:34:3A:0E:84'
-    name: env_living
-    monitored_conditions:
-      - temperature
-      - humidity
-      - battery
-    median: 1
-    adapter: hci1
-
-  - name: kitchen_gas_level
+  - name: gas_level_kitchen
     platform: mqtt
     state_topic: shellies/gas-kitchen/sensor/gas
 
-  - name: kitchen_gas_concentration
+  - name: gas_concentration_kitchen
     platform: mqtt
     state_topic: shellies/gas-kitchen/sensor/concentration
     unit_of_measurement: 'PPM'
+
+ble_monitor:
+  bt_interface: '5C:F3:70:99:5B:83'
+  discovery: false
+  restore_state: true
+  batt_entities: true
+  #active_scan: true
+  devices:
+    - mac: '58:2D:34:3A:0E:84'
+      name: 'env_living'
+    - mac: 'A4:C1:38:BE:E3:99'
+      name: 'env_bathroom1'
+      # Mi Token: cf9f60209fbbcb68389326f3
+      encryption_key: 'c15d08be9f48421c27963829582b7105'
+    - mac: 'A4:C1:38:CF:AE:8F'
+      name: 'env_kitchen'
+      # Mi Token: 09e489852a835cae9f057a90
+      encryption_key: 'c9ba2e2bf6877b235718edde1ecbeeaf'
 
 binary_sensor:
 
@@ -107,13 +138,16 @@ automation:
   - alias: house_on_fire
     trigger:
       - platform: numeric_state
-        entity_id: sensor.temp_kitchen
+        entity_id: sensor.temperature_kitchen
         above: 42
       - platform: numeric_state
-        entity_id: sensor.temp_bedroom
+        entity_id: sensor.temperature_bedroom
         above: 40
       - platform: numeric_state
-        entity_id: sensor.env_living_temperature
+        entity_id: sensor.temperature_living
+        above: 40
+      - platform: numeric_state
+        entity_id: sensor.temperature_bathroom1
         above: 40
     action:
       service: notify.kontalk_daniele
@@ -121,13 +155,15 @@ automation:
         title: "Allarme"
         message: |-
           Temperatura ambiente eccessiva!
-          Cucina: {{ states.sensor.temp_kitchen.state_with_unit }}
-          Camera da letto: {{ states.sensor.temp_bedroom.state_with_unit }}
+          Cucina: {{ states.sensor.temperature_kitchen.state_with_unit }}
+          Salone: {{ states.sensor.temperature_living.state_with_unit }}
+          Camera da letto: {{ states.sensor.temperature_bedroom.state_with_unit }}
+          Bagno: {{ states.sensor.temperature_bathroom1.state_with_unit }}
 
   - alias: bathroom_flooded
     trigger:
       - platform: state
-        entity_id: binary_sensor.leak_bathroom
+        entity_id: binary_sensor.water_bathroom1
         from: 'off'
         to: 'on'
     action:
@@ -140,10 +176,10 @@ automation:
   - alias: gas_leak
     trigger:
       - platform: state
-        entity_id: sensor.kitchen_gas_level
+        entity_id: sensor.gas_level_kitchen
         to: 'mild'
       - platform: state
-        entity_id: sensor.kitchen_gas_level
+        entity_id: sensor.gas_level_kitchen
         to: 'heavy'
     action:
       service: notify.kontalk_daniele
@@ -151,8 +187,8 @@ automation:
         title: "Allarme"
         message: |-
           Perdita di gas in cucina!
-          Livello: {{ states.sensor.kitchen_gas_level.state }}
-          Concentrazione: {{ states.sensor.kitchen_gas_concentration.state_with_unit }}
+          Livello: {{ states.sensor.gas_level_kitchen.state }}
+          Concentrazione: {{ states.sensor.gas_concentration_kitchen.state_with_unit }}
       # TODO invia email
       # TODO invia notifica push HASS
       # TODO fai parlare karen ripetutamente se c'è qualcuno in casa

@@ -1,31 +1,29 @@
-id: 4
+path: security
 title: Sicurezza
 icon: mdi:shield-home
-panel: true
+type: custom:vertical-layout
+layout:
+  max_cols: 2
 cards:
 
-  - type: custom:layout-card
-    layout: vertical
-    cards:
+  # Column 1
 
-      # Column 1
+  - type: alarm-panel
+    entity: alarm_control_panel.main
 
-      - type: alarm-panel
-        entity: alarm_control_panel.main
+  - type: custom:layout-break
 
-      - break
+  # Column 2
 
-      # Column 2
+  - type: picture-glance
+    title: 'Porta: Entrata'
+    entities:
+      - binary_sensor.motion_living_door
+      - binary_sensor.living_main_motion
+      - binary_sensor.living_entrance_motion
+      - binary_sensor.door_main
+    camera_image: camera.living_door
 
-      - type: picture-glance
-        title: 'Porta: Entrata'
-        entities:
-          - binary_sensor.living_door_motion
-          - binary_sensor.living_main_motion
-          - binary_sensor.living_entrance_motion
-          - binary_sensor.door_main
-        camera_image: camera.living_door
-
-  # TODO sensori di movimento
-  # TODO ultima attivazione sensore porta
-  # TODO ultimo trigger allarme
+# TODO sensori di movimento
+# TODO ultima attivazione sensore porta
+# TODO ultimo trigger allarme

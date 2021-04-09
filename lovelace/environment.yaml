@@ -1,126 +1,178 @@
-id: 1
+path: environment
 title: Ambiente
 icon: mdi:thermometer
-panel: true
+type: custom:vertical-layout
+layout:
+  max_cols: 2
 cards:
 
-  - type: custom:layout-card
-    layout: vertical
-    min_columns: 1
-    max_columns: 2
+  # Column 1
+
+  - type: custom:thermostat-card
+    entity: climate.boiler_main
+    ambient_temperature: sensor.temperature_average
+
+  - type: 'custom:button-card'
+    name: 'Controllo termostato'
+    icon: mdi:thermometer-lines
+    layout: icon_name
+    tap_action:
+      action: url
+      url_path: !secret thermostat_local_url
+
+  - type: custom:layout-break
+
+  # Column 2
+
+  # Riga 1
+  - type: horizontal-stack
     cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_external
+          - entity: sensor.humidity_external
+            show_state: true
+            show_graph: false
+        name: Esterno
+        height: 46
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
 
-      # Column 1
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_average
+          - entity: sensor.humidity_average
+            show_state: true
+            show_graph: false
+        name: Interno
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
 
-      - type: custom:thermostat-card
-        entity: climate.home_boiler
-        ambient_temperature: sensor.temp_average
+  # Riga 2
+  - type: horizontal-stack
+    cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_living
+          - entity: sensor.humidity_living
+            show_state: true
+            show_graph: false
+        name: Salone
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
 
-      - break
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_bedroom
+          - entity: sensor.humidity_bedroom
+            show_state: true
+            show_graph: false
+        name: Camera
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
 
-      # Column 2
+  # Riga 3
+  - type: horizontal-stack
+    cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_bathroom1
+          - entity: sensor.humidity_bathroom1
+            show_state: true
+            show_graph: false
+        name: Bagno
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
 
-      - type: horizontal-stack
-        cards:
-          - type: custom:mini-graph-card
-            entities:
-              - sensor.temp_external
-              - entity: sensor.humidity_external
-                show_state: true
-                show_graph: false
-            name: Esterno
-            height: 46
-            line_width: 2
-            font_size: 65
-            hours_to_show: 168
-            points_per_hour: 1
-            hour24: true
-            show:
-              icon: true
-              extrema: true
-            color_thresholds:
-              - value: 28
-                color: "#e74c3c"
-              - value: 15
-                color: "#1db954"
-              - value: 0
-                color: "#3498db"
-
-          - type: custom:mini-graph-card
-            entities:
-              - sensor.temp_kitchen
-            name: Cucina
-            height: 74
-            line_width: 2
-            font_size: 65
-            hours_to_show: 168
-            points_per_hour: 1
-            hour24: true
-            show:
-              icon: true
-              extrema: true
-            color_thresholds:
-              - value: 28
-                color: "#e74c3c"
-              - value: 15
-                color: "#1db954"
-              - value: 0
-                color: "#3498db"
-
-      - type: horizontal-stack
-        cards:
-          - type: custom:mini-graph-card
-            entities:
-              - sensor.temp_bedroom
-              - entity: sensor.humidity_bedroom
-                show_state: true
-                show_graph: false
-            name: Camera
-            height: 74
-            line_width: 2
-            font_size: 65
-            hours_to_show: 168
-            points_per_hour: 1
-            hour24: true
-            show:
-              icon: true
-              extrema: true
-            color_thresholds:
-              - value: 28
-                color: "#e74c3c"
-              - value: 15
-                color: "#1db954"
-              - value: 0
-                color: "#3498db"
-
-          - type: custom:mini-graph-card
-            entities:
-              - sensor.env_living_temperature
-              - entity: sensor.env_living_humidity
-                show_state: true
-                show_graph: false
-            name: Salone
-            height: 74
-            line_width: 2
-            font_size: 65
-            hours_to_show: 168
-            points_per_hour: 1
-            hour24: true
-            show:
-              icon: true
-              extrema: true
-            color_thresholds:
-              - value: 28
-                color: "#e74c3c"
-              - value: 15
-                color: "#1db954"
-              - value: 0
-                color: "#3498db"
-
-      - type: 'custom:button-card'
-        name: 'Controllo termostato'
-        icon: mdi:thermometer-lines
-        layout: icon_name
-        tap_action:
-          action: url
-          url_path: !secret thermostat_local_url
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_kitchen
+          - entity: sensor.humidity_kitchen
+            show_state: true
+            show_graph: false
+        name: Cucina
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"

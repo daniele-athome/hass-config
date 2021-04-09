@@ -10,6 +10,8 @@ homeassistant:
       friendly_name: Soggiorno extra
     light.bedroom_main:
       friendly_name: Camera
+    light.bedroom_left:
+      friendly_name: Camera SX
 
 automation:
   - alias: "Sync Tasmota states on start-up"
@@ -40,12 +42,25 @@ light:
 
   - platform: mqtt
     name: "bedroom_main"
-    state_topic: "homeassistant/tasmota/stat/bedroom/RESULT"
+    state_topic: "homeassistant/tasmota/stat/bedroom_main/RESULT"
     value_template: "{{ value_json.POWER }}"
-    command_topic: "homeassistant/tasmota/cmnd/bedroom/POWER"
+    command_topic: "homeassistant/tasmota/cmnd/bedroom_main/POWER"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "homeassistant/tasmota/tele/bedroom/LWT"
+    availability_topic: "homeassistant/tasmota/tele/bedroom_main/LWT"
+    payload_available: "Online"
+    payload_not_available: "Offline"
+    qos: 1
+    retain: false
+
+  - platform: mqtt
+    name: "bedroom_left"
+    state_topic: "homeassistant/tasmota/stat/bedroom_left/RESULT"
+    value_template: "{{ value_json.POWER }}"
+    command_topic: "homeassistant/tasmota/cmnd/bedroom_left/POWER"
+    payload_on: "ON"
+    payload_off: "OFF"
+    availability_topic: "homeassistant/tasmota/tele/bedroom_left/LWT"
     payload_available: "Online"
     payload_not_available: "Offline"
     qos: 1

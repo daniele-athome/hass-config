@@ -13,13 +13,15 @@ homeassistant:
   auth_mfa_modules:
     - type: totp
   external_url: !secret app_url
-  # TODO might not work when communicating with lounge media player
-  internal_url: !secret app_url
+  internal_url: !secret app_internal_url
   packages: !include_dir_named packages
 
 # Enables logging
 logger:
   default: info
+  logs:
+    # info stampa troppo
+    homeassistant.components.mikrotik.hub: warning
 
 # Show links to resources in log and frontend
 #introduction:
@@ -65,6 +67,9 @@ hacs:
 conversation:
 intent:
 
+zeroconf:
+  default_interface: false
+
 # Enables support for tracking state changes over time
 history:
 
@@ -78,41 +83,53 @@ recorder:
     entities:
       - input_select.house_mode
       - person.daniele
-      - climate.home_boiler
+      - climate.boiler_main
+      - sensor.battery_scatola
       - sensor.controlcenter_battery_level
       - sensor.daniele_payton_battery_level
       - sensor.battery_env_bedroom
-      - sensor.env_living_battery
+      - sensor.battery_env_external
+      - sensor.battery_env_living
       - sensor.battery_door_main
       - sensor.battery_motion_living
+      - sensor.battery_motion_bedroom
+      - sensor.battery_motion_entrance
       - sensor.homeserver_cpu_used
       - sensor.homeserver_ram_used_percent
-      - sensor.core_temperature
+      - sensor.cputemp_scatola
       - sensor.processor_use
-      - sensor.outside_humidity
-      - sensor.outside_temperature
-      - sensor.temp_external
+      - sensor.memory_use_percent
+      - sensor.temperature_external
       - sensor.humidity_external
       - sensor.weather_temperature
       - sensor.weather_apparent_temperature
-      - sensor.homeserver_w83627thf_1_temp
-      - sensor.temp_bedroom
+      - sensor.homeserver_w83627thf_1_temperature
+      - sensor.temperature_bedroom
       - sensor.pressure_bedroom
       - sensor.humidity_bedroom
-      - sensor.env_living_temperature
+      - sensor.temperature_living
       - sensor.pressure_living
-      - sensor.env_living_humidity
-      - sensor.temp_kitchen
-      - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
-      - sensor.homeserver_hddtemp_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
-      - sensor.mediarasp_cpu_thermal_1_temp
+      - sensor.humidity_living
+      - sensor.temperature_kitchen
+      - sensor.gas_concentration_kitchen
+      - binary_sensor.water_bathroom1
+      - sensor.battery_water_bathroom1
+      - sensor.battery_env_bathroom1
+      - sensor.humidity_bathroom1
+      - sensor.temperature_bathroom1
+      - sensor.temperature_average
+      - sensor.humidity_average
+      - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+      - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+      - sensor.mediarasp_cpu_used
+      - sensor.mediarasp_cpu_thermal_1_temperature
       - device_tracker.thermostat
       - device_tracker.controlcenter
       # TEST presence >>>
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
       # <<< TEST
-      - binary_sensor.living_door_motion
+      - binary_sensor.motion_living_door
       - binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
       - sensor.living_main_lux
@@ -165,6 +182,14 @@ zha:
 system_health:
 wake_on_lan:
 
+panel_iframe:
+  thermostat:
+    title: Termostato
+    icon: mdi:thermometer-lines
+    url: !secret thermostat_local_url
+
+lovelace_gen:
+
 lovelace:
   mode: yaml
   resources:
@@ -195,6 +220,10 @@ lovelace:
       type: module
     - url: /hacsfiles/list-card/list-card.js
       type: js
+    - url: /hacsfiles/search-card/search-card.js
+      type: module
+    - url: /hacsfiles/lovelace-paper-buttons-row/paper-buttons-row.js
+      type: module
     # untracked
     - url: /local/ui/custom_ui/moment-with-locales.js?v=2.24.0
       type: js

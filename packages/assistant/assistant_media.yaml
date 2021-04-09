@@ -10,6 +10,14 @@ intent_script:
             playlist: "{{ playlist }}"
       - delay:
           seconds: 5
+      - event: rhasspy_playlist
+        event_data_template:
+          playlist: "{{ playlist }}"
+
+script:
+
+  start_playlist:
+    sequence:
       - service: media_player.play_media
         data_template:
           entity_id: media_player.kodi
@@ -27,3 +35,6 @@ intent_script:
             {%- else -%}
             0.8
             {%- endif -%}
+
+rhasspy_playlists:
+  slot_file: ../.config/rhasspy/profiles/it/slots/playlist

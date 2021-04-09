@@ -1,5 +1,14 @@
 # Entity state scenes and scenarios for living room
 
+input_number:
+
+  people_count_living:
+    name: 'Persone in soggiorno'
+    initial: 0
+    min: 0
+    max: 10
+    step: 1
+
 input_boolean:
 
   need_living_utility_light:
@@ -112,6 +121,8 @@ automation:
           entity_id: input_boolean.house_entrance_lights
           state: 'off'
     action:
+      - delay:
+          seconds: 1
       - service: scene.turn_on
         entity_id: scene.cinema_mode
 
@@ -164,14 +175,23 @@ automation:
     action:
       - delay:
           seconds: 5
-      - service: media_player.play_media
-        data_template:
-          entity_id: media_player.kodi
-          media_content_id: !secret guest_mode_playlist
-          media_content_type: music
+      - service: media_player.clear_playlist
+        entity_id: media_player.music
+      # for Kodi
+      #- service: media_player.play_media
+      #  data:
+      #    entity_id: media_player.music
+      #    media_content_id: !secret guest_mode_playlist
+      #    media_content_type: music
+      # for Mopidy/MPD
+      - service: media_player.select_source
+        data:
+          entity_id: media_player.music
+          source: !secret guest_mode_playlist
+      # TODO we need a scenario here to set the various speakers
       - service: media_player.volume_set
         data:
-          entity_id: media_player.kodi
+          entity_id: media_player.music
           volume_level: !secret guest_mode_volume
 
   - alias: house_mode_living_not_guest
@@ -181,11 +201,11 @@ automation:
         from: guest
     action:
       - service: media_player.media_stop
-        entity_id: media_player.kodi
+        entity_id: media_player.music
       - service: media_player.volume_set
         data:
-          entity_id: media_player.kodi
-          volume_level: 0.9
+          entity_id: media_player.music
+          volume_level: !secret no_guest_mode_volume
 
   # Troppa luce in soggiorno: spegni le luci extra
   - alias: living_too_much_light
@@ -217,18 +237,24 @@ automation:
       entity_id: input_select.house_mode
       to: away
     action:
-      - service: media_player.turn_off
-        entity_id: media_player.kodi
-      - service: media_player.turn_off
-        entity_id: media_player.tv
+      # Azzera il conteggio persone (evita falsi positivi)
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.people_count_living
+          value: '0'
       - service: input_boolean.turn_off
         entity_id: input_boolean.need_living_utility_light
+      - service: media_player.turn_off
+        entity_id:
+          - media_player.kodi
+          - media_player.music
+          - media_player.tv
 
   # Accendi una lieve luce notturna in caso di movimento in salone
   - alias: living_motion_night
     trigger:
       - platform: state
-        entity_id: group.living_motion
+        entity_id: group.motion_living
         to: 'on'
       - platform: numeric_state
         entity_id: sensor.living_main_lux
@@ -257,7 +283,7 @@ automation:
           state: 'off'
         # Assicuriamoci che le condizioni del trigger siano tutte rispettate
         - condition: state
-          entity_id: group.living_motion
+          entity_id: group.motion_living
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.living_main_lux
@@ -270,10 +296,10 @@ automation:
   - alias: living_motion_night_end
     trigger:
       - platform: state
-        entity_id: group.living_motion
+        entity_id: group.motion_living
         to: 'off'
       - platform: state
-        entity_id: binary_sensor.notebook_active
+        entity_id: binary_sensor.activity_notebook_daniele
         to: 'off'
     condition:
       condition: and
@@ -295,11 +321,11 @@ automation:
           state: 'off'
         # Movimento in salone assente
         - condition: state
-          entity_id: group.living_motion
+          entity_id: group.motion_living
           state: 'off'
         # Notebook spento o idle
         - condition: state
-          entity_id: binary_sensor.notebook_active
+          entity_id: binary_sensor.activity_notebook_daniele
           state: 'off'
     action:
       - service: scene.turn_on
