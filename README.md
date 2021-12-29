@@ -171,7 +171,8 @@ and so on. The house mode input_select is used throughout the packages.
 
 ### HVAC
 
-Integration with [my homemade thermostat](https://github.com/daniele-athome/thermorasp-docs).
+A simple NodeMCU with a relay controls my heating boiler. It is controlled via MQTT with basic automations for when I
+leave and return home or when I go to sleep.
 
 ### Lights
 
@@ -218,6 +219,11 @@ The notification will have 3 actions:
 3. Cancel: disable night mode for tonight
 
 If no action is taken, night mode will be enabled automatically after the timer expires.
+
+### Notifications
+
+Still a work in progress, this will host centralized scripts and automations for notifying me through various means
+about stuff happening.
 
 ### Other
 
@@ -291,7 +297,9 @@ and is disarmed when I'm back. No need to think about it, ever.
 ### System
 
 My system is made up of a few running machines. This is a how a keep an eye on
-them. Heavy use of [Glances](https://github.com/nicolargo/glances/).
+them. Heavy use of [Glances](https://github.com/nicolargo/glances/).  
+Since the Home Assistant system hosts a dedicated WiFi access point, this view is used to control the devices connected
+to it and to selectively allow them access to the Internet.
 
 ### Theme control
 
