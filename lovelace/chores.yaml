@@ -21,7 +21,6 @@ cards:
           'chore_surfaces_dust',
           'chore_living_floor_clean',
           'chore_balcony_clean',
-          'chore_garage_clean',
       ] %}
 
       {% for chore_sensor in clean_chores %}
@@ -41,7 +40,9 @@ cards:
         label: ALTRO
 
       {% set other_chores = [
+          'chore_garage_clean',
           'chore_change_sheets',
+          'chore_coffee_machine_clean',
       ] %}
 
       {% for chore_sensor in other_chores %}

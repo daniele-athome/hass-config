@@ -331,7 +331,7 @@ cards:
                   80: '#09C7E8'
                   95: '#5294E2'
                 font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+                style: {top: 5%, left: 10%, width: 6em, height: 6em, transform: none}
 
               - type: custom:circle-sensor-card
                 entity: sensor.homeserver_media_external2_used_percent
@@ -346,7 +346,7 @@ cards:
                   80: '#09C7E8'
                   95: '#5294E2'
                 font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+                style: {top: 5%, left: 10%, width: 6em, height: 6em, transform: none}
 
       - type: entities
         show_header_toggle: off
@@ -368,7 +368,7 @@ cards:
                   80: '#09C7E8'
                   95: '#5294E2'
                 font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+                style: {top: 5%, left: 10%, width: 6em, height: 6em, transform: none}
 
               - type: custom:circle-sensor-card
                 entity: sensor.homeserver_media_external2_sec_used_percent
@@ -383,4 +383,4 @@ cards:
                   80: '#09C7E8'
                   95: '#5294E2'
                 font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {top: 5%, left: 80%, width: 6em, height: 6em, transform: none}
+                style: {top: 5%, left: 10%, width: 6em, height: 6em, transform: none}

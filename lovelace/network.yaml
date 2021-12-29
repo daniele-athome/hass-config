@@ -30,14 +30,20 @@ cards:
           - value: 'on'
             color: green
 
-      - type: custom:bar-card
-        entities:
-          {% set domonet_devices = [
-              {'address': '192.168.1.250', 'name': 'Termostato'},
-              {'address': '192.168.1.220', 'name': 'Google Home'},
-          ] %}
-          {% for device in domonet_devices %}
-          - !include
-            - include/domonet_dev_button.yaml
-            - device: device
-          {% endfor %}
+      - type: custom:auto-entities
+        card:
+          type: glance
+          show_state: false
+          state_color: green
+          columns: 2
+        filter:
+          include:
+            - entity_id: "binary_sensor.domonet_allowed_*"
+              options:
+                tap_action:
+                  action: call-service
+                  service: script.domonet_autodevice_toggle_internet
+                  service_data:
+                    entity_id: this.entity_id
+          exclude:
+            - entity_id: binary_sensor.domonet_allowed_global

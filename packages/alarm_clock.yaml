@@ -1,5 +1,17 @@
 # Alarm clock automations
 
+input_number:
+  alarm_clock_volume:
+    name: 'Volume radiosveglia'
+    min: 0
+    max: 1
+    step: 0.05
+  alarm_clock_increment:
+    name: 'Incremento volume radiosveglia'
+    min: 0
+    max: 1
+    step: 0.01
+
 automation:
 
   - alias: trigger_alarm_clock
@@ -7,9 +19,64 @@ automation:
       # Data e ora correnti corrispondono all'orario del prossimo allarme configurato sul telefono
       - platform: template
         value_template: "{{ as_timestamp(states.sensor.date_time_iso.state) | timestamp_custom('%Y-%m-%dT%H:%M') == as_timestamp(states.sensor.daniele_payton_next_alarm.state) | timestamp_custom('%Y-%m-%dT%H:%M') }}"
+    condition:
+      # Non c'è bisogno di attivare di nuovo lo streaming se sta già riproducendo qualcosa
+      - condition: template
+        value_template: "{{ not is_state('media_player.bedroom', 'playing') }}"
     action:
       - service: media_player.play_media
         data_template:
           entity_id: media_player.bedroom
+          # TODO fallback su media da media server o addirittura locale
           media_content_id: !secret alarm_clock_radio_station
           media_content_type: music
+      - service: script.alarm_clock_volume_increase
+
+  # Ferma volume_increase se media_player fermato o messo in pausa
+  - alias: alarm_clock_stop_increase
+    trigger:
+      - platform: state
+        entity_id: media_player.bedroom
+        to:
+          - 'off'
+          - idle
+          - paused
+    action:
+      - service: script.turn_off
+        entity_id: script.alarm_clock_volume_increase
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.bedroom
+          volume_level: "{{ states('input_number.alarm_clock_volume')|float }}"
+
+script:
+
+  # TODO parametrizzare e generalizzare in media_player (può servire?)
+  alarm_clock_volume_increase:
+    mode: restart
+    sequence:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.bedroom
+          volume_level: '0'
+      - delay:
+          seconds: 5
+      - repeat:
+          while:
+            # TODO usare mqtt perché reagisce immediatamente; e comunque non è detto che parta subito (es. disservizio internet radio)
+            #- condition: template
+            #  value_template: "{{ is_state('media_player.bedroom', 'playing') }}"
+            - condition: template
+              value_template: "{{ state_attr('media_player.bedroom', 'volume_level')|float < states('input_number.alarm_clock_volume')|float }}"
+          sequence:
+            - service: media_player.volume_set
+              data:
+                entity_id: media_player.bedroom
+                volume_level: >
+                  {% set target = states('input_number.alarm_clock_volume')|float %}
+                  {% set level = state_attr('media_player.bedroom', 'volume_level')|float + states('input_number.alarm_clock_increment')|float %}
+                  {% if level < target %} {{level|round(2)}}
+                  {% else %} {{ target }}
+                  {% endif %}
+            - delay:
+                seconds: 5

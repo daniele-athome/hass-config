@@ -32,11 +32,11 @@ media_player:
     name: kodi
     # turn_on_action no longer supported
     # turn_off_action no longer supported
-  - platform: mpd
-    host: !secret mediarasp_ip_address
+  - platform: mopidy
+    host: !secret mediarasp_host
     name: music
   - platform: snapcast
-    host: !secret mediarasp_ip_address
+    host: !secret mediarasp_host
   - platform: mpd
     host: !secret speaker_bedroom_host
     name: bedroom
@@ -140,6 +140,7 @@ script:
         data:
           entity_id: media_player.kodi
           media_content_type: 'channel'
+          # TODO retrieve channel ID via JSON-RPC to Kodi or script
           media_content_id: !secret tv_news_channel
 
   # Pronuncia qualcosa
@@ -364,3 +365,32 @@ automation:
         data:
           entity_id: media_player.snapcast_living
           volume_level: '{{ states.input_text.volume_preduck.state }}'
+
+  # Se bedroom in pausa da più di tot tempo, stoppalo
+  - alias: stop_speaker_bedroom_if_paused
+    trigger:
+      - platform: state
+        entity_id: media_player.bedroom
+        to: 'paused'
+        for: '00:05:00'
+    action:
+      - service: media_player.media_stop
+        entity_id: media_player.bedroom
+
+  - alias: trigger_mediarasp_update
+    trigger:
+      platform: mqtt
+      topic: mopidy/music/i/sta
+    action:
+      - service: homeassistant.update_entity
+        data:
+          entity_id: media_player.music
+
+  - alias: trigger_speaker_bedroom_update
+    trigger:
+      platform: mqtt
+      topic: mopidy/bedroom/i/sta
+    action:
+      - service: homeassistant.update_entity
+        data:
+          entity_id: media_player.bedroom

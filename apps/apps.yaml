@@ -43,6 +43,15 @@ app_assistant_xmpp_daniele:
   xmpp_username: !secret xmpp_username
   xmpp_password: !secret xmpp_password
   site_id: xmpp_daniele
-  allowed_senders:
-    - sender1@server.com
-    - sender2@server.com
+  allowed_senders: !secret assistant_xmpp_daniele_allowed_senders
+
+app_domonet_devices:
+  module: domonet_devices
+  class: DomonetDevices
+  log: domonet
+  log_level: DEBUG
+  devices_entity: sensor.domonet_devices
+  devices_attribute: clients
+  check_command: bin/domonet_check_device.sh
+  domonet_interface: !secret domonet_interface
+  external_interface: !secret external_interface

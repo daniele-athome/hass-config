@@ -14,12 +14,6 @@ homeassistant:
     automation.server_on_fire:
       friendly_name: Server caldo
 
-glances:
-
-  - host: server
-    name: homeserver
-    version: 3
-
 sensor:
 
   - platform: hddtemp

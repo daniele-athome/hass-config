@@ -14,7 +14,8 @@ device_tracker:
     require_movement: true
     entity_id:
       - device_tracker.daniele_paytongps
-      - device_tracker.daniele_paytonwifi
+      #- device_tracker.daniele_paytonwifi
+      - device_tracker.daniele_paytonrouter
       - device_tracker.daniele_paytonble
 
 person:
@@ -23,8 +24,9 @@ person:
     user_id: !secret userid_daniele
     device_trackers:
       - device_tracker.daniele_paytongps
-      - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
+      #- device_tracker.daniele_paytonwifi
+      - device_tracker.daniele_paytonrouter
 
 # quando GPS==Home, usa solo ble/wifi (i dati di location della persona saranno comunque aggiornati)
 # quando GPS!=Home, usa tracker più recente
@@ -34,8 +36,9 @@ person2:
     user_id: !secret userid_daniele
     device_trackers:
       - device_tracker.daniele_paytongps
-      - device_tracker.daniele_paytonwifi
+      #- device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonble
+      - device_tracker.daniele_paytonrouter
 
 sensor:
   - platform: history_stats

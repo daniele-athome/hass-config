@@ -6,7 +6,8 @@ input_number:
     name: 'Persone in soggiorno'
     initial: 0
     min: 0
-    max: 10
+    # counting known people only for now
+    max: 1
     step: 1
 
 input_boolean:
@@ -121,8 +122,6 @@ automation:
           entity_id: input_boolean.house_entrance_lights
           state: 'off'
     action:
-      - delay:
-          seconds: 1
       - service: scene.turn_on
         entity_id: scene.cinema_mode
 

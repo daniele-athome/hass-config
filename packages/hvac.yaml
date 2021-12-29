@@ -9,19 +9,25 @@ homeassistant:
     automation.ThermostatStuck:
       friendly_name: Termostato bloccato
 
-shell_command:
+input_number:
 
-  thermorasp_publish_temperature_bedroom: >-
-    mosquitto_pub
-    -h thermostat.domonet
-    -t homeassistant/thermorasp/sensor/temp_bedroom/control
-    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_bedroom.state }}}'
+  hvac_heating_temperature_day:
+    name: 'Temperature riscaldamento diurna'
+    min: 10
+    max: 30
+    step: 0.5
 
-  thermorasp_publish_temp_living: >-
-    mosquitto_pub
-    -h thermostat.domonet
-    -t homeassistant/thermorasp/sensor/temp_living/control
-    -m '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_living.state }}}'
+  hvac_heating_temperature_night:
+    name: 'Temperature riscaldamento notturna'
+    min: 10
+    max: 30
+    step: 0.5
+
+input_boolean:
+
+  hvac_heating_waiting_alarm_clock:
+    name: 'Riscaldamento attivo in attesa della sveglia'
+    initial: false
 
 automation:
 
@@ -35,141 +41,164 @@ automation:
           minutes: 8
     action:
       service: notify.kontalk_daniele
-      data_template:
+      data:
         title: "Allarme"
         message: |-
           Termostato non raggiungibile!
-
-  # Termostato up - pubblica le temperature
-  - alias: thermostat_up
-    trigger:
-      - platform: state
-        entity_id: device_tracker.thermostat
-        to: 'home'
-    action:
-      - service: automation.trigger
-        entity_id:
-          - automation.thermorasp_publish_temperature_bedroom
-          - automation.thermorasp_publish_temp_living
 
   # Termostato bloccato (caldaia accesa)
   - alias: thermostat_stuck
     trigger:
       - platform: state
         entity_id: climate.boiler_main
-        to: 'heat'
+        attribute: hvac_action
+        to: "heating"
         for:
-          hours: 8
+          hours: 6
     action:
       service: notify.kontalk_daniele
-      data_template:
+      data:
         title: "Allarme"
         message: |-
           Riscaldamento attivo da più di 6 ore!
 
-  - alias: thermorasp_publish_temperature_bedroom
+  - alias: house_mode_hvac_away
+    description: 'Disattiva climatizzazione quando usciti da casa per un certo tempo'
     trigger:
       - platform: state
-        entity_id: sensor.temperature_bedroom
-      # Il termostato richiede comunque un aggiornamento ogni 900 secondi
-      - platform: time_pattern
-        minutes: "/10"
+        entity_id: input_select.house_mode
+        to: "away"
+        for:
+          minutes: 10
+      - platform: state
+        entity_id: input_select.house_mode
+        to: "extended_away"
     action:
-      - service: shell_command.thermorasp_publish_temperature_bedroom
-      #- service: mqtt.publish
-      #  data_template:
-      #    topic: "homeassistant/thermorasp/sensor/temp_bedroom/control"
-      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temp_bedroom.state }}}'
+      service: climate.turn_off
+      data:
+        entity_id: climate.boiler_main
 
-  - alias: thermorasp_publish_temp_living
+  - alias: house_mode_hvac_not_away
+    description: 'Attiva climatizzazione quando rientrati in casa per un certo tempo'
     trigger:
       - platform: state
-        entity_id: sensor.temperature_living
-      # Il termostato richiede comunque un aggiornamento ogni 900 secondi
-      - platform: time_pattern
-        minutes: "/10"
+        entity_id: input_select.house_mode
+        from: "away"
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: input_select.house_mode
+        from: "extended_away"
+        for:
+          minutes: 3
     action:
-      - service: shell_command.thermorasp_publish_temp_living
-      #- service: mqtt.publish
-      #  data_template:
-      #    topic: "homeassistant/thermorasp/sensor/temp_living/control"
-      #    payload: '{"type":"temperature", "validity": 900, "unit": "celsius", "value": {{ states.sensor.temperature_living.state }}}'
+      service: climate.turn_on
+      data:
+        entity_id: climate.boiler_main
 
-  - alias: thermorasp_set_target_temperature
+  - alias: house_mode_hvac_night
+    description: 'Diminuisci la temperatura target di notte'
     trigger:
-      - platform: mqtt
-        topic: 'homeassistant/_internal/thermorasp/target_temperature'
+      - platform: state
+        entity_id: input_select.house_mode
+        to: "night"
     action:
-      - service: script.boiler_main_set_target_temperature
+      # salva la temperatura target attuale
+      - service: input_number.set_value
         data:
-          temperature: '{{ trigger.payload }}'
-
-rest_command:
-
-  # 12:34:00.787 XHRPOSThttp://thermostat.local/api/schedules/active/volatile
-  #    {"name":"generic.TargetTemperatureBehavior","order":0,"start_time":7954,"end_time":8640,"config":{"target_temperature":22.5},"sensors":["temp_bedroom"],"devices":["home_boiler"]}
-
-  boiler_main_set_active_volatile_generic:
-    url: !secret thermostat_set_active_volatile_url
-    verify_ssl: false
-    method: post
-    payload: >-
-      {
-        "name": "generic.TargetTemperatureBehavior",
-        "order": 0,
-        "start_time": {{start_time}},
-        "end_time": {{end_time}},
-        "config": {
-          "target_temperature": {{target_temperature}}
-        },
-        "sensors": [{{sensors}}],
-        "devices":[{{devices}}]
-      }
-    content_type:  'application/json; charset=utf-8'
-
-sensor:
-
-  - platform: command_line
-    name: current_minute_for_hvac
-    command: "bin/current_minute.py"
-
-  - platform: command_line
-    name: today_last_minute_for_hvac
-    command: "bin/today_last_minute.py"
-
-script:
-
-  boiler_main_set_target_temperature:
-    sequence:
-      - service: rest_command.boiler_main_set_active_volatile_generic
+          entity_id: input_number.hvac_heating_temperature_day
+          value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
+      - service: climate.set_temperature
         data:
-          start_time: '{{ states.sensor.current_minute_for_hvac.state }}'
-          end_time: '{{ states.sensor.today_last_minute_for_hvac.state }}'
-          target_temperature: '{{ temperature }}'
-          # FIXME not pretty
-          sensors: '"temp_living","temp_bedroom"'
-          # FIXME not pretty
-          devices: '"home_boiler"'
+          entity_id: climate.boiler_main
+          temperature: "{{ states('input_number.hvac_heating_temperature_night') }}"
+      - service: notify.kontalk_daniele
+        data:
+          title: ''
+          message: |-
+            Riscaldamento notturno impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
+            Target diurno salvato a {{ states('input_number.hvac_heating_temperature_day') }}° C
+
+  # Ripristino temperatura target diurna in caso di risveglio senza sveglia
+  - alias: house_mode_hvac_not_night
+    description: 'Ripristina la temperatura target di giorno'
+    trigger:
+      - platform: state
+        entity_id: input_select.house_mode
+        from: "night"
+    condition:
+      # non procedere se stiamo aspettando la sveglia
+      # vuol dire che X ore prima della sveglia è stata già impostata la temperatura diurna
+      condition: state
+      entity_id: input_boolean.hvac_heating_waiting_alarm_clock
+      state: 'off'
+    action:
+      # salva la temperatura target attuale
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.hvac_heating_temperature_night
+          value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
+      - service: climate.set_temperature
+        data:
+          entity_id: climate.boiler_main
+          temperature: "{{ states('input_number.hvac_heating_temperature_day') }}"
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.hvac_heating_waiting_alarm_clock
+      - service: notify.kontalk_daniele
+        data:
+          title: ''
+          message: |-
+            Riscaldamento diurno impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
+            Target notturno salvato a {{ states('input_number.hvac_heating_temperature_night') }}° C
+
+  - alias: house_mode_hvac_alarm_clock
+    description: 'Ripristina la temperatura target di giorno prima della sveglia'
+    trigger:
+      # 1 ora prima dell'orario del prossimo allarme configurato sul telefono
+      - platform: template
+        # FIXME andrebbero usati oggetti datetime ecc. ma per colpa del c***o di fuso orario non sono riuscito a trovare un modo affidabile
+        value_template: "{{ now() | as_timestamp - (state_attr('sensor.daniele_payton_next_alarm', 'Time in Milliseconds') / 1000) >= -3600 }}"
+    condition:
+      condition: state
+      entity_id: input_select.house_mode
+      state: "night"
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.hvac_heating_waiting_alarm_clock
+      # salva la temperatura target attuale
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.hvac_heating_temperature_night
+          value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
+      - service: climate.set_temperature
+        data:
+          entity_id: climate.boiler_main
+          temperature: "{{ states('input_number.hvac_heating_temperature_day') }}"
+      - service: notify.kontalk_daniele
+        data:
+          title: ''
+          message: |-
+            Riscaldamento pre-sveglia impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
+            Target notturno salvato a {{ states('input_number.hvac_heating_temperature_night') }}° C
 
 climate:
 
   # Termostato principale
-  - platform: mqtt
+  - platform: generic_thermostat
     name: boiler_main
-    precision: 0.1
-    temp_step: 0.5
+    precision: 0.5
     min_temp: 10
     max_temp: 30
-    modes:
-      - 'off'
-      - 'heat'
-    #current_temperature_topic: ''
-    #current_temperature_template: '{{ value_json.xxx }}'
-    mode_state_topic: 'homeassistant/thermorasp/device/home_boiler/state'
-    mode_state_template: "{{ 'heat' if value_json.enabled else 'off' }}"
-    temperature_state_topic: 'homeassistant/thermorasp/behavior/active'
-    temperature_state_template: '{{ value_json.config.target_temperature }}'
-    temperature_command_topic: 'homeassistant/_internal/thermorasp/target_temperature'
+    initial_hvac_mode: 'heat'
+    heater: switch.boiler_home
+    target_sensor: sensor.temperature_average
+    min_cycle_duration:
+      seconds: 30
+    # cold_tolerance:
+    #hot_tolerance:
+    away_temp: 15
 
   # Condizionatore salone
   - platform: tasmota_irhvac

@@ -1,6 +1,7 @@
 {
   "domain": "rhasspy_events",
   "name": "Rhasspy events to intent",
+  "version": "0.0.1",
   "dependencies": [],
   "codeowners": ["@daniele-athome"],
   "requirements": []

@@ -1,0 +1,140 @@
+# Servizi di notifica
+
+# Strumenti di notifica
+notify:
+  - platform: kodi
+    name: kodi
+    host: rasp
+  - platform: xmpp
+    name: kontalk_daniele
+    sender: !secret xmpp_username
+    password: !secret xmpp_password
+    recipient: !secret xmpp_recipient_daniele
+# notify.mobile_app_daniele_payton definito da integrazione mobile
+  - platform: smtp
+    name: email_daniele
+    server: !secret smtp_server
+    port: 25
+    encryption: starttls
+    sender: !secret xmpp_username
+    recipient: !secret email_recipient_daniele
+
+  # IM semplice per Daniele
+  - name: im_simple_daniele
+    platform: group
+    services:
+      - service: kontalk_daniele
+
+  # IM interattivo per Daniele
+  - name: im_interactive_daniele
+    platform: group
+    services:
+      - service: mobile_app_daniele_payton
+
+  # Emergenza: tutte le destinazioni
+  - name: emergency
+    platform: group
+    services:
+      - service: kodi
+      - service: kontalk_daniele
+      - service: email_daniele
+      - service: mobile_app_daniele_payton
+
+script:
+
+  notify_debug:
+    description: "Debug notification"
+    fields:
+      message:
+        description: "Message content"
+        example: "An event has occured"
+    sequence:
+      - service: notify.im_simple_daniele
+        data:
+          title: "Debug"
+          message: "{{ message }}"
+
+  notify_info:
+    description: "Information notification"
+    fields:
+      message:
+        description: "Message content"
+        example: "An event has occured"
+      target:
+        description: "Target notify entity"
+        example: "notify.kodi"
+      speak:
+        description: "Make Karen speak this message (only if people present at home)"
+        example: "yes"
+        default: no
+        required: no
+      data:
+        description: "Additional notification data"
+        required: no
+    sequence:
+      - service: "{{ target }}"
+        data:
+          title: "Info"
+          message: "{{ message }}"
+          data: "{{ data|default({}) }}"
+      - condition: template
+        value_template: >
+          {{ speak and is_state('binary_sensor.cinema_mode', 'off') and
+             states.input_select.house_mode.state in ['day_working','day_not_working'] and
+             states.sensor.people_count_home.state|int > 0 }}
+      - service: script.say_something
+        data:
+          message: "{{ message }}"
+
+  notify_important:
+    description: "Important notification"
+    fields:
+      message:
+        description: "Message content"
+        example: "An event has occured"
+      target:
+        description: "Target notify entity"
+        example: "notify.kodi"
+      speak:
+        description: "Make Karen speak this message (only if people present at home)"
+        example: "yes"
+        default: no
+        required: no
+      data:
+        description: "Additional notification data"
+        required: no
+    sequence:
+      - service: "{{ target }}"
+        data:
+          title: "Importante"
+          message: "{{ message }}"
+          data: "{{ data|default({}) }}"
+      - condition: template
+        value_template: >
+          {{ speak and states.input_select.house_mode.state in ['day_working','day_not_working'] and
+             states.sensor.people_count_home.state|int > 0 }}
+      - service: script.say_something
+        data:
+          message: "{{ message }}"
+
+  notify_emergency:
+    description: "Emergency notification"
+    fields:
+      message:
+        description: "Message content"
+        example: "An event has occured"
+      data:
+        description: "Additional notification data"
+        required: no
+    sequence:
+      - service: notify.emergency
+        data:
+          title: "Emergenza"
+          message: "{{ message }}"
+          data: "{{ data|default({}) }}"
+      - condition: template
+        value_template: >
+          {{ states.sensor.people_count_home.state|int > 0 }}
+      - service: script.say_something
+        data:
+          message: "Attenzione! {{ message }} Ripeto: {{message}}"

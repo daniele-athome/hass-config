@@ -2,12 +2,15 @@
 
 homeassistant:
   customize:
+    device_tracker.daniele_paytonrouter:
+      friendly_name: Payton (Router)
+
     device_tracker.daniele_paytonwifi:
       friendly_name: Payton (WiFi)
 
     device_tracker.daniele_paytongps:
       friendly_name: Payton (GPS)
-      icon: mdi:cellphone-android
+      icon: mdi:cellphone
 
     device_tracker.daniele_paytonble:
       friendly_name: Payton (BLE)
@@ -79,22 +82,6 @@ homeassistant:
       friendly_name: Batterie scariche
 
 device_tracker:
-  - platform: nmap_tracker
-    hosts:
-      # Private VLAN
-      - 192.168.0.0/24
-      # Domonet
-      - 192.168.100.0/24
-    home_interval: 3
-    scan_options: --privileged -PR -n -sn --host-timeout 10s
-    track_new_devices: false
-    interval_seconds: 30
-    consider_home: 180
-    exclude:
-      - server
-      - scatola
-      - 192.168.100.1
-
   - platform: mqtt
     devices:
       daniele_paytonble: 'homeassistant/monitor/rasp/payton/device_tracker'
@@ -107,14 +94,20 @@ sensor:
       # Device con batteria scarica
       low_batteries:
         value_template: >
-          {%- set threshold = 15 -%}
-          {%- set domains = ['sensor', 'binary_sensor'] -%}
-          {%- for domain in domains -%}
-          {%- for item in states[domain] if 'iphone' not in item.entity_id and 'health' not in item.entity_id and ((item.attributes.battery_level is defined and item.attributes['battery_level'] | int < threshold) or ("battery" in item.name | lower and ((item.state | int < threshold and item.state|int != 0) or item.state | lower == "low" or item.state | lower == "unknown"))) -%}
-              {{ item.entity_id }}{%- if not loop.last %}
-          {% endif -%}
+          {%- set threshold = 10 -%}
+          {%- set result = namespace(count=0) -%}
+          {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
+          {%- set result.count = result.count + 1 -%}
           {%- endfor -%}
-          {%- endfor -%}
+          {{ result.count }}
+        attribute_templates:
+          devices: >
+            {%- set threshold = 10 -%}
+            {%- set result = namespace(items=[]) -%}
+            {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
+            {% set result.items = result.items + [item.entity_id] %}
+            {%- endfor -%}
+            {{ result.items }}
 
       # da usare in UI per rappresentare stato assente
       status_controlcenter:
@@ -201,31 +194,40 @@ automation:
     action:
       service: notify.kontalk_daniele
       data_template:
-        title: "Allarme"
+        title: ''
         message: |-
           Batteria del centro di controllo bassa: {{ states.sensor.controlcenter_battery_level.state_with_unit }}
 
   - alias: alert_low_batteries
     trigger:
-      platform: time_pattern
-      hours: "/1"
-    condition:
-      condition: template
-      value_template: "{% if states('sensor.low_batteries') %}true{% endif %}"
+      platform: numeric_state
+      entity_id: sensor.low_batteries
+      above: '0'
+      # evita sensori che riportano microcambiamenti
+      for: 02:00:00
     action:
       - service: persistent_notification.create
         data_template:
           title: Batterie scariche
-          message: "{{ states('sensor.low_battery') }}"
+          message: >
+            {%- for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
           notification_id: alert_low_batteries
+      - service: notify.kontalk_daniele
+        data_template:
+          title: ''
+          message: |-
+            Batterie scariche:
+            {% for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
 
   - alias: alert_low_batteries_dismiss
     trigger:
-      platform: time_pattern
-      hours: "/1"
-    condition:
-      condition: template
-      value_template: "{% if not states('sensor.low_batteries') %}true{% endif %}"
+      platform: numeric_state
+      entity_id: sensor.low_batteries
+      below: '1'
     action:
       - service: persistent_notification.dismiss
         data_template:

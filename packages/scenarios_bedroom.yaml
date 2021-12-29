@@ -5,16 +5,23 @@ input_number:
     name: 'Persone in camera'
     initial: 0
     min: 0
-    max: 10
+    # counting known people only for now
+    max: 1
     step: 1
 
 automation:
 
   - alias: bedroom_entering
+    # disabilita finché non abbiamo qualcosa di più affidabile
+    initial_state: off
     trigger:
-      platform: mqtt
-      topic: homeassistant/room-trespass/bedroom/direction
-      payload: '1'
+      - platform: mqtt
+        topic: homeassistant/room-trespass/bedroom/direction
+        payload: '1'
+      # FIXME finché il sensore non sarà affidabile al 100%, per una persona sola va bene
+      - platform: state
+        entity_id: group.motion_bedroom
+        to: 'on'
     action:
       - service: input_number.increment
         entity_id: input_number.people_count_bedroom
@@ -23,6 +30,8 @@ automation:
         entity_id: input_number.people_count_living
 
   - alias: bedroom_exiting
+    # disabilita finché non abbiamo qualcosa di più affidabile
+    initial_state: off
     trigger:
       platform: mqtt
       topic: homeassistant/room-trespass/bedroom/direction
@@ -130,6 +139,29 @@ automation:
         entity_id:
           - light.bedroom_main
           - light.bedroom_left
+
+  # Attiva luce su movimento contro il muro
+  - alias: motion_bedroom_wall
+    trigger:
+      - platform: state
+        # non il gruppo, ci serve il sensore specifico qui
+        entity_id: binary_sensor.motion_bedroom
+        to: 'on'
+    condition:
+      condition: or
+      conditions:
+        # Da dieci minuti dopo il tramonto...
+        - condition: sun
+          after: sunset
+          after_offset: "+00:10:00"
+        # ...fino a mezzora prima dell'alba
+        - condition: sun
+          before: sunrise
+          before_offset: "-00:30:00"
+    action:
+      # Accendi la luce principale o la luce del letto, a seconda dell'orario
+      - service: script.bedroom_turn_on_main_light_conditional
+      - service: script.bedroom_turn_on_left_light_conditional
 
   - alias: motion_bedroom_day
     initial_state: off

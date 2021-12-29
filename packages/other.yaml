@@ -13,19 +13,6 @@ homeassistant:
     binary_sensor.workmorning:
       friendly_name: 'Mattina feriale'
 
-sensor:
-  - platform: waze_travel_time
-    name: commute_to_work
-    origin: zone.home
-    destination: zone.work
-    region: 'EU'
-
-  - platform: waze_travel_time
-    name: commute_to_home
-    origin: zone.work
-    destination: zone.home
-    region: 'EU'
-
 binary_sensor:
   - platform: template
     sensors:

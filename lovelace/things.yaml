@@ -142,10 +142,11 @@ cards:
         entities:
           - type: custom:list-card
             entity: sensor.potential_breaking_changes
+            feed_attribute: changes
             columns:
               - title: Component
                 add_link: doclink
-                field: component
+                field: integration
               - title: Description
                 add_link: prlink
                 field: description

@@ -10,12 +10,6 @@ homeassistant:
     automation.media_rasp_on_fire:
       friendly_name: Media Rasp calda
 
-glances:
-
-  - host: rasp
-    name: mediarasp
-    version: 3
-
 sensor:
 
   # Unsupported by Glances integration

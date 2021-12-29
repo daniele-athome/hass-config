@@ -8,17 +8,9 @@ cards:
 
   # Column 1
 
-  - type: custom:thermostat-card
+  - type: custom:thermostat-dark-card
     entity: climate.boiler_main
-    ambient_temperature: sensor.temperature_average
-
-  - type: 'custom:button-card'
-    name: 'Controllo termostato'
-    icon: mdi:thermometer-lines
-    layout: icon_name
-    tap_action:
-      action: url
-      url_path: !secret thermostat_local_url
+    highlight_tap: true
 
   - type: custom:layout-break
 

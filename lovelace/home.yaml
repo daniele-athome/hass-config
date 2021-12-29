@@ -100,7 +100,7 @@ cards:
       - type: 'custom:button-card'
         entity: input_select.house_mode
         name: dnd
-        icon: mdi:do-not-disturb
+        icon: mdi:minus-circle
         tap_action:
           action: call-service
           service: input_select.select_option

@@ -14,7 +14,7 @@ script:
       - service: timer.start
         data:
           entity_id: timer.night_mode_warning
-          duration: "00:03:00"
+          duration: "00:02:59"
 
   # Notifica l'utente che sta per attivarsi la modalità notte
   notify_night_mode_warning:
@@ -63,7 +63,7 @@ automation:
       platform: time_pattern
       # FIXME hard-coding variables
       # because secrets in templates are not supported
-      minutes: "*"
+      minutes: "/1"
     condition:
       # Le condizioni sono solo in questa automazione perché
       # dopo il primo triggering la cancellazione viene delegata all'utente.
@@ -87,8 +87,9 @@ automation:
           entity_id: sensor.people_count_home
           above: '0'
         # Tutte i presenti in camera
-        - condition: template
-          value_template: '{{ states.input_number.people_count_bedroom.state | float == states.sensor.people_count_home.state | float }}'
+        # FIXME sensore rimosso
+        #- condition: template
+        #  value_template: '{{ states.input_number.people_count_bedroom.state | float == states.sensor.people_count_home.state | float }}'
         # Timer warning non attivo
         - condition: template
           value_template: "{{ not is_state('timer.night_mode_warning', 'active') }}"

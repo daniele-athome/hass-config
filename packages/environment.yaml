@@ -14,6 +14,9 @@ homeassistant:
     sensor.temperature_kitchen:
       friendly_name: Cucina
 
+    sensor.humidity_kitchen:
+      friendly_name: Cucina
+
     sensor.temperature_bedroom:
       friendly_name: Camera
 
@@ -111,19 +114,22 @@ ble_monitor:
   bt_interface: '5C:F3:70:99:5B:83'
   discovery: false
   restore_state: true
-  batt_entities: true
   #active_scan: true
   devices:
     - mac: '58:2D:34:3A:0E:84'
       name: 'env_living'
     - mac: 'A4:C1:38:BE:E3:99'
       name: 'env_bathroom1'
+      # TODO remove this stuff - it's for stock firmware
       # Mi Token: cf9f60209fbbcb68389326f3
       encryption_key: 'c15d08be9f48421c27963829582b7105'
     - mac: 'A4:C1:38:CF:AE:8F'
       name: 'env_kitchen'
+      # TODO remove this stuff - it's for stock firmware
       # Mi Token: 09e489852a835cae9f057a90
       encryption_key: 'c9ba2e2bf6877b235718edde1ecbeeaf'
+    - mac: 'A4:C1:38:73:F0:E9'
+      name: 'env_bedroom'
 
 binary_sensor:
 
@@ -150,6 +156,7 @@ automation:
         entity_id: sensor.temperature_bathroom1
         above: 40
     action:
+      # TODO usare script.notify_emergency
       service: notify.kontalk_daniele
       data_template:
         title: "Allarme"
@@ -167,9 +174,8 @@ automation:
         from: 'off'
         to: 'on'
     action:
-      service: notify.kontalk_daniele
-      data_template:
-        title: "Allarme"
+      service: script.notify_emergency
+      data:
         message: |-
           Bagno allagato!
 
@@ -182,13 +188,13 @@ automation:
         entity_id: sensor.gas_level_kitchen
         to: 'heavy'
     action:
-      service: notify.kontalk_daniele
-      data_template:
-        title: "Allarme"
-        message: |-
-          Perdita di gas in cucina!
-          Livello: {{ states.sensor.gas_level_kitchen.state }}
-          Concentrazione: {{ states.sensor.gas_concentration_kitchen.state_with_unit }}
-      # TODO invia email
-      # TODO invia notifica push HASS
-      # TODO fai parlare karen ripetutamente se c'è qualcuno in casa
+      - service: script.notify_emergency
+        data:
+          message: |-
+            Perdita di gas in cucina!
+      - service: notify.kontalk_daniele
+        data:
+          title: ''
+          message: |-
+            Livello gas: {{ states.sensor.gas_level_kitchen.state }}
+            Concentrazione: {{ states.sensor.gas_concentration_kitchen.state_with_unit }}

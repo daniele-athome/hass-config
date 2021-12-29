@@ -1,1 +1,12 @@
 # lovelace_gen
+
+type: 'custom:button-card'
+entity: binary_sensor.domonet_allowed_{{ device_name | replace('-', '') | lower }}
+name: {{ device_name }}
+icon: mdi:access-point
+#tap_action:
+#  action: call-service
+#  service: '[[[ if (entity.state === "on") return "script.domonet_all_disable_internet"; else return "script.domonet_all_enable_internet" ]]]'
+state:
+  - value: 'on'
+    color: green

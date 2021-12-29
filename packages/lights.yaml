@@ -30,7 +30,7 @@ light:
   - platform: mqtt
     name: "living_stand"
     state_topic: "homeassistant/tasmota/stat/piantana/RESULT"
-    value_template: "{{ value_json.POWER }}"
+    state_value_template: "{{ value_json.POWER }}"
     command_topic: "homeassistant/tasmota/cmnd/piantana/POWER"
     payload_on: "ON"
     payload_off: "OFF"
@@ -43,7 +43,7 @@ light:
   - platform: mqtt
     name: "bedroom_main"
     state_topic: "homeassistant/tasmota/stat/bedroom_main/RESULT"
-    value_template: "{{ value_json.POWER }}"
+    state_value_template: "{{ value_json.POWER }}"
     command_topic: "homeassistant/tasmota/cmnd/bedroom_main/POWER"
     payload_on: "ON"
     payload_off: "OFF"
@@ -56,7 +56,7 @@ light:
   - platform: mqtt
     name: "bedroom_left"
     state_topic: "homeassistant/tasmota/stat/bedroom_left/RESULT"
-    value_template: "{{ value_json.POWER }}"
+    state_value_template: "{{ value_json.POWER }}"
     command_topic: "homeassistant/tasmota/cmnd/bedroom_left/POWER"
     payload_on: "ON"
     payload_off: "OFF"
@@ -70,8 +70,8 @@ light:
     lights:
       living_ceiling:
         value_template: "{{ states('light.living_ceiling_real') }}"
-        level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int }}"
-        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int }}"
+        level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int(0) }}"
+        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) }}"
         turn_on:
           service: light.turn_on
           data_template:

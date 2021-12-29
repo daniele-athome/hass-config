@@ -23,6 +23,9 @@ homeassistant:
     sensor.chore_garage_clean:
       repeat_days: 365
 
+    sensor.chore_coffee_machine_clean:
+      repeat_days: 120
+
 input_datetime:
 
   chore_bedroom_floor_dust_last:
@@ -57,6 +60,11 @@ input_datetime:
 
   chore_garage_clean_last:
     name: Ultima pulizia garage
+    icon: mdi:broom
+    has_date: true
+
+  chore_coffee_machine_clean_last:
+    name: Ultimo spurgo caffè
     icon: mdi:broom
     has_date: true
 
@@ -168,5 +176,20 @@ sensor:
               timedelta(days=states.sensor.chore_garage_clean.attributes.repeat_days)
             }}
         friendly_name: Pulizia garage
+        icon_template: mdi:broom
+        unit_of_measurement: 'g'
+
+      chore_coffee_machine_clean:
+        value_template: >-
+          {% set delta = (strptime(states.input_datetime.chore_coffee_machine_clean_last.state, '%Y-%m-%d').date() +
+              timedelta(days=states.sensor.chore_coffee_machine_clean.attributes.repeat_days)) - now().date() %}
+          {{ delta.days }}
+        attribute_templates:
+          next: >-
+            {{
+              strptime(states.input_datetime.chore_coffee_machine_clean_last.state, '%Y-%m-%d').date() +
+              timedelta(days=states.sensor.chore_coffee_machine_clean.attributes.repeat_days)
+            }}
+        friendly_name: Spurgo caffè
         icon_template: mdi:broom
         unit_of_measurement: 'g'

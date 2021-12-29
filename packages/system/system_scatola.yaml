@@ -51,7 +51,7 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id: sensor.cputemp_scatola
-        above: 70
+        above: 73
         for:
           minutes: 10
     action:
