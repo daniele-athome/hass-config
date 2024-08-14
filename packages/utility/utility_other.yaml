@@ -1,0 +1,52 @@
+# Other
+
+homeassistant:
+  customize:
+    sensor.commute_to_home:
+      friendly_name: 'Lavoro-casa'
+      icon: 'mdi:car'
+
+    sensor.commute_to_work:
+      friendly_name: 'Casa-lavoro'
+      icon: 'mdi:car'
+
+    binary_sensor.workmorning:
+      friendly_name: 'Mattina feriale'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      workmorning:
+        value_template: >-
+          {% set hour = states('sensor.time').split(':')[0] | int %}
+          {{ is_state('binary_sensor.workday', 'on') and now().hour >= 5 and now().hour < 10 }}
+      workevening:
+        value_template: >-
+          {% set hour = states('sensor.time').split(':')[0] | int %}
+          {{ is_state('binary_sensor.workday', 'on') and now().hour >= 16 and now().hour < 20 }}
+
+automation:
+
+  - alias: Attivazione ritardata automazioni
+    id: ab1a8506-f203-423f-9264-237b1c548415
+    initial_state: 'on'
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: '00:02:00'
+      - service: automation.turn_on
+        entity_id:
+          - automation.daniele_arrived
+          - automation.daniele_left
+
+  - alias: Imposta tema di default
+    id: 647f2d4d-ec5e-4e7a-9b5d-a35eeb215101
+    initial_state: 'on'
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - service: frontend.set_theme
+        data:
+          name: !secret default_theme

@@ -1,195 +1,48 @@
 # Chores data
+# TODO spostare in directory "chores"
 
-homeassistant:
-  customize:
-    sensor.chore_bedroom_floor_dust:
-      repeat_days: 2
+template:
+  - binary_sensor:
+      - name: washing_machine_operating
+        #icon: todo
+        state: "{{ states.sensor.power_washing_machine.state|int > 10 }}"
+        delay_on: "00:00:10"
+        delay_off: "00:00:60"
 
-    sensor.chore_surfaces_dust:
-      repeat_days: 5
+automation:
 
-    sensor.chore_water_closet_clean:
-      repeat_days: 6
+  - alias: washing_machine_finished
+    id: dc758df2-3df4-11ef-9f43-9797b302512e
+    description: Notifica la fine di una lavatrice
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.washing_machine_operating
+        to: "off"
+    action:
+      - service: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Lavatrice terminata
+      # TODO forse qualcosa di parlato e magari un altro reminder dopo un tot di tempo
 
-    sensor.chore_change_sheets:
-      repeat_days: 25
-
-    sensor.chore_balcony_clean:
-      repeat_days: 60
-
-    sensor.chore_living_floor_clean:
-      repeat_days: 30
-
-    sensor.chore_garage_clean:
-      repeat_days: 365
-
-    sensor.chore_coffee_machine_clean:
-      repeat_days: 120
-
-input_datetime:
-
-  chore_bedroom_floor_dust_last:
-    name: Ultima spazzata camera
-    icon: mdi:broom
-    has_date: true
-
-  chore_surfaces_dust_last:
-    name: Ultima pulizia superfici
-    icon: mdi:broom
-    has_date: true
-
-  chore_water_closet_clean_last:
-    name: Ultima pulizia sanitari
-    icon: mdi:broom
-    has_date: true
-
-  chore_change_sheets_last:
-    name: Ultimo cambia lenzuola
-    icon: mdi:broom
-    has_date: true
-
-  chore_balcony_clean_last:
-    name: Ultimo pulizia balcone
-    icon: mdi:broom
-    has_date: true
-
-  chore_living_floor_clean_last:
-    name: Ultima pulizia pavimento salone
-    icon: mdi:broom
-    has_date: true
-
-  chore_garage_clean_last:
-    name: Ultima pulizia garage
-    icon: mdi:broom
-    has_date: true
-
-  chore_coffee_machine_clean_last:
-    name: Ultimo spurgo caffè
-    icon: mdi:broom
-    has_date: true
-
-sensor:
-
-  # TODO use a custom integration for this
-
-  - platform: template
-    sensors:
-      chore_bedroom_floor_dust:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_bedroom_floor_dust_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_bedroom_floor_dust.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_bedroom_floor_dust_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_bedroom_floor_dust.attributes.repeat_days)
-            }}
-        friendly_name: Spazzare camera
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_surfaces_dust:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_surfaces_dust_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_surfaces_dust.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_surfaces_dust_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_surfaces_dust.attributes.repeat_days)
-            }}
-        friendly_name: Superfici
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_water_closet_clean:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_water_closet_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_water_closet_clean.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_water_closet_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_water_closet_clean.attributes.repeat_days)
-            }}
-        friendly_name: Sanitari
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_change_sheets:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_change_sheets_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_change_sheets.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_change_sheets_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_change_sheets.attributes.repeat_days)
-            }}
-        friendly_name: Cambia lenzuola
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_balcony_clean:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_balcony_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_balcony_clean.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_balcony_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_balcony_clean.attributes.repeat_days)
-            }}
-        friendly_name: Pulizia balcone
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_living_floor_clean:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_living_floor_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_living_floor_clean.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_living_floor_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_living_floor_clean.attributes.repeat_days)
-            }}
-        friendly_name: Pavimento salone
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_garage_clean:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_garage_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_garage_clean.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_garage_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_garage_clean.attributes.repeat_days)
-            }}
-        friendly_name: Pulizia garage
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
-
-      chore_coffee_machine_clean:
-        value_template: >-
-          {% set delta = (strptime(states.input_datetime.chore_coffee_machine_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_coffee_machine_clean.attributes.repeat_days)) - now().date() %}
-          {{ delta.days }}
-        attribute_templates:
-          next: >-
-            {{
-              strptime(states.input_datetime.chore_coffee_machine_clean_last.state, '%Y-%m-%d').date() +
-              timedelta(days=states.sensor.chore_coffee_machine_clean.attributes.repeat_days)
-            }}
-        friendly_name: Spurgo caffè
-        icon_template: mdi:broom
-        unit_of_measurement: 'g'
+# TODO device not available
+#  - alias: trigger_reminder_trash_morning
+#    id: cb974a36-3de3-11ef-9892-bb0d0252ddd1
+#    mode: single
+#    # FIXME this trigger causes validation to fail (but not really)
+#    trigger:
+#      - device_id: 949aad0be16512bcf2671f392f17de26
+#        domain: zha
+#        platform: device
+#        type: remote_button_short_press
+#        subtype: remote_button_short_press
+#    action:
+#      - service: input_boolean.turn_on
+#        entity_id: input_boolean.reminder_trash_morning
+#      - event: assistant_speak_tts
+#        event_data_template:
+#          template: TrashReminderMorning_manual
+#          variables:
+#            when: "domani"

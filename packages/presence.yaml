@@ -1,4 +1,5 @@
 # Presence automations
+# FIXME questo file è un casino, organizzare e rivedere l'appartenenza di alcune automazioni/script/sensori
 
 input_boolean:
 
@@ -8,15 +9,30 @@ input_boolean:
     initial: off
     icon: mdi:door-open
 
+  # Daniele entrato in zona casa - resettato dopo che Daniele entra in casa
+  daniele_zoned_home:
+    initial: off
+
 sensor:
 
-  # Numero di persone note in casa
+  # Numero di persone note in zona casa
   - platform: template
     sensors:
       people_count_home:
         value_template: >-
           {% set count = 0 %}
           {% if is_state("person.daniele", "home") %}
+            {% set count = count + 1 %}
+          {% endif %}
+          {{count}}
+
+  # Numero di persone note rilevate con device dentro casa
+  - platform: template
+    sensors:
+      people_count_home_local:
+        value_template: >-
+          {% set count = 0 %}
+          {% if is_state("device_tracker.daniele_paytonble", "home") or is_state("device_tracker.daniele_paytonrouter", "home") %}
             {% set count = count + 1 %}
           {% endif %}
           {{count}}
@@ -34,13 +50,61 @@ automation:
         data:
           topic: 'homeassistant/monitor/KNOWN DEVICE STATES'
 
-  - alias: daniele_arrived
-    initial_state: off
+  - alias: daniele_zoned_home
+    description: 'Arrivo di Daniele in zona casa'
     trigger:
       - platform: state
-        entity_id: person.daniele
+        entity_id: device_tracker.daniele_payton
         to: 'home'
     action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.daniele_zoned_home
+
+  - alias: daniele_zoned_away
+    description: 'Uscita di Daniele da zona casa'
+    trigger:
+      - platform: state
+        entity_id: device_tracker.daniele_payton
+        from: 'home'
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.daniele_zoned_home
+
+  # deve scattare quando entro dentro casa, quindi non basta la person ma devono attivarsi i sensori di rete vicina (WiFi o BLE)
+  # FIXME evitare falsi positivi derivanti dalla sparizione temporanea dei tracker WiFi e BLE
+  # FIXME parte 2 volte quando entro e mi rileva col bluetooth e poi attivo il WiFi
+  - alias: daniele_arrived
+    description: 'Arrivo di Daniele: Karen saluta'
+    initial_state: off
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: device_tracker.daniele_paytonble
+        to: 'home'
+      - platform: state
+        entity_id: device_tracker.daniele_paytonrouter
+        to: 'home'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.daniele_zoned_home
+          state: 'on'
+        - condition: or
+          conditions:
+            # Porta aperta...
+            - condition: state
+              entity_id: binary_sensor.door_main
+              state: 'on'
+            # ...oppure chiusa meno di 3 minuti fa
+            - condition: template
+              value_template: >-
+                {{ is_state("binary_sensor.door_main", "off") and
+                  (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 180 }}
+    action:
+      # resetta stato temporaneo
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.daniele_zoned_home
       # Aspetta che la porta sia chiusa
       - wait_template: "{{ is_state('binary_sensor.door_main', 'off') }}"
       # Sicuramente c'è una persona in più in soggiorno
@@ -48,15 +112,16 @@ automation:
         entity_id: input_number.people_count_living
       - delay:
           seconds: 10
-      # Annuncia
+      # Saluta
       - service: script.welcome_home
 
   - alias: daniele_left
+    description: 'Uscita di Daniele: sveglia il server'
     initial_state: off
     trigger:
       - platform: state
         entity_id: person.daniele
-        to: 'not_home'
+        from: 'home'
     action:
       # Sicuramente c'è una persona in meno in soggiorno
       - service: input_number.decrement
@@ -69,16 +134,6 @@ automation:
       - platform: numeric_state
         entity_id: sensor.people_count_home
         below: '1'
-    condition:
-      condition: and
-      conditions:
-        # Porta chiusa...
-        - condition: state
-          entity_id: binary_sensor.door_main
-          state: 'off'
-        # ... meno di 5 minuti fa
-        - condition: template
-          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 300 }}'
     action:
       # Modalità casa vuota
       - service: input_select.select_option
@@ -94,9 +149,9 @@ automation:
     action:
       # Modalità giorno
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.house_mode
-          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
+          option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
 
   # TODO house_empty_extended
 
@@ -108,21 +163,15 @@ automation:
         entity_id: binary_sensor.door_main
         to: 'on'
     condition:
-      condition: or
-      conditions:
-        # Casa vuota
-        - condition: numeric_state
-          entity_id: sensor.people_count_home
-          below: 1
-        # Il numero di persone in casa è variato recentemente
-        # Usato nei casi di bluetooth o wifi rilevati prima dell'ingresso in casa
-        - condition: template
-          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.sensor.people_count_home.last_changed)) < 120 }}'
+      # Nessun device in casa
+      - condition: numeric_state
+        entity_id: sensor.people_count_home_local
+        below: 1
     action:
       - service: script.scan_arrival
       - service: script.people_arrival
 
-  # Movimento rilevato e nessuno in casa: fai partire scan di arrivo
+  # Movimento rilevato e nessuno device in casa: fai partire scan di arrivo
   # Aiuta nel risolvere le situazioni di stallo derivanti da assenze brevi
   - alias: motion_fix_empty
     trigger:
@@ -131,9 +180,9 @@ automation:
         entity_id: group.motion_living
         to: 'on'
     condition:
-      # Casa vuota
+      # Nessun device in casa
       - condition: numeric_state
-        entity_id: sensor.people_count_home
+        entity_id: sensor.people_count_home_local
         below: 1
     action:
       - service: script.scan_arrival
@@ -161,9 +210,8 @@ automation:
         object_type: person
     action:
       # Debug
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Info"
+      - service: script.notify_debug
+        data:
           message: "Persone rilevate: {{ states.image_processing.deepstack_person_detector.state }}"
       - condition: numeric_state
         entity_id: image_processing.deepstack_person_detector
@@ -182,9 +230,11 @@ automation:
         to: 'on'
     condition:
       - condition: numeric_state
-        entity_id: sensor.people_count_home
+        entity_id: sensor.people_count_home_local
         above: '0'
     action:
+      # FIXME pause is actually toggle for most media players
+      # FIXME it might trigger when I open the door and already connected to WiFi from outside 
       - service: media_player.media_pause
         entity_id: group.media
 
@@ -204,38 +254,10 @@ automation:
         - condition: template
           value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 120 }}'
         - condition: numeric_state
-          entity_id: sensor.people_count_home
+          entity_id: sensor.people_count_home_local
           above: '0'
     action:
       - service: script.scan_departure
-
-  # Movimento terminato e porta chiusa meno di 2 minuti fa, nessuno in casa
-  # Passa a house mode away immediatamente
-  # - Automazione particolarmente utile nelle zone morte o quando i device tracker non rilevano niente nonostante
-  #   ci sia gente in casa. Il cessato movimento e la porta chiusa di recente determina con buone possibilità che
-  #   chi c'era prima è uscito e la casa è ora definitivamente vuota, ergo il passaggio diretto ad away.
-  - alias: presence_motion_stopped_empty
-    trigger:
-      - platform: state
-        entity_id: group.motion_living
-        to: 'off'
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.door_main
-          state: 'off'
-        - condition: template
-          value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) < 120 }}'
-        - condition: state
-          entity_id: sensor.people_count_home
-          state: '0'
-    action:
-      # Modalità casa vuota
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.house_mode
-          option: away
 
   # Disattiva le automazioni di luci di movimento se è appena entrato qualcuno in casa
   - alias: motion_house_entrance_disable
@@ -260,6 +282,47 @@ automation:
         entity_id:
           - automation.living_motion_night
           - automation.living_motion_night_end
+
+  - alias: trigger_daniele_location
+    description: 'Richiede la posizione al device di Daniele qualche tempo dopo la disconnessione dei device locali'
+    trigger:
+      - platform: state
+        entity_id: device_tracker.daniele_paytonble
+        from: 'home'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: device_tracker.daniele_paytonrouter
+        from: 'home'
+        for:
+          minutes: 5
+    action:
+      - service: notify.mobile_app_daniele_payton
+        data:
+          message: request_location_update
+
+  - alias: payton_house_entered_enable_wifi
+    description: "Abilita Wi-Fi del cellulare all'ingresso di casa."
+    trigger:
+      platform: state
+      entity_id: binary_sensor.door_main
+      to: 'on'
+    condition:
+      not:
+        - condition: state
+          entity_id: binary_sensor.daniele_payton_wifi_state
+          state: 'on'
+    action:
+      - service: notify.mobile_app_daniele_payton
+        data:
+          message: command_activity
+          data:
+            intent_package_name: "com.llamalab.automate"
+            intent_action: "com.llamalab.automate.intent.action.START_FLOW"
+            intent_uri: !secret payton_automate_enablewifi
+
+  # TODO - alias: payton_house_left_disable_wifi
+  #  description: "Disabilita Wi-Fi del cellulare all'uscita di casa."
 
 script:
 

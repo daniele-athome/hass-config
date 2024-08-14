@@ -1,0 +1,129 @@
+# ### Device presence and battery monitoring
+# TODO allarmi per sensori che spariscono, data una lista di sensori noti
+
+sensor:
+  - platform: template
+    sensors:
+      # Device con batteria scarica
+      low_batteries:
+        friendly_name: Batterie scariche
+        value_template: >
+          {%- set threshold = 10 -%}
+          {%- set result = namespace(count=0) -%}
+          {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
+          {%- set result.count = result.count + 1 -%}
+          {%- endfor -%}
+          {{ result.count }}
+        attribute_templates:
+          devices: >
+            {%- set threshold = 10 -%}
+            {%- set result = namespace(items=[]) -%}
+            {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
+            {% set result.items = result.items + [item.entity_id] %}
+            {%- endfor -%}
+            {{ result.items }}
+
+      # da usare in UI per rappresentare stato assente
+      status_controlcenter:
+        unit_of_measurement: "%"
+        device_class: battery
+        value_template: >-
+          {% if is_state('device_tracker.controlcenter', 'home') %}
+          {{ states.sensor.controlcenter_battery_level.state }}
+          {% else %}
+          0
+          {% endif %}
+
+      status_thermostat:
+        unit_of_measurement: "%"
+        device_class: battery
+        value_template: >-
+          {% if not is_state('climate.boiler_main', 'unavailable') %}
+          100
+          {% else %}
+          0
+          {% endif %}
+
+      status_mediarasp:
+        unit_of_measurement: "%"
+        device_class: battery
+        value_template: >-
+          {% if is_state('device_tracker.rasp', 'home') %}
+          100
+          {% else %}
+          0
+          {% endif %}
+
+automation:
+  - alias: control_center_low_battery
+    id: a64c4dea-2c0d-11ef-9cb5-e7d9d5cb4346
+    description: Notifica centro di controllo scarico
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.controlcenter_battery_level
+        below: 10
+    action:
+      - service: script.notify_info
+        data:
+          category: Sistema
+          message: |-
+            Batteria del centro di controllo bassa: {{ states.sensor.controlcenter_battery_level.state_with_unit }}
+
+  - alias: alert_low_batteries
+    id: d60577fa-2c0d-11ef-b5c7-9ff802017551
+    description: Notifica batterie scariche
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.low_batteries
+      above: '0'
+      # evita sensori che riportano microcambiamenti
+      for: 02:00:00
+    action:
+      - service: persistent_notification.create
+        data:
+          title: Batterie scariche
+          message: >
+            {%- for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
+          notification_id: alert_low_batteries
+      - service: script.notify_info
+        data:
+          category: Sistema
+          message: |-
+            Batterie scariche:
+            {% for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
+
+  - alias: alert_low_batteries_dismiss
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.low_batteries
+      below: '1'
+    action:
+      - service: persistent_notification.dismiss
+        data:
+          notification_id: alert_low_batteries
+
+  - alias: alert_home_assistant_startup
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - service: script.notify_debug
+        data:
+          message: |-
+            Home Assistant avviato
+
+alert:
+  battery_discharging_scatola:
+    name: Batteria scatola in scaricamento
+    message: 'Batteria scatola in scaricamento: {{ states.sensor.battery_scatola.state_with_unit }}'
+    done_message: 'Batteria scatola carica.'
+    entity_id: binary_sensor.battery_discharging_scatola
+    state: 'on'
+    repeat: 5
+    can_acknowledge: true
+    notifiers:
+      - information

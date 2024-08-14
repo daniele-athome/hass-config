@@ -61,6 +61,7 @@ class AssistantSpeak(hermes.Hermes):
             tmpl_text = self.call_service('assistant/template',
                                           template=tmpl_name,
                                           variables=tmpl_variables,
+                                          return_result=True,
                                           namespace='assistant')
         else:
             tmpl_text = None

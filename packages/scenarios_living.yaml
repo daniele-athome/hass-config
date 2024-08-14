@@ -1,4 +1,15 @@
 # Entity state scenes and scenarios for living room
+# FIXME merita una directory dedicata
+
+binary_sensor:
+
+  - platform: template
+    sensors:
+      # Bisogno di luce in soggiorno
+      living_need_light:
+        value_template: >-
+          {{ states.sensor.lux_living.state|int < 10 or is_state('sun.sun', 'below_horizon') }}
+
 
 input_number:
 
@@ -45,6 +56,15 @@ scene:
         state: off
 
 automation:
+
+  - alias: need_utility_light_toggle_tag
+    trigger:
+      - platform: tag
+        tag_id: 573fa973-7041-4431-a3ef-541f37fffe34
+    action:
+      - service: input_boolean.toggle
+        entity_id: input_boolean.need_living_utility_light
+      # TODO maybe say something?
 
   - alias: need_utility_light_on
     trigger:
@@ -210,7 +230,7 @@ automation:
   - alias: living_too_much_light
     trigger:
       - platform: numeric_state
-        entity_id: sensor.living_main_lux
+        entity_id: sensor.lux_living
         above: !secret living_lux_too_much_threshold
     action:
       - service: light.turn_off
@@ -249,14 +269,14 @@ automation:
           - media_player.music
           - media_player.tv
 
-  # Accendi una lieve luce notturna in caso di movimento in salone
+  # Accendi una lieve luce notturna in caso di movimento in soggiorno
   - alias: living_motion_night
     trigger:
       - platform: state
         entity_id: group.motion_living
         to: 'on'
       - platform: numeric_state
-        entity_id: sensor.living_main_lux
+        entity_id: sensor.lux_living
         below: !secret living_lux_darkness_threshold
     condition:
       condition: and
@@ -269,9 +289,10 @@ automation:
           entity_id: binary_sensor.cinema_paused_mode
           state: 'off'
         # TV spenta (rafforzativo del cinema mode causa instabilità API Philips)
-        - condition: state
-          entity_id: media_player.tv
-          state: 'off'
+        # FIXME API Philips non funziona
+        #- condition: state
+        #  entity_id: media_player.tv
+        #  state: 'off'
         # Non mi serve luce utility soggiorno
         - condition: state
           entity_id: input_boolean.need_living_utility_light
@@ -285,13 +306,13 @@ automation:
           entity_id: group.motion_living
           state: 'on'
         - condition: numeric_state
-          entity_id: sensor.living_main_lux
+          entity_id: sensor.lux_living
           below: !secret living_lux_darkness_threshold
     action:
       - service: scene.turn_on
         entity_id: scene.living_night_guidance_on
 
-  # Spegni la luce notturna quando il movimento in salone è cessato
+  # Spegni la luce notturna quando il movimento in soggiorno è cessato
   - alias: living_motion_night_end
     trigger:
       - platform: state
@@ -318,7 +339,7 @@ automation:
         - condition: state
           entity_id: input_boolean.need_living_utility_light
           state: 'off'
-        # Movimento in salone assente
+        # Movimento in soggiorno assente
         - condition: state
           entity_id: group.motion_living
           state: 'off'

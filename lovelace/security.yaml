@@ -1,7 +1,8 @@
 path: security
 title: Sicurezza
 icon: mdi:shield-home
-type: custom:vertical-layout
+type: custom:layout-card
+layout_type: custom:vertical-layout
 layout:
   max_cols: 2
 cards:

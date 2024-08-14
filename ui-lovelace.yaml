@@ -2,6 +2,12 @@ title: Casaricci
 
 #background: center / cover no-repeat url("/local/ui/background_19.png") fixed
 
+swipe_nav:
+  #wrap: false
+  #animate: swipe
+  #prevent_default: true
+  swipe_amount: 40
+
 views:
   - !include lovelace/home.yaml
   - !include lovelace/environment.yaml

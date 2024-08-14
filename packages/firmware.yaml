@@ -1,10 +1,8 @@
-# Firmware
+# ### Firmware
 # Inspired by https://github.com/JamesMcCarthy79/Home-Assistant-Config/tree/master/config/packages/firmware
 
 homeassistant:
   customize:
-    sensor.potential_breaking_changes:
-      friendly_name: Cambiamenti rilevanti
     sensor.ha_update_available:
       friendly_name: Aggiornamento HA disponibile
 
@@ -14,15 +12,7 @@ group:
     entities:
       - binary_sensor.ha_update_available
 
-breaking_changes:
-
 sensor:
-  - platform: version
-    source: local
-
-  - platform: version
-    source: pypi
-
   - platform: template
     sensors:
       ha_update_available:
@@ -40,11 +30,14 @@ automation:
   - alias: Notifica aggiornamento HASS
     trigger:
       - platform: state
-        entity_id: binary_sensor.updater
+        entity_id: binary_sensor.latest_version_update_available
         from: 'off'
         to: 'on'
     action:
-      service: notify.kontalk_daniele
-      data_template:
-        title: 'Nuova versione di Home Assistant'
-        message: "Home Assistant {{ state_attr('binary_sensor.updater', 'newest_version') }} è stato rilasciato."
+      - service: script.notify_debug
+        data:
+          message: "Home Assistant {{ states('sensor.latest_version') }} è stato rilasciato."
+
+shell_command:
+  # in teoria la cwd di HA è la cartella della configurazione
+  upgrade_configuration_scm: git pull --ff-only

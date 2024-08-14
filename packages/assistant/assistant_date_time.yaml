@@ -1,26 +1,30 @@
 
 intent_script:
 
+  # Pronuncia l'ora
   GetTime:
     action:
-      - service: script.say_time
-
-  GetDate:
-    action:
-      - service: script.say_date
-
-script:
-
-  # Pronuncia l'ora
-  say_time:
-    sequence:
-      - event: assistant_speak_tts
-        event_data:
-          template: say_time
+      - service: random_template.render
+        data:
+          key: assistant_say_time
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   # Pronuncia la data
-  say_date:
-    sequence:
-      - event: assistant_speak_tts
-        event_data:
-          template: say_date
+  GetDate:
+    action:
+      - service: random_template.render
+        data:
+          key: assistant_say_date
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"

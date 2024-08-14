@@ -1,0 +1,104 @@
+# ### Environment monitoring automations and sensors
+
+automation:
+  - alias: house_on_fire
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.temperature_kitchen
+        above: 42
+      - platform: numeric_state
+        entity_id: sensor.temperature_bedroom
+        above: 40
+      - platform: numeric_state
+        entity_id: sensor.temperature_living
+        above: 40
+      - platform: numeric_state
+        entity_id: sensor.temperature_bathroom1
+        above: 40
+      - platform: numeric_state
+        entity_id: sensor.temperature_studio
+        above: 40
+    action:
+      - service: script.notify_emergency
+        data:
+          title: "Emergenza"
+          speak: no
+          category: "Ambiente"
+          message: |-
+            Temperatura ambiente eccessiva!
+            Cucina: {{ states.sensor.temperature_kitchen.state_with_unit }}
+            Soggiorno: {{ states.sensor.temperature_living.state_with_unit }}
+            Camera da letto: {{ states.sensor.temperature_bedroom.state_with_unit }}
+            Bagno 1: {{ states.sensor.temperature_bathroom1.state_with_unit }}
+            Studio: {{ states.sensor.temperature_studio.state_with_unit }}
+
+  - alias: bathroom_flooded
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.water_bathroom1
+        from: 'off'
+        to: 'on'
+    action:
+      - service: script.notify_emergency
+        data:
+          category: Ambiente
+          message: |-
+            Bagno 1 allagato!
+      - service: switch.turn_off
+        entity_id: switch.washing_machine
+
+  - alias: gas_leak
+    trigger:
+      - platform: state
+        entity_id: sensor.gas_level_kitchen
+        to: 'mild'
+      - platform: state
+        entity_id: sensor.gas_level_kitchen
+        to: 'heavy'
+    action:
+      - service: script.notify_emergency
+        data:
+          category: Ambiente
+          message: |-
+            Perdita di gas in cucina!
+      - service: script.notify_info
+        data:
+          category: Ambiente
+          message: |-
+            Livello gas: {{ states.sensor.gas_level_kitchen.state }}
+            Concentrazione: {{ states.sensor.gas_concentration_kitchen.state_with_unit }}
+
+  # Riscaldamento acceso da troppo tempo (qualcosa non va)
+  - alias: boiler_main_stuck
+    trigger:
+      - platform: state
+        entity_id: climate.boiler_main
+        attribute: hvac_action
+        to: "heating"
+        for:
+          hours: 6
+    action:
+      - service: script.notify_important
+        data:
+          category: Ambiente
+          speak: no
+          message: |-
+            Riscaldamento attivo da più di 6 ore!
+
+  # Termostato down
+  # TODO usare stato del termostato Zigbee; spostare in device_monitoring e usare automazione generica
+  - alias: thermostat_down
+    initial_state: off
+    trigger:
+      - platform: state
+        entity_id: device_tracker.thermostat
+        to: 'not_home'
+        for:
+          minutes: 8
+    action:
+      - service: script.notify_important
+        data:
+          category: Sistema
+          speak: no
+          message: |-
+            Termostato non raggiungibile!

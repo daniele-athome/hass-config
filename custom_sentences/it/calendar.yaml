@@ -1,0 +1,30 @@
+language: it
+
+intents:
+
+  CalendarSummaryToday:
+    data:
+      - sentences:
+          - "(che|cosa) succede oggi"
+          - "mi dici gli appuntamenti [di] oggi"
+          - "che appuntamenti (ci sono|ho) [per oggi]"
+          - "(che|cosa) devo fare oggi"
+          - "(che|cosa) c'è (in|nel) calendario [oggi]"
+
+  CalendarSummaryTomorrow:
+    data:
+      - sentences:
+          - "(che|cosa) succede domani"
+          - "mi dici gli appuntamenti [di] domani"
+          - "che appuntamenti (ci sono|ho) [per] domani"
+          - "(che|cosa) devo fare domani"
+          - "(che|cosa) c'è (in|nel) calendario domani"
+
+  CalendarSummaryWeekend:
+    data:
+      - sentences:
+          - "(che|cosa) succede [(il|nel)] (fine settimana|weekend)"
+          - "mi dici gli appuntamenti [(per|del|nel)] (fine settimana|weekend)"
+          - "che appuntamenti (ci sono|ho) [(per|il|nel)] (fine settimana|weekend)"
+          - "(che|cosa) devo fare [(il|nel)] (fine settimana|weekend)"
+          - "(che|cosa) c'è (in|nel) calendario [(il|nel)] (fine settimana|weekend)"

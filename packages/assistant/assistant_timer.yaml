@@ -4,6 +4,12 @@ timer:
     name: Timer
     icon: mdi:timer
 
+intent_script:
+
+  # TODO SetCountdownAlarm:
+  # TODO GetCountdownAlarm:
+  # TODO ClearCountdownAlarm:
+
 automation:
 
   - alias: TimerFinished

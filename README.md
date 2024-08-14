@@ -1,7 +1,9 @@
 # My Home Assistant configuration
 
+> This readme might be behind the actual configuration files. I will update it when I can.
+
 This is a mirror of my home automation configuration for Home Assistant.
-It's been stripped down of some templates for speech and notifications.
+It's been stripped down of some templates for speech and notifications (and of course secrets).
 
 ## What's a Smart Home for me
 
@@ -45,7 +47,11 @@ TODO home automation view diagram
 * ZigBee RGB LED strips
 
 TODO also include a wishlist or planning to buy  
-TODO include custom built hardware
+TODO include custom built hardware  
+TODO new Bosch ZigBee thermostat  
+TODO new media raspberry  
+TODO Rhasspy dismissal  
+TODO new ZigBee/Thread controller
 
 ## Lovelace interface
 

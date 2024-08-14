@@ -1,7 +1,10 @@
-class ClockCard extends Polymer.Element {
-  
-  static get template() {
-    return Polymer.html`
+const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
+const html = LitElement.prototype.html;
+
+class ClockCard extends LitElement {
+
+  render() {
+    return html`
           <style>
         :host {
           cursor: pointer;
@@ -50,15 +53,15 @@ class ClockCard extends Polymer.Element {
   
   static get properties() {
     return {
-      _hass: Object
-    }
+      hass: Object,
+      config: Object,
+    };
   }
-  
-  ready() {
-    super.ready();
-    this.time = this.$.time;
-    this.date = this.$.date;
-    
+
+  firstUpdated() {
+    this.time = this.shadowRoot.getElementById('time');
+    this.date = this.shadowRoot.getElementById('date');
+
     this._updateTime();
     setInterval(() => this._updateTime(), 1000);
   }
@@ -66,14 +69,10 @@ class ClockCard extends Polymer.Element {
   setConfig(config) {
     this.config = config;
   }
-  
-  set hass(hass) {
-    this._hass = hass;
-  }
 
   _updateTime(force = false) {
     if (window.moment) {
-      moment.locale(this._hass.language);
+      moment.locale(this.hass.language);
       this.time.innerHTML = moment().format('LT');
       this.date.innerHTML = moment().format('dddd, LL');
     }

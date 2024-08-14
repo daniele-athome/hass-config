@@ -23,7 +23,7 @@ app_assistant_template:
   class: AssistantTemplate
   log: assistant
   log_level: DEBUG
-  templates_path: /home/homeassistant/.homeassistant/templates
+  templates_path: /home/homeassistant/.homeassistant/custom_templates
   language: it
 
 app_assistant_speak:
@@ -34,16 +34,6 @@ app_assistant_speak:
   dependencies:
     - app_assistant_template
     - app_hermes_tts
-
-app_assistant_xmpp_daniele:
-  module: assistant_xmpp
-  class: AssistantXMPP
-  log: assistant
-  log_level: DEBUG
-  xmpp_username: !secret xmpp_username
-  xmpp_password: !secret xmpp_password
-  site_id: xmpp_daniele
-  allowed_senders: !secret assistant_xmpp_daniele_allowed_senders
 
 app_domonet_devices:
   module: domonet_devices

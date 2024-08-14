@@ -8,10 +8,9 @@ confirmation:
   text: '[[[ return `Conferma ${entity.attributes.friendly_name}` ]]]'
 tap_action:
   action: call-service
-  service: input_datetime.set_datetime
+  service: chore_helper.complete
   service_data:
-    entity_id: input_datetime.{{ chore_name }}_last
-    date: '[[[ return new Date().toISOString().split("T")[0] ]]]'
+    entity_id: sensor.{{ chore_name }}
 
 state:
   - value: -2

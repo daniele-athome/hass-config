@@ -1,7 +1,8 @@
 path: things
 title: Oggetti
 icon: mdi:cogs
-type: custom:vertical-layout
+type: custom:layout-card
+layout_type: custom:vertical-layout
 layout:
   max_cols: 2
 cards:
@@ -9,28 +10,8 @@ cards:
   # Column 1
 
   - type: markdown
-    style:
-      .: |
-        ha-markdown.no-header {
-          padding: 0 !important;
-        }
-        ha-markdown {
-          padding: 0;
-        }
-      'ha-markdown':
-        $: |
-          ha-markdown-element h1 {
-            line-height: 64px;
-          }
-          ha-markdown-element img {
-            width: 64px;
-            height: 64px;
-            border-radius: var(--ha-card-border-radius);
-            vertical-align: top;
-            margin-right: 10px;
-          }
     content: >
-      # ![Karen](/local/ui/karen-avatar.jpg) Karen
+      ## Scatola
 
   - type: 'custom:bar-card'
     entities:
@@ -43,22 +24,23 @@ cards:
       minmax: 'off'
       name: 'off'
       value: inside
-    style: |-
-      :host {
-        --bar-card-border-radius: 4px;
-      }
-      :host .card-content {
-        padding: 6px 10px;
-      }
-      bar-card-value {
-        font-size: 13px;
-        font-weight: bold;
-        text-shadow: 1px 1px #0008;
-        margin-left: 4px !important;
-      }
-      bar-card-divider {
-        display: none;
-      }
+    card_mod:
+      style: |-
+        :host {
+          --bar-card-border-radius: 4px;
+        }
+        :host .card-content {
+          padding: 6px 10px;
+        }
+        bar-card-value {
+          font-size: 13px;
+          font-weight: bold;
+          text-shadow: 1px 1px #0008;
+          margin-left: 4px !important;
+        }
+        bar-card-divider {
+          display: none;
+        }
 
   - type: 'custom:bar-card'
     entities:
@@ -73,22 +55,23 @@ cards:
       minmax: 'off'
       name: 'off'
       value: inside
-    style: |-
-      :host {
-        --bar-card-border-radius: 4px;
-      }
-      :host .card-content {
-        padding: 6px 10px;
-      }
-      bar-card-value {
-        font-size: 13px;
-        font-weight: bold;
-        text-shadow: 1px 1px #0008;
-        margin-left: 4px !important;
-      }
-      bar-card-divider {
-        display: none;
-      }
+    card_mod:
+      style: |-
+        :host {
+          --bar-card-border-radius: 4px;
+        }
+        :host .card-content {
+          padding: 6px 10px;
+        }
+        bar-card-value {
+          font-size: 13px;
+          font-weight: bold;
+          text-shadow: 1px 1px #0008;
+          margin-left: 4px !important;
+        }
+        bar-card-divider {
+          display: none;
+        }
 
   - type: entities
     entities:
@@ -110,46 +93,92 @@ cards:
           name: inside
           value: inside
         height: '40px'
-        style: |-
-          :host {
-            --bar-card-border-radius: 4px;
-          }
-          :host .card-content {
-            padding: 0 10px;
-          }
-          bar-card-card {
-            padding: 9px;
-          }
-          bar-card-name {
-            margin: 2px 0 0 0;
-          }
-          bar-card-value {
-            font-weight: bold;
-            margin-right: auto;
-            margin-left: auto;
-            margin-bottom: auto;
-            margin-top: 0px;
-          }
-          bar-card-divider {
-            display: none;
-          }
-          bar-card-contentbar {
-            flex-direction: column !important;
-          }
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 0 10px;
+            }
+            bar-card-card {
+              padding: 9px;
+            }
+            bar-card-name {
+              margin: 2px 0 0 0;
+            }
+            bar-card-value {
+              font-weight: bold;
+              margin-right: auto;
+              margin-left: auto;
+              margin-bottom: auto;
+              margin-top: 0px;
+            }
+            bar-card-divider {
+              display: none;
+            }
+            bar-card-contentbar {
+              flex-direction: column !important;
+            }
 
-      - type: custom:fold-entity-row
-        head: sensor.potential_breaking_changes
-        entities:
-          - type: custom:list-card
-            entity: sensor.potential_breaking_changes
-            feed_attribute: changes
-            columns:
-              - title: Component
-                add_link: doclink
-                field: integration
-              - title: Description
-                add_link: prlink
-                field: description
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: 'CORRENTE (kWh)'
+
+      - entity: input_number.energy_mains_total_f1
+      - entity: input_number.energy_mains_total_f2
+      - entity: input_number.energy_mains_total_f3
+
+      - type: 'custom:button-card'
+        icon: mdi:transmission-tower
+        name: Applica
+        layout: icon_name
+        styles:
+          card:
+            - height: 70px
+        tap_action:
+          action: call-service
+          service: script.input_reading_energy_mains
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: 'GAS (m³)'
+
+      - entity: input_number.energy_gas_total
+
+      - type: 'custom:button-card'
+        icon: mdi:fire
+        name: Applica
+        layout: icon_name
+        styles:
+          card:
+            - height: 70px
+        tap_action:
+          action: call-service
+          service: script.input_reading_energy_gas
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: 'ACQUA (m³)'
+
+      - entity: input_number.energy_water_total
+
+      - type: 'custom:button-card'
+        icon: mdi:water
+        name: Applica
+        layout: icon_name
+        styles:
+          card:
+            - height: 70px
+        tap_action:
+          action: call-service
+          service: script.input_reading_energy_water
 
   - type: custom:layout-break
 
@@ -163,10 +192,14 @@ cards:
 
       - type: custom:bar-card
         entities:
-          - sensor.battery_scatola
-          - sensor.status_controlcenter
-          - sensor.status_thermostat
-          - sensor.status_mediarasp
+          - entity: sensor.battery_scatola
+            name: Scatola
+          - entity: sensor.status_controlcenter
+            name: Centro di controllo
+          - entity: sensor.status_thermostat
+            name: Termostato
+          - entity: sensor.status_mediarasp
+            name: Media center
         severity:
           - color: '#bf4040'
             from: 0
@@ -184,38 +217,41 @@ cards:
           minmax: 'off'
           name: 'inside'
           value: 'off'
-        style: |-
-          :host {
-            --bar-card-border-radius: 4px;
-          }
-          :host .card-content {
-            padding: 6px 10px;
-          }
-          bar-card-name {
-            font-size: 13px;
-            font-weight: bold;
-            text-shadow: 1px 1px #0008;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          bar-card-divider {
-            display: none;
-          }
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-name {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: auto;
+              margin-right: auto;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
       - type: section
         label: SENSORI
 
       - type: custom:bar-card
         entities:
+          - sensor.battery_env_external
           - sensor.battery_env_living
           - sensor.battery_env_bedroom
           - sensor.battery_env_bathroom1
-          - sensor.battery_env_external
           - sensor.battery_env_kitchen
+          - sensor.battery_env_studio
           - sensor.battery_door_main
           - sensor.battery_motion_living
+          - sensor.battery_lux_living
           - sensor.battery_motion_entrance
-          - sensor.battery_motion_bedroom
+          - sensor.battery_motion_bedroom_left
           - sensor.battery_water_bathroom1
         severity:
           - color: '#bf4040'
@@ -234,23 +270,24 @@ cards:
           minmax: 'off'
           name: 'inside'
           value: 'off'
-        style: |-
-          :host {
-            --bar-card-border-radius: 4px;
-          }
-          :host .card-content {
-            padding: 6px 10px;
-          }
-          bar-card-name {
-            font-size: 13px;
-            font-weight: bold;
-            text-shadow: 1px 1px #0008;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          bar-card-divider {
-            display: none;
-          }
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-name {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: auto;
+              margin-right: auto;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
       # TODO non so se queste vanno qui...
       - type: section

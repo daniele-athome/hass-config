@@ -1,9 +1,2 @@
 *
 !.gitignore
-!rhasspy_events
-!rhasspy_events/*
-!rhasspy_playlists
-!rhasspy_playlists/*
-!person2
-!person2/*
-!person2/translations/*

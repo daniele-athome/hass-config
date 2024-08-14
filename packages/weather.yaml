@@ -14,51 +14,55 @@ homeassistant:
     sensor.weather_temperature:
       friendly_name: Temperatura esterna
 
-weather:
-  - name: home
-    #platform: openweathermap
-    #api_key: !secret openweathermap_apikey
-    platform: darksky
-    api_key: !secret darksky_apikey
-    mode: daily
-
 sensor:
-  - name: weather
-    platform: darksky
-    api_key: !secret darksky_apikey
-    language: it
-    scan_interval: '01:00'
-    forecast:
-      - 0
-      - 1
-      - 2
-      - 3
-      - 4
-      - 5
-    hourly_forecast:
-      - 0
-      - 1
-    monitored_conditions:
-      - summary
-      - minutely_summary
-      - hourly_summary
-      - daily_summary
-      - icon
-      - uv_index
-      - ozone
-      - temperature
-      - temperature_high
-      - temperature_low
-      - apparent_temperature
-      - apparent_temperature_high
-      - humidity
-      - wind_speed
-      - wind_bearing
-      - precip_probability
-      - precip_intensity
-      - precip_intensity_max
-      - pressure
-      - visibility
+# TODO replace these in templates and speech templates
+#  - name: weather
+#    platform: darksky
+#    api_key: !secret darksky_apikey
+#    language: it
+#    scan_interval: '01:00'
+#    forecast:
+#      - 0
+#      - 1
+#      - 2
+#      - 3
+#      - 4
+#      - 5
+#    hourly_forecast:
+#      - 0
+#      - 1
+#      - 2
+#      - 3
+#      - 4
+#      - 5
+#      - 6
+#      - 7
+#      - 8
+#      - 9
+#      - 10
+#      - 11
+#      - 12
+#    monitored_conditions:
+#      - summary
+#      - minutely_summary
+#      - hourly_summary
+#      - daily_summary
+#      - icon
+#      - uv_index
+#      - ozone
+#      - temperature
+#      - temperature_high
+#      - temperature_low
+#      - apparent_temperature
+#      - apparent_temperature_high
+#      - humidity
+#      - wind_speed
+#      - wind_bearing
+#      - precip_probability
+#      - precip_intensity
+#      - precip_intensity_max
+#      - pressure
+#      - visibility
 
   #
   # Wind direction

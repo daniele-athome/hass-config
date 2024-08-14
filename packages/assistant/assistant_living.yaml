@@ -5,9 +5,16 @@ intent_script:
     action:
       - service: input_boolean.turn_on
         entity_id: input_boolean.need_living_utility_light
-      - event: assistant_speak_tts
-        event_data:
-          template: SetDinnerEating
+      - service: random_template.render
+        data:
+          key: assistant_SetDinnerEating
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   AllLightsOff:
     action:
@@ -15,14 +22,21 @@ intent_script:
         entity_id: input_boolean.need_living_utility_light
       - service: light.turn_off
         entity_id: all
-      - event: assistant_speak_tts
-        event_data:
-          template: AllLightsOff
+      - service: random_template.render
+        data:
+          key: assistant_AllLightsOff
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   LivingUtilityLightOn:
     action:
-      service: light.turn_on
-      entity_id: light.living_extra
+      - service: light.turn_on
+        entity_id: light.living_extra
 
   GuestModeOn:
     action:
@@ -37,19 +51,9 @@ intent_script:
   GuestModeOff:
     action:
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.house_mode
-          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
+          option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
       - event: assistant_speak_tts
         event_data:
           template: GuestModeOff
-
-  DNDModeOn:
-    action:
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.house_mode
-          option: dnd
-      - event: assistant_speak_tts
-        event_data:
-          template: DNDModeOn

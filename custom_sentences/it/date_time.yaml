@@ -1,0 +1,45 @@
+language: it
+
+intents:
+
+  GetTime:
+    data:
+      - sentences:
+        - "che ore sono [ora]"
+        - "che ora (e|è)"
+        - "mi dici l'ora"
+        - "posso chiederti che ore sono"
+        - "mi diresti l'ora"
+        - "mi daresti l'orario"
+        - "darmi l'orario"
+        - "l'ora"
+        - "dammi l'ora"
+        - "l'orario"
+        - "sai dirmi l'ora"
+        - "qual è l'orario"
+
+  GetDate:
+    data:
+      - sentences:
+        - "che giorno è oggi"
+        - "sai qual è la data di oggi"
+        - "sai qual è la data"
+        - "qual è la data"
+        - "mi diresti la data"
+        - "dirmi la data di oggi"
+        - "mi diresti la data di oggi"
+        - "che data è oggi"
+        - "qual è la data di oggi"
+        - "dammi la data"
+        - "[mi dai] la data"
+
+# FIXME !include not supported here
+skip_words:
+  # (defaults)
+  #  - "per favore"
+  #  - "potresti"
+  #  - "puoi"
+  #  - "puoi dirmi"
+  #  - "dimmi"
+  #  - "grazie"
+  - "per piacere"

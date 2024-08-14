@@ -1,0 +1,33 @@
+language: it
+
+intents:
+
+  CleanNightway:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [il] corridoio"
+
+  CleanKitchen:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [la] cucina"
+
+  CleanBathroom1:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [il] bagno (uno|padronale|principale|grande)"
+
+  CleanBathroom2:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [il] bagno (due|di servizio|secondario|piccolo)"
+
+  CleanBedroom:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [la] camera (da letto)"
+
+  CleanLiving:
+    data:
+      - sentences:
+          - "(pulisci|pulire) [il] (soggiorno|salone)"

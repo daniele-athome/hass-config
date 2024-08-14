@@ -1,0 +1,16 @@
+homeassistant:
+  customize:
+    binary_sensor.router_ether1:
+      friendly_name: ether1
+    binary_sensor.router_ether2:
+      friendly_name: ether2
+    binary_sensor.router_ether3:
+      friendly_name: ether3
+    binary_sensor.router_ether4:
+      friendly_name: ether4
+    binary_sensor.router_ether5:
+      friendly_name: ether5
+    sensor.router_wireless_clients:
+      friendly_name: WiFi connessi
+    sensor.router_temperature:
+      friendly_name: Temperatura router

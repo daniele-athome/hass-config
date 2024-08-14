@@ -1,0 +1,86 @@
+
+intent_script:
+
+  CleanNightway:
+    action:
+      - service: script.vacuum_clean_nightway
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CleanKitchen:
+    action:
+      - service: script.vacuum_clean_kitchen
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CleanBathroom1:
+    action:
+      - service: script.vacuum_clean_bathroom1
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CleanBathroom2:
+    action:
+      - service: script.vacuum_clean_bathroom2
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CleanBedroom:
+    action:
+      - service: script.vacuum_clean_bedroom
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CleanLiving:
+    action:
+      - service: script.vacuum_clean_living
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"

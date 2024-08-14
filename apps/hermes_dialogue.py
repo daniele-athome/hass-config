@@ -77,8 +77,9 @@ class HermesDialogue(hermes.Hermes):
         if not handle_cancel or (session_id in self.sessions and self.sessions[session_id].owner_app is None):
             tmpl_text = self.call_service('assistant/template',
                                           template=self.cancel_template,
+                                          return_result=True,
                                           namespace='assistant')
-            if not self.call_service('dialogue/end', session_id=session_id, text=tmpl_text, namespace='hermes'):
+            if not self.call_service('dialogue/end', session_id=session_id, text=tmpl_text, return_result=True, namespace='hermes'):
                 # no session active, use low-level TTS
                 self.tts_say(tmpl_text)
         else:
@@ -152,7 +153,7 @@ class DialogueSupport(adapi.ADAPI):
         if custom_data:
             message['custom_data'] = custom_data
 
-        if not self.call_service('dialogue/end', **message):
+        if not self.call_service('dialogue/end', return_result=True, **message):
             # no session active, use low-level TTS
             message = {'text': text}
             self.call_service('mqtt/publish',
