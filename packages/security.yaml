@@ -1,4 +1,5 @@
 # House security and alarms
+# TODO documentare e assegnare ID
 
 homeassistant:
   customize:
@@ -9,9 +10,9 @@ alarm_control_panel:
   - platform: manual
     name: main
     code: !secret alarm_code
-    arming_time: 120
+    arming_time: 30
     armed_away:
-      delay_time: 60
+      delay_time: 15
 
 automation:
 
@@ -72,7 +73,7 @@ automation:
           entity_id: media_player.lounge
           volume_level: 0.05
       - service: media_player.play_media
-        data_template:
+        data:
           entity_id: media_player.lounge
           media_content_id: !secret security_alarm_warning_media_url
           media_content_type: music
@@ -92,12 +93,21 @@ automation:
         entity_id: alarm_control_panel.main
         to: 'triggered'
     action:
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Allarme"
+      - service: script.notify_emergency
+        data:
+          category: Allarme
+          speak: no
           message: |-
             Rilevato movimento in casa!
         # TODO invia fotogramma del movimento e/o link al video
+      - service: notify.mobile_app_daniele_payton
+        data:
+          message: command_webview
+          data:
+            command: "/lovelace/security"
+            priority: high
+            ttl: 0
+            tag: security_alarm_triggered
 
   # Attiva telecamera ingresso su attivazione allarme
   - alias: security_alarm_arming
@@ -126,11 +136,12 @@ automation:
         for:
           minutes: 5
     action:
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Allarme"
+      - service: script.notify_important
+        data:
+          speak: no
+          category: Allarme
           message: |-
-            porta aperta da più di 5 minuti!
+            Porta aperta da più di 5 minuti!
 
   # Notifica attivazione allarme
   - alias: security_alarm_armed
@@ -140,8 +151,8 @@ automation:
         to: 'armed_away'
     action:
       - service: shell_command.start_living_door_camera
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Allarme"
+      - service: script.notify_info
+        data:
+          category: Allarme
           message: |-
-            armato.
+            Allarme armato.

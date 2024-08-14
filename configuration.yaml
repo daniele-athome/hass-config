@@ -1,6 +1,7 @@
 homeassistant:
   # Name of the location where Home Assistant is running
   name: Home
+  country: IT
   # Location required to calculate the time the sun rises and sets
   latitude: !secret latitude_home
   longitude: !secret longitude_home
@@ -20,8 +21,17 @@ homeassistant:
 logger:
   default: info
   logs:
+    homeassistant.components.assist_pipeline: debug
+    homeassistant.components.random_template: debug
+    homeassistant.components.signal_messenger2: debug
+    homeassistant.components.signal_messenger2.client: debug
+    homeassistant.components.signal_messenger2.signalcli_jsonrpc: debug
     # info stampa troppo
     homeassistant.components.mikrotik.hub: warning
+    # TEST Zigbee OTA
+    #homeassistant.components.zha: debug
+    #zigpy: debug
+    #custom_components.zha_toolkit: debug
 
 # Show links to resources in log and frontend
 #introduction:
@@ -40,6 +50,7 @@ mobile_app:
 
 # Enables configuration UI
 config:
+my:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 http:
@@ -49,21 +60,6 @@ http:
     - 127.0.0.1
     - ::1
 
-# Checks for available updates
-# Note: This component will send some information about your system to
-# the developers to assist with development of Home Assistant.
-# For more information, please see:
-# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
-updater:
-  # Optional, allows Home Assistant developers to focus on popular components.
-  # include_used_components: true
-
-# Community store
-hacs:
-  token: !secret github_token
-  sidepanel_icon: 'mdi:package-variant'
-  experimental: true
-
 # Discover some devices automatically
 #discovery:
 #  enable:
@@ -72,9 +68,11 @@ hacs:
 # Allows you to issue voice commands from the frontend in enabled browsers
 conversation:
 intent:
+assist_pipeline:
 
 zeroconf:
 network:
+energy:
 
 # Enables support for tracking state changes over time
 history:
@@ -86,12 +84,21 @@ logbook:
 recorder:
   db_url: mysql+pymysql://homeassistant@localhost/homeassistant?charset=utf8
   auto_purge: yes
-  purge_keep_days: 14
+  purge_keep_days: 60
   include:
     entities:
       - input_select.house_mode
       - person.daniele
       - climate.boiler_main
+      - climate.living_ac
+      - vacuum.valetudo_risucchiator
+      - vacuum.spulicchiator
+      - sensor.battery_vacuum_spulicchiator
+      - binary_sensor.spulicchiator_cleaning
+      - binary_sensor.spulicchiator_mop_drying
+      - binary_sensor.spulicchiator_water_box_attached
+      - binary_sensor.spulicchiator_water_shortage
+      - sensor.spulicchiator_status
       - sensor.battery_scatola
       - sensor.controlcenter_battery_level
       - sensor.daniele_payton_battery_level
@@ -102,6 +109,8 @@ recorder:
       - sensor.battery_motion_living
       - sensor.battery_motion_bedroom
       - sensor.battery_motion_entrance
+      - sensor.battery_button_dustbin
+      - sensor.battery_presence_mainbed
       - sensor.homeserver_cpu_used
       - sensor.homeserver_ram_used_percent
       - sensor.cputemp_scatola
@@ -111,15 +120,20 @@ recorder:
       - sensor.humidity_external
       - sensor.weather_temperature
       - sensor.weather_apparent_temperature
-      - sensor.homeserver_w83627thf_1_temperature
+      - sensor.homeserver_package_id_0_temperature
       - sensor.temperature_bedroom
       - sensor.pressure_bedroom
       - sensor.humidity_bedroom
       - sensor.temperature_living
+      - sensor.temperature_living_window
+      - sensor.temperature_living_table
       - sensor.pressure_living
       - sensor.humidity_living
       - sensor.temperature_kitchen
       - sensor.humidity_kitchen
+      - sensor.voc_kitchen
+      - sensor.temperature_studio
+      - sensor.humidity_studio
       - sensor.gas_concentration_kitchen
       - binary_sensor.water_bathroom1
       - sensor.battery_water_bathroom1
@@ -128,22 +142,61 @@ recorder:
       - sensor.temperature_bathroom1
       - sensor.temperature_average
       - sensor.humidity_average
+      - sensor.battery_motion_bedroom_left
+      - sensor.lux_motion_bedroom_left
+      - binary_sensor.motion_bedroom_left
       - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
       - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+      - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802580
+      - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802589
       - sensor.mediarasp_cpu_used
+      - sensor.mediarasp_cpu_thermal_0_temperature
       - sensor.mediarasp_cpu_thermal_1_temperature
-      - device_tracker.thermostat
       - device_tracker.controlcenter
+      - binary_sensor.presence_mainbed
       # TEST presence >>>
+      - device_tracker.daniele_payton
       - device_tracker.daniele_paytonwifi
+      - device_tracker.daniele_paytonrouter
       - device_tracker.daniele_paytonble
       - sensor.people_count_home
+      - sensor.people_count_home_local
       # <<< TEST
+      - binary_sensor.door_main
       - binary_sensor.motion_living_door
       - binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
       - sensor.living_main_lux
+      - sensor.lux_living
       - sensor.bedroom_lux
+      - binary_sensor.internet
+      - sensor.router_wireless_clients
+      - sensor.router_temperature
+      # TEST media player >>>
+      - media_player.tv
+      - media_player.kodi
+      - media_player.music
+      # <<< TEST
+      - input_number.energy_gas_total
+      - sensor.energy_gas_total
+      - sensor.energy_water_total
+      - input_number.energy_water_total
+      - sensor.energy_washing_machine
+      - sensor.power_washing_machine
+      - sensor.power_light_bedroom_left
+      - sensor.energy_light_bedroom_left
+      - sensor.power_light_bedroom_main
+      - sensor.energy_light_bedroom_main
+      - sensor.power_datacenter
+      - sensor.energy_datacenter
+      - sensor.speedtest_download
+      - sensor.speedtest_ping
+      - sensor.speedtest_upload
+      - input_text.vacuum_current_room
+      - input_text.vacuum_finished_room
+    entity_globs:
+      - input_number.energy_mains_total_*
+      - sensor.energy_mains_*
 
 influxdb:
   api_version: 2
@@ -169,9 +222,6 @@ influxdb:
       - calendar
       - camera
 
-# Enables a map showing the location of tracked devices
-map:
-
 # Track the sun
 sun:
 
@@ -190,15 +240,23 @@ tts:
     type: IsabellaNeural
     region: westeurope
 
+stt:
+  - platform: google_cloud_stt
+    key_file: !secret google_stt_credentials
+    model: command_and_search
+
 mqtt:
-  broker: localhost
-  discovery: true
 
 zha:
   database_path: /home/homeassistant/.homeassistant/zigbee.db
+  zigpy_config:
+    ota:
+      otau_directory: /home/homeassistant/.homeassistant/zigpy_ota
+zha_toolkit:
 
 system_health:
 wake_on_lan:
+homeassistant_alerts:
 
 lovelace_gen:
 
@@ -219,8 +277,6 @@ lovelace:
       type: module
     - url: /hacsfiles/vertical-stack-in-card/vertical-stack-in-card.js
       type: js
-    - url: /hacsfiles/circle-sensor-card/circle-sensor-card.js
-      type: module
     - url: /hacsfiles/lovelace-card-tools/card-tools.js
       type: module
     - url: /hacsfiles/lovelace-layout-card/layout-card.js
@@ -237,10 +293,26 @@ lovelace:
       type: module
     - url: /hacsfiles/lovelace-auto-entities/auto-entities.js
       type: module
-    # untracked
-    - url: /local/ui/custom_ui/moment-with-locales.js?v=2.24.0
-      type: js
+    - url: /hacsfiles/lovelace-hourly-weather/hourly-weather.js
+      type: module
+    - url: /hacsfiles/lovelace-valetudo-map-card/valetudo-map-card.js
+      type: module
+    - url: /hacsfiles/mini-climate-card/mini-climate-card-bundle.js
+      type: module
+    - url: /hacsfiles/vacuum-card/vacuum-card.js
+      type: module
+    - url: /hacsfiles/weather-chart-card/weather-chart-card.js
+      type: module
+    - url: /hacsfiles/lovelace-xiaomi-vacuum-map-card/xiaomi-vacuum-map-card.js
+      type: module
     - url: /hacsfiles/lovelace-thermostat-dark-card/thermostat-dark-card.js
+      type: module
+    # untracked
+    - url: /local/ui/custom_ui/moment-with-locales.min.js?v=2.29.2
+      type: js
+    # original plugin is broken
+    # using https://github.com/custom-cards/circle-sensor-card/pull/31
+    - url: /local/ui/custom_ui/circle-sensor-card.js
       type: module
     # Customizzata!! NON AGGIORNARE!
     - url: /local/ui/custom_ui/clock-card.js?track=false&v=1

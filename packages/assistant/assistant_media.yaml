@@ -1,31 +1,61 @@
 
 intent_script:
 
-  StartMusicPlaylist:
+  MusicPlayNowTitleByArtist:
     action:
-      - event: assistant_speak_tts
-        event_data_template:
-          template: StartMusicPlaylist
-          variables:
-            playlist: "{{ playlist }}"
-      - delay:
-          seconds: 5
-      - event: rhasspy_playlist
-        event_data_template:
-          playlist: "{{ playlist }}"
+      - service: script.search_and_play_music
+        data:
+          keyword_artist: "{{ music_artist }}"
+          keyword_track_name: "{{ music_title }}"
+          target: "media_player.music"
+          enqueue: play
+        response_variable: play_result
+      # TODO risposta speech dipendente da cosa abbiamo fatto
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  MusicPlayNextTitleByArtist:
+    action:
+      - service: script.search_and_play_music
+        data:
+          keyword_artist: "{{ music_artist }}"
+          keyword_track_name: "{{ music_title }}"
+          target: "media_player.music"
+          enqueue: next
+        response_variable: play_result
+      # TODO risposta speech dipendente da cosa abbiamo fatto
+      - service: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
 script:
 
+  # TODO non usato al momento
   start_playlist:
     sequence:
       - service: media_player.play_media
-        data_template:
+        data:
           entity_id: media_player.kodi
           media_content_id: >-
             special://profile/playlists/music/{{ playlist }}.m3u
           media_content_type: music
       - service: media_player.volume_set
-        data_template:
+        data:
           entity_id: media_player.kodi
           # FIXME hard-coding variables: guest_mode_volume, no_guest_mode_volume
           # because secrets in templates are not supported
@@ -36,5 +66,55 @@ script:
             0.8
             {%- endif -%}
 
-rhasspy_playlists:
-  slot_file: ../.config/rhasspy/profiles/it/slots/playlist
+  search_and_play_music:
+    description: Cerca e riproduci musica
+    fields:
+      keyword_track_name:
+        description: "Track name"
+        example: "Perdere l'amore"
+        required: yes
+      keyword_artist:
+        description: "Track name"
+        example: "Massimo Ranieri"
+        required: yes
+      enqueue:
+        description: "Queue mode"
+        example: "play"
+        required: no
+        # add: queue track at the end of the queue and do nothing
+        # next: queue track after currently playing track and do nothing
+        # play: queue track before currently playing track and play it
+        # replace: clear the queue and play the track
+        default: "play"
+      target:
+        description: "Mopidy media player"
+        example: "media_player.music"
+        required: no
+        default: "media_player.music"
+    sequence:
+      - service: mopidy.get_search_result
+        data:
+          keyword_artist: "{{ keyword_artist }}"
+          keyword_track_name: "{{ keyword_track_name }}"
+          source: "local,spotify"
+        target:
+          entity_id: "{{ target }}"
+        response_variable: music_tracks
+      - if: "{{ music_tracks['media_player.music'].result|length > 0 }}"
+        then:
+          - service: media_player.play_media
+            data:
+              # TODO supporto per risultati multipli
+              media_content_id: "{{ music_tracks['media_player.music'].result[0] }}"
+              media_content_type: music
+              # riproduci immediatamente inserendo il brano prima di quello attualmente in riproduzione
+              enqueue: "{{ enqueue }}"
+            target:
+              entity_id: "{{ target }}"
+        # TODO else:
+      # TODO return something meaningful (e.g. list of track names for example)
+      - variables:
+          result:
+            value: "{{ music_tracks['media_player.music'].result }}"
+      - stop: "Returning"
+        response_variable: "result"

@@ -14,8 +14,8 @@ automation:
         value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', false) }}"
       # Internet non disponibile
       - platform: state
-        entity_id: device_tracker.internet
-        to: 'not_home'
+        entity_id: binary_sensor.internet
+        to: 'off'
     action:
       - service: rest_command.wakeword_disable
 
@@ -37,8 +37,8 @@ automation:
         conditions:
           # Internet disponibile
           - condition: state
-            entity_id: device_tracker.internet
-            state: 'home'
+            entity_id: binary_sensor.internet
+            state: 'on'
     action:
       - service: rest_command.wakeword_enable
 
@@ -46,8 +46,8 @@ automation:
     trigger:
       # Internet disponibile
       - platform: state
-        entity_id: device_tracker.internet
-        to: 'home'
+        entity_id: binary_sensor.internet
+        to: 'on'
     condition:
       condition: and
       conditions:
@@ -69,23 +69,6 @@ rest_command:
     method: post
     payload: 'off'
 
-rhasspy_events:
-  events:
-    - GetTime
-    - GetDate
-    - GreetingGoodMorning
-    - GreetingGeneral
-    - Thankyou
-    - AnnounceGoingAway
-    - GreetingGoodNight
-    - GetExternalTemperature
-    - SetDinnerEating
-    - AllLightsOff
-    - LivingUtilityLightOn
-    - SetCountdownAlarm
-    - GetCountdownAlarm
-    - ClearCountdownAlarm
-    - TrashReminderMorning
-    - GuestModeOn
-    - GuestModeOff
-    - StartMusicPlaylist
+random_template:
+  templates_path: /home/homeassistant/.homeassistant/custom_templates
+  language: it

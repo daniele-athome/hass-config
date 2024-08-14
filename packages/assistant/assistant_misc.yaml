@@ -10,31 +10,76 @@ intent_script:
     action:
       - service: input_boolean.turn_on
         entity_id: input_boolean.reminder_trash_morning
-      - event: assistant_speak_tts
-        event_data_template:
-          template: TrashReminderMorning
+      - service: random_template.render
+        data:
+          key: assistant_TrashReminderMorning
           variables:
             when_raw: "{{ when }}"
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   GreetingGoodMorning:
     action:
-      - service: script.goodmorning
+      - service: script.turn_on
+        data:
+          entity_id: script.goodmorning_actions
+      - service: random_template.render
+        data:
+          key: assistant_goodmorning
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   GreetingGeneral:
     action:
-      - event: assistant_speak_tts
-        event_data:
-          template: GreetingGeneral
+      - service: random_template.render
+        data:
+          key: assistant_GreetingGeneral
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   Thankyou:
     action:
-      - event: assistant_speak_tts
-        event_data:
-          template: thankyou
+      - service: random_template.render
+        data:
+          key: assistant_thankyou
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   AnnounceGoingAway:
     action:
-      - service: script.announce_going_away
+      - service: script.turn_on
+        data:
+          entity_id: script.announce_going_away_actions
+      - service: random_template.render
+        data:
+          key: assistant_announce_going_away
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   # Saluto della buonanotte
   GreetingGoodNight:
@@ -43,9 +88,47 @@ intent_script:
         data:
           entity_id: input_select.house_mode
           option: night
-      - event: assistant_speak_tts
-        event_data:
-          template: goodnight
+      - service: random_template.render
+        data:
+          key: assistant_goodnight
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  DNDModeOn:
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: dnd
+      - service: random_template.render
+        data:
+          key: assistant_DNDModeOn
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  PutTVNewsOn:
+    action:
+      - service: script.tv_channel_favourite_news
+      - service: random_template.render
+        data:
+          key: assistant_PutTVNewsOn_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
 input_boolean:
 
@@ -55,9 +138,20 @@ input_boolean:
     initial: off
     icon: mdi:recycle
 
+  reminder_refuel_car:
+    name: "Rifornire di carburante l'automobile"
+    initial: off
+    icon: mdi:gas-station
+
+binary_sensor:
+  - platform: template
+    sensors:
+      assistant_can_speak:
+        value_template: "{{ states.sensor.people_count_home_local.state | int > 0 }}"
+
 automation:
 
-  # Avvisa di viaggi duri al lavoro se in mattina feriale e c'è qualcuno in casa
+  # Avvisa di viaggi duri al lavoro se in mattina feriale e c'è Daniele in casa
   - alias: work_commute_hard
     trigger:
       - platform: numeric_state
@@ -69,24 +163,44 @@ automation:
         - condition: state
           entity_id: binary_sensor.workmorning
           state: 'on'
-        - condition: numeric_state
-          entity_id: sensor.people_count_home
-          above: '0'
+        - condition: state
+          entity_id: person.daniele
+          state: 'home'
     action:
       - event: assistant_speak_tts
         event_data:
           template: work_commute_hard
 
+  - alias: home_commute_hard
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.commute_to_home
+        above: 35
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.workevening
+          state: 'on'
+        - condition: template
+          value_template: "{{ not is_state('person.daniele', 'home') }}"
+    action:
+      service: script.notify_info
+      data:
+        category: Tempo di viaggio
+        message: |-
+          Tempo previsto per il ritorno a casa: {{ states.sensor.commute_to_home.state_with_unit }}
+
   - alias: karen_internet_unavailable
     trigger:
       - platform: state
-        entity_id: device_tracker.internet
-        from: 'home'
-        to: 'not_home'
+        entity_id: binary_sensor.internet
+        from: 'on'
+        to: 'off'
     condition:
-      condition: numeric_state
-      entity_id: sensor.people_count_home
-      above: '0'
+      condition: state
+      entity_id: binary_sensor.assistant_can_speak
+      state: 'on'
     action:
       - service: script.say_something_rendered
         data:
@@ -95,13 +209,13 @@ automation:
   - alias: karen_internet_restored
     trigger:
       - platform: state
-        entity_id: device_tracker.internet
-        from: 'not_home'
-        to: 'home'
+        entity_id: binary_sensor.internet
+        from: 'off'
+        to: 'on'
     condition:
-      condition: numeric_state
-      entity_id: sensor.people_count_home
-      above: '0'
+      condition: state
+      entity_id: binary_sensor.assistant_can_speak
+      state: 'on'
     action:
       - service: script.say_something_rendered
         data:
@@ -121,7 +235,7 @@ automation:
           state: 'off'
     action:
       - event: assistant_speak_tts
-        event_data_template:
+        event_data:
           template: incoming_phone_call
           variables:
             caller: "{{ states.sensor.payton_phone_call_incoming_caller.state }}"
@@ -178,24 +292,58 @@ automation:
           - automation.karen_internet_unavailable
           - automation.karen_internet_restored
 
-sensor:
-  - name: payton_phone_call_incoming_caller
-    platform: mqtt
-    state_topic: homeassistant/payton/device/phone/state
-    value_template: "{{ value_json.caller_name if value_json.state == 'ringing' else '' }}"
+  - alias: reminder_refuel_car
+    trigger:
+      - platform: time
+        at: "06:30:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.reminder_refuel_car
+        state: 'on'
+    action:
+      service: script.notify_info
+      data:
+        category: Promemoria benzina
+        message: |-
+          Ricordati di fare benzina oggi.
+
+  - alias: announce_going_away_on_wifi_disconnect
+    description: 'Messaggio di uscita per Daniele alla disconnessione del WiFi'
+    trigger:
+      - platform: state
+        entity_id: sensor.daniele_payton_wifi_connection
+        from: !secret wifi_home
+    condition:
+      - condition: and
+        conditions:
+          # movimento in soggiorno
+          - condition: state
+            entity_id: group.motion_living
+            state: 'on'
+          # porta chiusa da più di 5 minuti
+          - condition: template
+            value_template: >-
+              {{ is_state("binary_sensor.door_main", "off") and
+                (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) > 300 }}
+    action:
+      # non proseguire se la porta è aperta o è stata chiusa da poco
+      - service: script.announce_going_away
+
+mqtt:
+  sensor:
+    - name: payton_phone_call_incoming_caller
+      state_topic: homeassistant/payton/device/phone/state
+      value_template: "{{ value_json.caller_name if value_json.state == 'ringing' else '' }}"
 
 script:
 
   # Saluto del buongiorno
-  goodmorning:
+  goodmorning_actions:
     sequence:
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.house_mode
-          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
-      - event: assistant_speak_tts
-        event_data:
-          template: goodmorning
+          option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
       - condition: template
         value_template: '{{ 4 <= now().hour < 10 }}'
       - delay:
@@ -207,7 +355,7 @@ script:
           entity_id: media_player.lounge
           volume_level: !secret lounge_volume
       - service: media_player.play_media
-        data_template:
+        data:
           entity_id: media_player.lounge
           media_content_id: >-
             {% set hour = states('sensor.time').split(':')[0] %}
@@ -217,9 +365,10 @@ script:
   # Bentornato a casa
   welcome_home:
     sequence:
-      - event: assistant_speak_tts
-        event_data:
-          template: welcome_home
+      # TODO da ripensare
+      #- event: assistant_speak_tts
+      #  event_data:
+      #    template: welcome_home
       - condition: template
         value_template: '{{ (now().hour == 20 and now().minute < 10) or (now().hour == 19 and now().minute > 50) }}'
       - delay:
@@ -237,7 +386,16 @@ script:
       - event: assistant_speak_tts
         event_data:
           template: announce_going_away
+      - service: script.announce_going_away_actions
+
+  announce_going_away_actions:
+    sequence:
+      - delay:
+          seconds: 10
       - service: input_boolean.turn_off
         entity_id: input_boolean.reminder_trash_morning
+      # diamo per scontato che se stiamo uscendo metteremo benzina
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.reminder_refuel_car
       - service: switch.turn_on
         entity_id: switch.homeserver

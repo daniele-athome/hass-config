@@ -1,0 +1,23 @@
+language: it
+
+intents:
+
+  SetDinnerEating:
+    data:
+      - sentences:
+        - "sto (cenando | mangiando)"
+        - "devo (cenare | mangiare)"
+
+  AllLightsOff:
+    data:
+      - sentences:
+          - "(spegni | chiudi) tutto"
+          - "spegni tutte [le] luci"
+          - "voglio stare al buio"
+          - "buio"
+
+  LivingUtilityLightOn:
+    data:
+      - sentences:
+        - "accendi [la] piantana"
+        - "accendi [la] luce (vicino al | sul) divano"

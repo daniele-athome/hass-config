@@ -1,0 +1,61 @@
+language: it
+
+intents:
+
+  # TODO frasi composte per includere la temperatura target
+  HeatingOn:
+    data:
+      - sentences:
+          - "(accendi|attiva) [il] riscaldamento"
+
+  HeatingOff:
+    data:
+      - sentences:
+          - "(spegni|disattiva) [il] riscaldamento"
+
+  ACLivingOn:
+    data:
+       - sentences:
+                   - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_living>;[[modo] {living_ac_mode}];[[a] {living_ac_temperature}(°| gradi)];[{living_ac_fan_mode}])"
+
+  ACLivingOff:
+    data:
+      - sentences:
+          - "(spegni|spegnere|disattiva|disattivare) [il] (condizionatore|condizionamento) <area_living>"
+
+  ACLivingDry:
+    data:
+      - sentences:
+          - "(accendi|accendere|attiva|attivare) (([la] deumidificazione|[il] deumidificatore);[{living_ac_fan_mode}];<area_living>)"
+
+  ACLivingFanOnly:
+    data:
+      - sentences:
+          - "(accendi|accendere|attiva|attivare) ([il] (ventilatore);<area_living>;{living_ac_fan_mode})"
+
+lists:
+  living_ac_mode:
+    values:
+      - in: "(freddo|a freddo)"
+        out: "cool"
+      - in: "(caldo|a caldo)"
+        out: "heat"
+      - in: "(deumidificazione|in deumidificazione|deumidificatore|a deumidificatore|deumidifica)"
+        out: "dry"
+      - in: "ventilatore"
+        out: "fan_only"
+
+  living_ac_temperature:
+    range:
+      from: 7
+      to: 35
+
+  living_ac_fan_mode:
+    values:
+      - in: "(a palla|al massimo)"
+        out: "5"
+      - in: "al minimo"
+        out: "Silence"
+
+expansion_rules:
+  area_living: "[(in|nel|del)] (soggiorno|salone)"

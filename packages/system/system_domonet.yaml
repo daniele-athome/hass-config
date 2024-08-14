@@ -89,6 +89,22 @@ script:
       - service: homeassistant.update_entity
         entity_id: binary_sensor.domonet_allowed_global
 
+command_line:
+  - sensor:
+      name: domonet_devices
+      command: bin/domonet_clients.sh {{ states.sensor.domonet_interface.state }}
+      scan_interval: 15
+      value_template: "{{ value_json.clients | length }}"
+      json_attributes:
+        - clients
+
+  - binary_sensor:
+      name: domonet_allowed_global
+      scan_interval: 60
+      command: bin/domonet_check_global.sh {{ states.sensor.domonet_interface.state }} {{ states.sensor.external_interface.state }} "(all devices)"
+      payload_on: "1"
+      payload_off: "0"
+
 sensor:
 
   - platform: template
@@ -97,20 +113,3 @@ sensor:
         value_template: !secret domonet_interface
       external_interface:
         value_template: !secret external_interface
-
-  - platform: command_line
-    name: domonet_devices
-    command: bin/domonet_clients.sh {{ states.sensor.domonet_interface.state }}
-    scan_interval: 15
-    value_template: "{{ value_json.clients | length }}"
-    json_attributes:
-      - clients
-
-binary_sensor:
-
-  - platform: command_line
-    name: domonet_allowed_global
-    scan_interval: 60
-    command: bin/domonet_check_global.sh {{ states.sensor.domonet_interface.state }} {{ states.sensor.external_interface.state }} "(all devices)"
-    payload_on: "1"
-    payload_off: "0"

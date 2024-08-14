@@ -14,7 +14,7 @@ sensor:
 
   # Unsupported by Glances integration
   - platform: rest
-    resource: http://rasp:61208/api/3/uptime
+    resource: http://rasp:61208/api/4/uptime
     name: uptime_mediarasp
     value_template: '{{ value_json }}'
     scan_interval: 300
@@ -29,8 +29,9 @@ automation:
         for:
           minutes: 15
     action:
-      service: notify.kontalk_daniele
-      data_template:
-        title: "Allarme"
+      service: script.notify_important
+      data:
+        category: Sistema
+        speak: no
         message: |-
           Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temperature.state_with_unit }}

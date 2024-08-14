@@ -1,43 +1,52 @@
-# Persons
+# Persons (and their trackers)
 
 homeassistant:
   customize:
     person.daniele:
       friendly_name: Daniele
       entity_picture: !secret daniele_picture
+    device_tracker.daniele_paytonrouter:
+      friendly_name: Payton (Router)
+    device_tracker.daniele_paytonwifi:
+      friendly_name: Payton (WiFi)
+    device_tracker.daniele_paytongps:
+      friendly_name: Payton (GPS)
+      icon: mdi:cellphone
+    device_tracker.daniele_paytonble:
+      friendly_name: Payton (BLE)
 
-device_tracker:
-  # TEST
-  - platform: composite
-    name: daniele_composite
-    time_as: local
-    require_movement: true
-    entity_id:
-      - device_tracker.daniele_paytongps
-      #- device_tracker.daniele_paytonwifi
-      - device_tracker.daniele_paytonrouter
-      - device_tracker.daniele_paytonble
+mqtt:
+  device_tracker:
+    - name: daniele_paytonble
+      state_topic: 'homeassistant/monitor/rasp/payton/device_tracker'
+      source_type: bluetooth
+    - name: daniele_swimtwo
+      state_topic: 'homeassistant/monitor/rasp/swimtwo/device_tracker'
+      source_type: bluetooth
+
+# TEST
+composite:
+  trackers:
+    - name: daniele_composite
+      require_movement: true
+      entity_id:
+        #- device_tracker.daniele_paytongps
+        # tracker device nativo usato come GPS
+        - device_tracker.daniele_payton
+        #- device_tracker.daniele_paytonwifi
+        - device_tracker.daniele_paytonrouter
+        - device_tracker.daniele_paytonble
 
 person:
   - name: daniele
     id: daniele
     user_id: !secret userid_daniele
     device_trackers:
-      - device_tracker.daniele_paytongps
+      #- device_tracker.daniele_paytongps
+      # tracker device nativo usato come GPS
+      - device_tracker.daniele_payton
       - device_tracker.daniele_paytonble
       #- device_tracker.daniele_paytonwifi
-      - device_tracker.daniele_paytonrouter
-
-# quando GPS==Home, usa solo ble/wifi (i dati di location della persona saranno comunque aggiornati)
-# quando GPS!=Home, usa tracker più recente
-person2:
-  - name: daniele
-    id: daniele
-    user_id: !secret userid_daniele
-    device_trackers:
-      - device_tracker.daniele_paytongps
-      #- device_tracker.daniele_paytonwifi
-      - device_tracker.daniele_paytonble
       - device_tracker.daniele_paytonrouter
 
 sensor:
@@ -49,3 +58,48 @@ sensor:
     duration:
       days: 28
     end: "{{ now() }}"
+
+command_line:
+  # Sensore idleness computer
+  - binary_sensor:
+      name: activity_notebook_daniele
+      # FIXME non so perché ma è necessario il tr...
+      command: >-
+        ping -W 1 -c 1 notebook > /dev/null 2>&1 && (
+        idle=$(/usr/bin/ssh daniele@notebook 2>/dev/null | tr -d '\n\r'); [ "$idle" -lt 60000 ] && echo 1 || echo 0) ||
+        echo 0
+      payload_on: "1"
+      payload_off: "0"
+
+automation:
+  - alias: paytonble_detect_workaround_1
+    description: 'Forza uno scan di arrivo BLE quando il router rileva payton.'
+    trigger:
+      platform: state
+      entity_id: device_tracker.daniele_paytonrouter
+      from: not_home
+      to: home
+    condition:
+      # inutile fare lo scan se è già stato rilevato
+      condition: state
+      entity_id: device_tracker.daniele_paytonble
+      state: not_home
+    action:
+      - service: script.scan_arrival
+
+  - alias: paytonble_detect_workaround_2
+    description: 'Forza uno scan di partenza BLE quando il router non rileva payton per 3 minuti.'
+    trigger:
+      platform: state
+      entity_id: device_tracker.daniele_paytonrouter
+      from: home
+      to: not_home
+      for:
+        minutes: 3
+    condition:
+      # inutile fare lo scan se è già stato rilevato come non a casa
+      condition: state
+      entity_id: device_tracker.daniele_paytonble
+      state: home
+    action:
+      - service: script.scan_departure

@@ -1,7 +1,27 @@
 # House lights
+# TODO lasciare qui dentro solo la definizione delle entità delle luci
+
+#Bagno 1(main):"Shelly1MiniG3-84FCE63E2ACC"
+#Corridoio(Giorno):"Shelly1MiniG3-84FCE63DA950"
+#Camera(main):"Shelly1MiniG3-84FCE63DAA9C"
+#Corridoio(Notte):"Shelly1MiniG3-84FCE63E1BA0"
+#Esterno(Soggiorno):"shelly1-BCDDC27735AE"
+#Bagno 2:"Shelly1MiniG3-84FCE638FEDC"
+#Esterno(Camera):"shelly1-BCDDC2777F13"
+#Cucina:"shelly1-BCDDC277305D"
+#Lavatrice:"shelly1pm-34945470E289"
+#Studio:"Shelly1MiniG3-ECDA3BC571F4"
+#Bagno 1(Specchio):"Shelly1MiniG3-84FCE63DAA68"
+#Soggiorno(main):"Shelly1MiniG3-ECDA3BC1E014"
 
 homeassistant:
   customize:
+    light.external_bedroom:
+      friendly_name: Esterno (camera)
+    light.external_living:
+      friendly_name: Esterno (soggiorno)
+    light.living_main:
+      friendly_name: Soggiorno
     light.living_stand:
       friendly_name: Piantana soggiorno
     light.living_ceiling:
@@ -12,8 +32,21 @@ homeassistant:
       friendly_name: Camera
     light.bedroom_left:
       friendly_name: Camera SX
+    light.kitchen_main:
+      friendly_name: Cucina
+    light.studio:
+      friendly_name: Studio
+    light.dayway:
+      friendly_name: Corridoio giorno
+    light.nightway:
+      friendly_name: Corridoio notte
+    light.bathroom1_main:
+      friendly_name: Bagno 1
+    light.bathroom1_mirror:
+      friendly_name: Bagno 1 specchio
 
 automation:
+  # FIXME appartiene a firmware o devices?
   - alias: "Sync Tasmota states on start-up"
     initial_state: true
     trigger:
@@ -27,69 +60,32 @@ automation:
 
 light:
 
-  - platform: mqtt
-    name: "living_stand"
-    state_topic: "homeassistant/tasmota/stat/piantana/RESULT"
-    state_value_template: "{{ value_json.POWER }}"
-    command_topic: "homeassistant/tasmota/cmnd/piantana/POWER"
-    payload_on: "ON"
-    payload_off: "OFF"
-    availability_topic: "homeassistant/tasmota/tele/piantana/LWT"
-    payload_available: "Online"
-    payload_not_available: "Offline"
-    qos: 1
-    retain: false
-
-  - platform: mqtt
-    name: "bedroom_main"
-    state_topic: "homeassistant/tasmota/stat/bedroom_main/RESULT"
-    state_value_template: "{{ value_json.POWER }}"
-    command_topic: "homeassistant/tasmota/cmnd/bedroom_main/POWER"
-    payload_on: "ON"
-    payload_off: "OFF"
-    availability_topic: "homeassistant/tasmota/tele/bedroom_main/LWT"
-    payload_available: "Online"
-    payload_not_available: "Offline"
-    qos: 1
-    retain: false
-
-  - platform: mqtt
-    name: "bedroom_left"
-    state_topic: "homeassistant/tasmota/stat/bedroom_left/RESULT"
-    state_value_template: "{{ value_json.POWER }}"
-    command_topic: "homeassistant/tasmota/cmnd/bedroom_left/POWER"
-    payload_on: "ON"
-    payload_off: "OFF"
-    availability_topic: "homeassistant/tasmota/tele/bedroom_left/LWT"
-    payload_available: "Online"
-    payload_not_available: "Offline"
-    qos: 1
-    retain: false
-
   - platform: template
     lights:
       living_ceiling:
         value_template: "{{ states('light.living_ceiling_real') }}"
         level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int(0) }}"
-        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) }}"
+        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
         turn_on:
           service: light.turn_on
-          data_template:
+          data:
             entity_id: light.living_ceiling_real
             brightness: 255
+            color_temp: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
         turn_off:
           service: light.turn_on
           data:
             entity_id: light.living_ceiling_real
             brightness: 0
+            color_temp: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
         set_level:
           service: light.turn_on
-          data_template:
+          data:
             entity_id: light.living_ceiling_real
             brightness: "{{ brightness }}"
         set_temperature:
           service: light.turn_on
-          data_template:
+          data:
             entity_id: light.living_ceiling_real
             color_temp: "{{ color_temp }}"
 
@@ -99,7 +95,25 @@ light:
       - light.living_stand
       - light.living_ceiling
 
-  # TODO group living_main: -- quando avremo sotto controllo le luci principali
+  - platform: group
+    name: external
+    entities:
+      - light.external_living
+      - light.external_bedroom
+
+mqtt:
+  light:
+    - name: "living_stand"
+      state_topic: "homeassistant/tasmota/stat/piantana/RESULT"
+      state_value_template: "{{ value_json.POWER }}"
+      command_topic: "homeassistant/tasmota/cmnd/piantana/POWER"
+      payload_on: "ON"
+      payload_off: "OFF"
+      availability_topic: "homeassistant/tasmota/tele/piantana/LWT"
+      payload_available: "Online"
+      payload_not_available: "Offline"
+      qos: 1
+      retain: false
 
 script:
 
@@ -119,6 +133,7 @@ script:
 scene:
 
   # Luci ingresso in casa
+  # TODO spostare dove?
   - name: house_entrance
     entities:
       light.living_ceiling:

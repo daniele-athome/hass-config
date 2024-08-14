@@ -1,23 +1,7 @@
-# Devices monitoring and tracking
+# Generic device definitions
 
 homeassistant:
   customize:
-    device_tracker.daniele_paytonrouter:
-      friendly_name: Payton (Router)
-
-    device_tracker.daniele_paytonwifi:
-      friendly_name: Payton (WiFi)
-
-    device_tracker.daniele_paytongps:
-      friendly_name: Payton (GPS)
-      icon: mdi:cellphone
-
-    device_tracker.daniele_paytonble:
-      friendly_name: Payton (BLE)
-
-    sensor.daniele_payton_battery_level:
-      friendly_name: Telefono
-
     sensor.controlcenter_battery_level:
       friendly_name: Centro di controllo
 
@@ -26,18 +10,27 @@ homeassistant:
 
     sensor.battery_env_external:
       friendly_name: 'Ambiente: Esterno'
+      unit_of_measurement: '%'
 
     sensor.battery_env_living:
-      friendly_name: 'Ambiente: Salone'
+      friendly_name: 'Ambiente: Soggiorno'
+      unit_of_measurement: '%'
 
     sensor.battery_env_bathroom1:
       friendly_name: 'Ambiente: Bagno'
+      unit_of_measurement: '%'
 
     sensor.battery_env_bedroom:
       friendly_name: 'Ambiente: Camera'
+      unit_of_measurement: '%'
 
     sensor.battery_env_kitchen:
       friendly_name: 'Ambiente: Cucina'
+      unit_of_measurement: '%'
+
+    sensor.battery_env_studio:
+      friendly_name: 'Ambiente: Studio'
+      unit_of_measurement: '%'
 
     sensor.battery_door_main:
       friendly_name: 'Porta: Entrata'
@@ -45,8 +38,11 @@ homeassistant:
     binary_sensor.door_main:
       friendly_name: 'Porta: Entrata'
 
+    sensor.battery_lux_living:
+      friendly_name: 'Lux: Soggiorno'
+
     sensor.battery_motion_living:
-      friendly_name: 'Movimento: Salone'
+      friendly_name: 'Movimento: Soggiorno'
 
     sensor.battery_motion_bedroom:
       friendly_name: 'Movimento: Camera'
@@ -54,8 +50,14 @@ homeassistant:
     sensor.battery_motion_entrance:
       friendly_name: 'Movimento: Ingresso'
 
+    sensor.battery_presence_mainbed:
+      friendly_name: 'Presenza: letto'
+
+    sensor.battery_button_dustbin:
+      friendly_name: 'Pulsante: Pattumiera'
+
     binary_sensor.living_main_motion:
-      friendly_name: 'Movimento: Salone'
+      friendly_name: 'Movimento: Soggiorno'
 
     binary_sensor.motion_living_door:
       friendly_name: 'Movimento: Entrata'
@@ -63,111 +65,42 @@ homeassistant:
     binary_sensor.living_entrance_motion:
       friendly_name: 'Movimento: Ingresso'
 
+    binary_sensor.presence_mainbed:
+      friendly_name: 'Presenza: letto'
+
     binary_sensor.water_bathroom1:
       friendly_name: 'Acqua: bagno'
 
-    automation.control_center_low_battery:
-      friendly_name: Centro di controllo scarico
+ble_monitor:
+  bt_interface: '5C:F3:70:99:5B:83'
+  discovery: false
+  restore_state: true
+  report_unknown: false
+  #active_scan: true
+  devices:
+    - mac: '58:2D:34:3A:0E:84'
+      name: 'env_living'
+    - mac: 'A4:C1:38:BE:E3:99'
+      name: 'env_bathroom1'
+      # TODO remove this stuff - it's for stock firmware
+      # Mi Token: cf9f60209fbbcb68389326f3
+      encryption_key: 'c15d08be9f48421c27963829582b7105'
+    - mac: 'A4:C1:38:CF:AE:8F'
+      name: 'env_studio'
+      # TODO remove this stuff - it's for stock firmware
+      # Mi Token: 09e489852a835cae9f057a90
+      encryption_key: 'c9ba2e2bf6877b235718edde1ecbeeaf'
+    - mac: 'A4:C1:38:73:F0:E9'
+      name: 'env_bedroom'
+    - mac: '18:45:16:C5:EB:85'
+      name: 'toothbrush'
 
-    sensor.status_controlcenter:
-      friendly_name: Centro di controllo
-
-    sensor.status_thermostat:
-      friendly_name: Termostato
-
-    sensor.status_mediarasp:
-      friendly_name: Media center
-
-    sensor.low_batteries:
-      friendly_name: Batterie scariche
-
-device_tracker:
-  - platform: mqtt
-    devices:
-      daniele_paytonble: 'homeassistant/monitor/rasp/payton/device_tracker'
-    source_type: bluetooth
-
-sensor:
-
-  - platform: template
-    sensors:
-      # Device con batteria scarica
-      low_batteries:
-        value_template: >
-          {%- set threshold = 10 -%}
-          {%- set result = namespace(count=0) -%}
-          {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
-          {%- set result.count = result.count + 1 -%}
-          {%- endfor -%}
-          {{ result.count }}
-        attribute_templates:
-          devices: >
-            {%- set threshold = 10 -%}
-            {%- set result = namespace(items=[]) -%}
-            {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
-            {% set result.items = result.items + [item.entity_id] %}
-            {%- endfor -%}
-            {{ result.items }}
-
-      # da usare in UI per rappresentare stato assente
-      status_controlcenter:
-        unit_of_measurement: "%"
-        device_class: battery
-        value_template: >-
-          {% if is_state('device_tracker.controlcenter', 'home') %}
-          {{ states.sensor.controlcenter_battery_level.state }}
-          {% else %}
-          0
-          {% endif %}
-
-      status_thermostat:
-        unit_of_measurement: "%"
-        device_class: battery
-        value_template: >-
-          {% if is_state('device_tracker.thermostat', 'home') %}
-          100
-          {% else %}
-          0
-          {% endif %}
-
-      status_mediarasp:
-        unit_of_measurement: "%"
-        device_class: battery
-        value_template: >-
-          {% if is_state('device_tracker.rasp', 'home') %}
-          100
-          {% else %}
-          0
-          {% endif %}
-
-binary_sensor:
-
-  - name: motion_living_door
-    platform: mqtt
-    state_topic: homeassistant/camera/living_door/motion
-    device_class: motion
-
-  # Sensore idleness computer
-  - platform: command_line
-    name: activity_notebook_daniele
-    # FIXME non so perché ma è necessario il tr...
-    command: >-
-      ping -W 1 -c 1 notebook > /dev/null 2>&1 && (
-      idle=$(/usr/bin/ssh daniele@notebook 2>/dev/null | tr -d '\n\r'); [ "$idle" -lt 60000 ] && echo 1 || echo 0) ||
-      echo 0
-    payload_on: "1"
-    payload_off: "0"
-
-proximity:
-  prox_home_daniele:
-    devices:
-      - device_tracker.daniele_paytongps
-    tolerance: 50
-
-camera:
-  - platform: mjpeg
-    name: living_door
-    mjpeg_url: http://localhost:9995/
+mqtt:
+  device_tracker:
+  binary_sensor:
+    - name: motion_living_door
+      state_topic: homeassistant/camera/living_door/motion
+      device_class: motion
 
 image_processing:
   - platform: deepstack_object
@@ -185,72 +118,13 @@ shell_command:
   start_living_door_camera: sudo systemctl start motion.service
   stop_living_door_camera: sudo systemctl stop motion.service
 
-automation:
-  - alias: control_center_low_battery
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.controlcenter_battery_level
-        below: 10
-    action:
-      service: notify.kontalk_daniele
-      data_template:
-        title: ''
-        message: |-
-          Batteria del centro di controllo bassa: {{ states.sensor.controlcenter_battery_level.state_with_unit }}
-
-  - alias: alert_low_batteries
-    trigger:
-      platform: numeric_state
-      entity_id: sensor.low_batteries
-      above: '0'
-      # evita sensori che riportano microcambiamenti
-      for: 02:00:00
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: Batterie scariche
-          message: >
-            {%- for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
-            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
-            {% endfor -%}
-          notification_id: alert_low_batteries
-      - service: notify.kontalk_daniele
-        data_template:
-          title: ''
-          message: |-
-            Batterie scariche:
-            {% for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
-            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
-            {% endfor -%}
-
-  - alias: alert_low_batteries_dismiss
-    trigger:
-      platform: numeric_state
-      entity_id: sensor.low_batteries
-      below: '1'
-    action:
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: alert_low_batteries
-
-alert:
-  battery_discharging_scatola:
-    name: Batteria scatola in scaricamento
-    message: 'Batteria scatola in scaricamento: {{ states.sensor.battery_scatola.state_with_unit }}'
-    done_message: 'Batteria scatola carica.'
-    entity_id: binary_sensor.battery_discharging_scatola
-    state: 'on'
-    repeat: 5
-    can_acknowledge: true
-    notifiers:
-      - kontalk_daniele
-
 group:
   motion_living:
     name: Living room motion
     entities:
-      - binary_sensor.motion_living_door
-      - binary_sensor.living_main_motion
+      # TODO da configurare
+      #- binary_sensor.motion_living_door
+      #- binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
 
   motion_bedroom:

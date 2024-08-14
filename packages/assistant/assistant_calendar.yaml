@@ -1,0 +1,68 @@
+
+intent_script:
+
+  CalendarSummaryToday:
+    action:
+      # TODO aggiungi compleanni
+      - service: calendar.get_events
+        data:
+          entity_id: calendar.my_calendar_events
+          start_date_time: "{{ now()-timedelta(hours=4) }}"
+          end_date_time: "{{ today_at('23:59:59') }}"
+        response_variable: agenda
+      - service: random_template.render
+        data:
+          key: assistant_CalendarSummaryToday
+          variables:
+            events: "{{ agenda.events }}"
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CalendarSummaryTomorrow:
+    action:
+      # TODO aggiungi compleanni
+      - service: calendar.get_events
+        data:
+          entity_id: calendar.my_calendar_events
+          start_date_time: "{{ today_at('00:00:00') + timedelta(days=1) }}"
+          end_date_time: "{{ today_at('23:59:59') + timedelta(days=1) }}"
+        response_variable: agenda
+      - service: random_template.render
+        data:
+          key: assistant_CalendarSummaryTomorrow
+          variables:
+            events: "{{ agenda.events }}"
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  CalendarSummaryWeekend:
+    action:
+      - service: calendar.get_events
+        data:
+          entity_id: calendar.my_calendar_events
+          # da venerdi sera
+          start_date_time: "{{ today_at('19:00')+timedelta(days=-now().weekday()+4) }}"
+          end_date_time: "{{ today_at('23:59:59')+timedelta(days=-now().weekday()+6) }}"
+        response_variable: agenda
+      - service: random_template.render
+        data:
+          key: assistant_CalendarSummaryWeekend
+          variables:
+            events: "{{ agenda.events }}"
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"

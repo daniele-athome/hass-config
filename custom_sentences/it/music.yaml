@@ -1,0 +1,51 @@
+language: it
+
+intents:
+
+  MusicPlayNowTitleByArtist:
+    data:
+      - sentences:
+          - "(riproduci|metti) {music_title} di {music_artist}"
+
+  MusicPlayNextTitleByArtist:
+    data:
+      - sentences:
+          - "((riproduci|metti) {music_title} di {music_artist};(dopo (questo brano|questa canzone)|subito dopo))"
+
+  # we don't need a context, overwrite the defaults
+  HassMediaPrevious:
+    data:
+      - sentences:
+          - "(vai indietro|ripeti)"
+          - "[vai indietro all'|torna all'|ripeti [l']|riproduci [di nuovo ][l']]ultima [ canzone| traccia]"
+          - "[vai indietro all'|torna all'|ripeti [l']|riproduci [di nuovo ][l']]ultimo [ brano| elemento| programma| episodio]"
+          - "[vai indietro alla |torna alla |ripeti [la ]|riproduci [di nuovo ][la ]][canzone|traccia] precedente"
+          - "[vai indietro al |torna al |ripeti [il ]|riproduci [di nuovo ][il ]][brano|programma] precedente"
+          - "[vai indietro all'|torna all'|ripeti [l']|riproduci [di nuovo ][l']][elemento|episodio] precedente"
+
+  # we don't need a context, overwrite the defaults
+  HassMediaNext:
+    data:
+      - sentences:
+          - "vai avanti"
+          - "[vai alla ]prossima[ canzone| traccia]"
+          - "[vai avanti alla ]prossima[ canzone| traccia]"
+          - "[vai avanti al ]prossimo[ brano| elemento| programma| episodio]"
+          - "[vai al ]prossimo[ brano| elemento| programma| episodio]"
+          - "[vai avanti alla ][canzone|traccia] (successiva|seguente)"
+          - "[vai avanti al ][brano|programma] (successivo|seguente)"
+          - "[vai avanti all'][elemento|episodio] (successivo|seguente)"
+          - "salta [la ](canzone|traccia)"
+          - "salta [questa |alla prossima ][canzone|traccia]"
+          - "salta [il ] (brano|programma)"
+          - "salta [questo |al prossimo ] [brano|programma]"
+          - "salta [l'][elemento|episodio]"
+          - "salta [questo |al prossimo ][elemento|episodio]"
+          - "salta alla [canzone |traccia ](successiva|seguente)"
+          - "salta al[ brano |l'elemento | programma |l'episodio ](successivo|seguente)"
+
+lists:
+  music_title:
+    wildcard: true
+  music_artist:
+    wildcard: true

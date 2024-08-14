@@ -2,12 +2,44 @@
 path: network
 title: Rete
 icon: mdi:lan
-type: custom:vertical-layout
+type: custom:layout-card
+layout_type: custom:vertical-layout
 layout:
   max_cols: 2
 cards:
 
   # Column 1
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: section
+        label: ROUTER
+
+  - type: custom:auto-entities
+    show_empty: false
+    unique: true
+    card:
+      type: glance
+      #title: "Ethernet"
+      show_state: false
+      columns: 5
+    filter:
+      include:
+        - entity_id: 'binary_sensor.router_ether*'
+
+  - type: horizontal-stack
+    cards:
+
+      - type: entity
+        entity: binary_sensor.internet
+        icon: mdi:web
+      - type: entity
+        entity: sensor.router_wireless_clients
+        icon: mdi:wifi
+      - type: entity
+        entity: sensor.router_temperature
+        icon: mdi:thermometer
 
   - type: custom:layout-break
 
@@ -23,6 +55,9 @@ cards:
         entity: binary_sensor.domonet_allowed_global
         name: Domonet
         icon: mdi:home-automation
+        styles:
+          card:
+            - height: 100px
         tap_action:
           action: call-service
           service: '[[[ if (entity.state === "on") return "script.domonet_all_disable_internet"; else return "script.domonet_all_enable_internet" ]]]'

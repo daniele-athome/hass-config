@@ -1,0 +1,35 @@
+language: it
+
+intents:
+
+  SetCountdownAlarm:
+    data:
+      - sentences:
+        - "(imposta|avvia|metti) [un] timer [(per|di)] [{hours} ore] [e] [{minutes} minuti] [e] [{seconds} secondi]"
+
+  GetCountdownAlarm:
+    data:
+      - sentences:
+        - "(stato | situazione) del timer"
+        - "quanto manca [(alla fine del | al)] timer"
+        - "quando finisce il timer"
+
+  ClearCountdownAlarm:
+    data:
+      - sentences:
+        - "(annulla | cancella | termina) [il] timer"
+
+lists:
+  seconds:
+    range:
+      from: 0
+      to: 120
+  minutes:
+    range:
+      from: 0
+      to: 120
+  hours:
+    range:
+      from: 0
+      to: 24
+

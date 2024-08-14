@@ -1,4 +1,5 @@
 # Media players
+# FIXME questo file contiene automazioni che gestiscono in concerto i media_player: riorganizzare/rinominare/splittare
 
 homeassistant:
   customize:
@@ -26,20 +27,14 @@ homeassistant:
     media_player.snapcast_kitchen:
       friendly_name: Music - Kitchen
 
+media_source:
+
 media_player:
   - platform: kodi
-    host: rasp
+    host: !secret mediarasp_host
     name: kodi
     # turn_on_action no longer supported
     # turn_off_action no longer supported
-  - platform: mopidy
-    host: !secret mediarasp_host
-    name: music
-  - platform: snapcast
-    host: !secret mediarasp_host
-  - platform: mpd
-    host: !secret speaker_bedroom_host
-    name: bedroom
 
 group:
 
@@ -48,7 +43,7 @@ group:
     name: Media
     icon: mdi:television-classic
     entities:
-      - media_player.tv
+      # conflicts with Kodi - media_player.tv
       - media_player.kodi
       - media_player.lounge
       - media_player.music
@@ -59,7 +54,7 @@ group:
     name: Media non TTS
     icon: mdi:television-classic
     entities:
-      - media_player.tv
+      # conflicts with Kodi - media_player.tv
       - media_player.kodi
       - media_player.music
       - media_player.bedroom
@@ -93,10 +88,21 @@ group:
       - media_player.snapcast_kitchen
       - media_player.snapcast_cfba28f0_3339_48ea_80e6_7426830806fe
 
+command_line:
+  - sensor:
+      name: news_tv_channelid
+      command: bin/tv-channel.sh "{{ states('input_text.news_tv_channel_name') }}"
+      scan_interval: 600
+
 binary_sensor:
 
   - platform: template
     sensors:
+      # TV accesa su Kodi
+      tv_on_kodi:
+        value_template: >-
+          {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'source', 'HDMI 3') }}
+
       # Modalità visione video/cinema o TV in canale
       cinema_mode:
         value_template: >-
@@ -110,27 +116,6 @@ binary_sensor:
           {{ (is_state('media_player.kodi', 'paused') and states.media_player.kodi.attributes.media_content_type in ['movie','tvshow','video']) or
              (is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'is_volume_muted', true) and states.media_player.tv.attributes.media_content_type == 'channel') }}
 
-
-# FIXME le API di Philipsmerda non funzionano per cambiare canale, quindi facciamo finta di digitarlo
-# Canale 507 (La7 HD)
-rest_command:
-  tv_channel_favourite_news_digit1:
-    url: http://192.168.0.205:1925/1/input/key
-    method: post
-    payload: '{"key": "Digit0"}'
-  tv_channel_favourite_news_digit2:
-    url: http://192.168.0.205:1925/1/input/key
-    method: post
-    payload: '{"key": "Digit5"}'
-  tv_channel_favourite_news_digit3:
-    url: http://192.168.0.205:1925/1/input/key
-    method: post
-    payload: '{"key": "Digit0"}'
-  tv_channel_favourite_news_digit4:
-    url: http://192.168.0.205:1925/1/input/key
-    method: post
-    payload: '{"key": "Digit7"}'
-
 script:
   tv_channel_favourite_news:
     sequence:
@@ -140,8 +125,7 @@ script:
         data:
           entity_id: media_player.kodi
           media_content_type: 'channel'
-          # TODO retrieve channel ID via JSON-RPC to Kodi or script
-          media_content_id: !secret tv_news_channel
+          media_content_id: "{{ states('sensor.news_tv_channelid') }}"
 
   # Pronuncia qualcosa
   say_something:
@@ -154,7 +138,7 @@ script:
       - service: script.set_tts_volume
       - service: tts.microsoft_say
         entity_id: media_player.lounge
-        data_template:
+        data:
           # not supported by Amazon Polly -- language: "{{ language|default('it') }}"
           message: "<p>{{ message }}</p>"
 
@@ -168,7 +152,7 @@ script:
         entity_id: media_player.lounge
       - service: script.set_tts_volume
       - service: media_player.play_media
-        data_template:
+        data:
           entity_id: media_player.lounge
           media_content_type: music
           media_content_id: "{{ url }}"
@@ -188,11 +172,6 @@ script:
       - service: media_player.media_pause
         data:
           entity_id: group.media_big_sound
-      # Muta la TV
-      - condition: state
-        entity_id: media_player.tv
-        state: 'on'
-      - service: script.mute_tv
 
   # Workaround for Philips API that acts as toggle mute always
   mute_tv:
@@ -229,15 +208,17 @@ input_text:
   volume_preduck:
     name: Volume pre-duck
     initial: 0.5
+  news_tv_channel_name:
+    name: TV news channel
 
 automation:
 
   - alias: tv_request_turn_on
     trigger:
       - platform: device
-        device_id: f689398559355f452b4318b3e9d21947
-        domain: philips_js
-        type: turn_on
+        device_id: 91f5981788a21313c9056f8ba1de975f
+        domain: webostv
+        type: webostv.turn_on
     action:
       service: kodi.call_method
       data:
@@ -250,7 +231,7 @@ automation:
   - alias: kodi_request_turn_on
     trigger:
       platform: device
-      device_id: db9f8246f92511ea9a5be195168bca21
+      device_id: 990074f3127e3df453ac96e856d47c37
       domain: kodi
       entity_id: media_player.kodi
       type: turn_on
@@ -262,7 +243,7 @@ automation:
   - alias: kodi_request_turn_off
     trigger:
       platform: device
-      device_id: db9f8246f92511ea9a5be195168bca21
+      device_id: 990074f3127e3df453ac96e856d47c37
       domain: kodi
       entity_id: media_player.kodi
       type: turn_off
@@ -284,7 +265,7 @@ automation:
         to: 'playing'
     action:
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.kodi_last_media
           option: "{{ states.media_player.kodi.attributes.media_content_type }}"
 
@@ -298,11 +279,6 @@ automation:
       - service: media_player.media_pause
         data:
           entity_id: group.media_big_sound
-      # Muta la TV
-      - condition: state
-        entity_id: media_player.tv
-        state: 'on'
-      - service: script.mute_tv
 
   - alias: pause_music_on_video_start
     trigger:
@@ -326,7 +302,7 @@ automation:
         data:
           entity_id: media_player.kodi
 
-  # Abbassa la musica quando non c'è attività in salone
+  # Abbassa la musica quando non c'è attività in soggiorno
   - alias: duck_volume_living
     trigger:
       - platform: state
@@ -354,7 +330,7 @@ automation:
           entity_id: media_player.snapcast_living
           volume_level: !secret music_duck_volume
 
-  # Ripristina volume della musica quando c'è attività in salone
+  # Ripristina volume della musica quando c'è attività in soggiorno
   - alias: unduck_volume_living
     trigger:
       - platform: state
@@ -394,3 +370,55 @@ automation:
       - service: homeassistant.update_entity
         data:
           entity_id: media_player.bedroom
+
+  - alias: kodi_crash_workaround
+    description: Spegni la TV dopo un crash di Kodi se nessuno sta guardando
+    trigger:
+      platform: state
+      # il media player non supporta gli stati on/off apparentemente
+      entity_id: device_tracker.tv
+      to: "home"
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.house_mode
+          state: night
+        - condition: state
+          entity_id: input_select.house_mode
+          state: away
+        - condition: state
+          entity_id: input_select.house_mode
+          state: extended_away
+    action:
+      - service: media_player.turn_off
+        entity_id: media_player.kodi
+      # Questo potrebbe fallire quindi lo mettiamo per ultimo
+      - service: media_player.turn_off
+        entity_id: media_player.tv
+
+  - alias: bathroom_activate_media_controller
+    description: Attiva BubbleUPnP sul telefono quando lo speaker in bagno si connette
+    trigger:
+      platform: state
+      entity_id: media_player.snapcast_bathroom
+      to: "idle"
+    condition:
+      condition: state
+      entity_id: person.daniele
+      state: home
+    action:
+      - service: notify.mobile_app_daniele_payton
+        data:
+          message: command_broadcast_intent
+          data:
+            intent_package_name: "com.bubblesoft.android.bubbleupnp"
+            intent_action: "com.bubblesoft.android.bubbleupnp.START_SERVICE"
+      - delay: 6
+      - service: notify.mobile_app_daniele_payton
+        data:
+          message: command_broadcast_intent
+          data:
+            intent_package_name: "com.bubblesoft.android.bubbleupnp"
+            intent_action: "com.bubblesoft.android.bubbleupnp.SET_RENDERER"
+            intent_extras: "name:Music House (OpenHome)"

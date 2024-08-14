@@ -1,8 +1,13 @@
+# TODO potrebbe essere spostato in "utility"
+
 homeassistant:
   customize:
     input_select.house_mode:
       friendly_name: Modalità casa
       icon: mdi:home-assistant
+    script.house_mode_night:
+      friendly_name: Night mode
+      icon: mdi:weather-night
 
 input_select:
   house_mode:
@@ -48,7 +53,7 @@ automation:
   # Impostazione automatica modalità giorno al mattino (risveglio)
   - alias: mode_auto_day
     trigger:
-      # Rilevato movimento in salone
+      # Rilevato movimento in soggiorno
       - platform: state
         entity_id: group.motion_living
         to: 'on'
@@ -65,9 +70,9 @@ automation:
           state: night
     action:
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.house_mode
-          option: "{{ 'day_working' if is_state('binary_sensor.workday_sensor', 'on') else 'day_not_working' }}"
+          option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
 
   # Impostazione automatica modalità casa vuota lunga
   - alias: mode_auto_extended_away
@@ -88,9 +93,19 @@ automation:
     trigger:
       - platform: state
         entity_id: input_select.house_mode
+        to:
     action:
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Info"
+      - service: script.notify_debug
+        data:
           message: |-
             House mode: {{ states.input_select.house_mode.state }}
+
+script:
+
+  house_mode_night:
+    description: Attiva la modalità notte
+    sequence:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.house_mode
+          option: night

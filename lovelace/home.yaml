@@ -1,7 +1,8 @@
 path: home
 title: Home
 icon: mdi:home
-type: custom:vertical-layout
+type: custom:layout-card
+layout_type: custom:vertical-layout
 layout:
   max_cols: 2
 cards:
@@ -10,30 +11,6 @@ cards:
 
   - type: custom:search-card
     max_results: 10
-
-  - type: 'custom:clock-card'
-
-  - type: horizontal-stack
-    cards:
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - person.daniele
-          - type: divider
-          - sensor.daniele_payton_battery_level
-
-      # other people here
-
-  - type: 'custom:travel-time-card'
-    entities:
-      - entity: sensor.commute_to_work
-        zone: zone.work
-        name: Work
-        title: Tempi di viaggio
-
-  - type: custom:layout-break
-
-  # Column 2
 
   - type: horizontal-stack
     cards:
@@ -139,10 +116,45 @@ cards:
           - value: extended_away
             color: red
 
-  - type: custom:weather-card
+  - type: 'custom:travel-time-card'
+    entities:
+      - entity: sensor.commute_to_work
+        zone: zone.work
+        name: Work
+        title: Tempi di viaggio
+
+  - type: horizontal-stack
+    cards:
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - person.daniele
+          - type: divider
+          - entity: sensor.daniele_payton_battery_level
+            name: Telefono
+
+      # other people here
+
+  - type: custom:layout-break
+
+  # Column 2
+
+  - type: custom:hourly-weather
     entity: weather.home
-    name: !secret weather_name_home
-    icons: "/local/icons/weather_icons/static/"
-    current: true
-    details: true
-    forecast: true
+    num_segments: 4
+    name: Prossime 12 ore
+
+  - type: custom:weather-chart-card
+    entity: weather.home
+    #title: !secret weather_name_home
+    show_time: true
+    show_day: true
+    show_date: true
+    forecast:
+      type: hourly
+      condition_icons: false
+      show_wind_forecast: false
+    units:
+      pressure: 'hPa'
+      speed: 'km/h'
+    locale: it

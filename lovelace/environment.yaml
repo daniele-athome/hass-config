@@ -1,16 +1,30 @@
 path: environment
 title: Ambiente
 icon: mdi:thermometer
-type: custom:vertical-layout
+type: custom:layout-card
+layout_type: custom:vertical-layout
 layout:
   max_cols: 2
 cards:
 
   # Column 1
 
-  - type: custom:thermostat-dark-card
+  - type: thermostat
     entity: climate.boiler_main
-    highlight_tap: true
+    features:
+      - type: "climate-hvac-modes"
+        hvac_modes:
+          - heat
+          - "off"
+    card_mod:
+      style: |-
+        :host {
+          height: auto !important;
+        }
+  - type: custom:mini-climate
+    entity: climate.living_ac
+  - type: custom:mini-climate
+    entity: climate.bedroom_ac
 
   - type: custom:layout-break
 
@@ -22,9 +36,10 @@ cards:
       - type: custom:mini-graph-card
         entities:
           - sensor.temperature_external
-          - entity: sensor.humidity_external
-            show_state: true
-            show_graph: false
+          # TODO installare sensore
+#          - entity: sensor.humidity_external
+#            show_state: true
+#            show_graph: false
         name: Esterno
         height: 46
         line_width: 2
@@ -76,7 +91,7 @@ cards:
           - entity: sensor.humidity_living
             show_state: true
             show_graph: false
-        name: Salone
+        name: Soggiorno
         height: 74
         line_width: 2
         font_size: 65
@@ -127,7 +142,7 @@ cards:
           - entity: sensor.humidity_bathroom1
             show_state: true
             show_graph: false
-        name: Bagno
+        name: Bagno 1
         height: 74
         line_width: 2
         font_size: 65
@@ -168,3 +183,31 @@ cards:
             color: "#1db954"
           - value: 0
             color: "#3498db"
+
+  # Riga 4
+  - type: horizontal-stack
+    cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.temperature_studio
+          - entity: sensor.humidity_studio
+            show_state: true
+            show_graph: false
+        name: Studio
+        height: 74
+        line_width: 2
+        font_size: 65
+        hours_to_show: 168
+        points_per_hour: 1
+        hour24: true
+        show:
+          icon: true
+          extrema: true
+        color_thresholds:
+          - value: 28
+            color: "#e74c3c"
+          - value: 15
+            color: "#1db954"
+          - value: 0
+            color: "#3498db"
+

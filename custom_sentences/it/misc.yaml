@@ -1,0 +1,71 @@
+language: it
+
+intents:
+
+  GreetingGoodMorning:
+    data:
+      - sentences:
+        - "buongiorno"
+        - "buon giorno"
+
+  GreetingGeneral:
+    data:
+      - sentences:
+        - "ciao"
+        - "salve"
+
+  GreetingGoodNight:
+    data:
+      - sentences:
+        - "buonanotte"
+        - "buona notte"
+
+  AnnounceGoingAway:
+    data:
+      - sentences:
+        - "sto uscendo [per lavoro]"
+        - "(sto andando|vado) (al lavoro|a lavorare)"
+
+  DNDModeOn:
+    data:
+      - sentences:
+        - "non voglio essere disturbato"
+        - "non mi disturbare"
+        - "(contattami|chiamami|parlami|parla) solo per [le] emergenze"
+        - "fai silenzio"
+        - "stai zitta"
+        - "non parlare"
+
+  PutTVNewsOn:
+    data:
+      - sentences:
+        - "metti il telegiornale"
+        - "accendi la tv sul telegiornale"
+
+  TrashReminderMorning:
+    data:
+      - sentences:
+        - "ricordami [di portare] (la spazzatura | l'immondizia) {when_simple:when}"
+
+lists:
+  when_simple:
+    values:
+      - domani
+      - dopodomani
+
+# FIXME non funziona perché "grazie" è tra le skip_words
+#  Thankyou:
+#    data:
+#      - sentences:
+#        - "grazie [(mille|cara)]"
+
+# FIXME !include not supported here
+skip_words:
+  # (defaults)
+  #  - "per favore"
+  #  - "potresti"
+  #  - "puoi"
+  #  - "puoi dirmi"
+  #  - "dimmi"
+  #  - "grazie"
+  - "per piacere"

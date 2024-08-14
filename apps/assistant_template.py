@@ -47,6 +47,7 @@ class AssistantTemplate(hass.Hass):
             return self.call_service('template/render',
                                      template=tmpl_content,
                                      variables=variables,
+                                     return_result=True,
                                      namespace='hass')
 
     def template_dirname(self, name):

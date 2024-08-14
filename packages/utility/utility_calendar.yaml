@@ -1,0 +1,63 @@
+# ### Calendar data sensors
+
+homeassistant:
+  customize:
+    sensor.date_long:
+      friendly_name: Data
+    calendar.my_calendar_events:
+      friendly_name: Personale
+    calendar.lavoro_events:
+      friendly_name: Lavoro
+    calendar.risucchiator_events:
+      friendly_name: Risucchiator
+
+# Calendario personale
+calendar:
+  - platform: caldav
+    username: !secret caldav_username
+    password: !secret caldav_password
+    url: !secret caldav_url
+    custom_calendars:
+      - name: "events"
+        calendar: "My Calendar"
+        search: ".*"
+      - name: "events"
+        calendar: "Lavoro"
+        search: ".*"
+      - name: "events"
+        calendar: "Risucchiator"
+        search: ".*"
+
+sensor:
+  - platform: time_date
+    display_options:
+      - time
+      - date
+      - date_time
+      - date_time_utc
+      - date_time_iso
+
+  # Data fatta bene
+  - platform: template
+    sensors:
+      date_long:
+        icon_template: mdi:calendar-today
+        value_template: >-
+          {% set months = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"] %}
+          {% set days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]  %}
+          {% set weekday = days[now().weekday()] %}
+          {% set year = now().year %}
+          {% set month = months[now().month-1] %}
+          {% set day = now().day | int %}
+          {% set day = 'primo' if (day == 1) else day %}
+
+          {{ weekday }}, {{ day }} {{ month }} {{ year }}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      workday:
+        value_template: >-
+          {{ is_state("binary_sensor.workday_home", "on") and
+             not (is_state("calendar.lavoro_events", "on") and
+             state_attr("calendar.lavoro_events", "message") in ("Ferie", "Malattia", "Lutto")) }}

@@ -1,3 +1,5 @@
+# FIXME la gestione della notte e del risveglio merita probabilmente una directory dedicata
+
 homeassistant:
   customize:
     input_boolean.night_mode_disabled_today:
@@ -20,7 +22,7 @@ script:
   notify_night_mode_warning:
     sequence:
       - service: notify.mobile_app_daniele_payton
-        data_template:
+        data:
           title: "Modalità notte"
           message: "Sto per attivare la modalità notte!"
           data:
@@ -38,17 +40,12 @@ script:
               # Annulla per questa notte
               - action: night_mode_cancel
                 title: Annulla
-      # Debug: notifica anche IM
-      - service: notify.kontalk_daniele
-        data_template:
-          title: "Info"
-          message: "Sto per attivare la modalità notte!"
 
   # Cancella la notifica della modalità notte
   cancel_night_mode_warning:
     sequence:
       - service: notify.mobile_app_daniele_payton
-        data_template:
+        data:
           message: clear_notification
           data:
             priority: high
@@ -59,6 +56,7 @@ automation:
   # Avvisami che sta per attivarsi la modalità notte
   # Se non ci saranno cambiamenti si attiverà automaticamente in 3 minuti
   - alias: night_mode_warning
+    id: bcf91662-890e-41f7-a5bd-c6a55852624b
     trigger:
       platform: time_pattern
       # FIXME hard-coding variables
@@ -108,15 +106,13 @@ automation:
           entity_id: media_player.kodi
           state: idle
         - condition: template
-          value_template: "{{ is_state('media_player.music', 'off') or is_state('media_player.music', 'paused') }}"
-        - condition: state
-          entity_id: media_player.tv
-          state: 'off'
-        - condition: state
-          entity_id: device_tracker.tv
-          state: 'not_home'
+          value_template: "{{ is_state('media_player.music', 'off') or is_state('media_player.music', 'paused') or is_state('media_player.music', 'unavailable')}}"
         - condition: template
-          value_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'off') }}"
+          value_template: "{{ is_state('media_player.tv', 'idle') or is_state('media_player.tv', 'off') or is_state('media_player.tv', 'unavailable') }}"
+        - condition: template
+          value_template: "{{ is_state('device_tracker.tv', 'not_home') or is_state('device_tracker.tv', 'unavailable') }}"
+        - condition: template
+          value_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'off') or is_state('media_player.lounge', 'unavailable') }}"
         # Ogni movimento tranne in camera da letto cessato
         - condition: state
           entity_id: group.motion_not_bedroom
@@ -128,7 +124,7 @@ automation:
         # ...
         # Luminosità bassa in tutte le stanze
         - condition: numeric_state
-          entity_id: sensor.living_main_lux
+          entity_id: sensor.lux_living
           below: !secret living_lux_darkness_threshold
         - condition: numeric_state
           entity_id: sensor.bedroom_lux
@@ -142,6 +138,7 @@ automation:
 
   # Attivazione modalità notte per scadenza del timer
   - alias: night_mode_enable
+    id: c365ea4e-2c99-48be-94db-71499fbea546
     trigger:
       platform: event
       event_type: timer.finished
@@ -156,6 +153,7 @@ automation:
 
   # Timer warning modalità notte partito
   - alias: night_mode_warning_started
+    id: 207bc889-a191-4085-b386-7b1fb69ad5ea
     trigger:
       platform: event
       event_type: timer.started
@@ -167,6 +165,7 @@ automation:
 
   # Annullamento del timer di warning della modalità notte
   - alias: night_mode_cancelled
+    id: 66b695b7-1043-4346-84aa-22bbe6b4c589
     trigger:
       platform: event
       event_type: timer.cancelled
@@ -177,6 +176,7 @@ automation:
 
   # Utente ha richiesto snooze, riavvia il timer per 15 minuti (12 snooze + 3 warning)
   - alias: night_mode_snooze
+    id: 56c8fd1b-10b0-43da-b619-d3d9dfdf8b49
     trigger:
       - event_data:
           action: night_mode_snooze
@@ -190,12 +190,13 @@ automation:
         data:
           entity_id: timer.night_mode_snooze
       - service: timer.start
-        data_template:
+        data:
           entity_id: timer.night_mode_snooze
           duration: "00:12:00"
 
   # Scadenza dello snooze della modalità notte
   - alias: night_mode_snoozed
+    id: e65a336a-56ab-4974-9324-1680972f9e0c
     trigger:
       platform: event
       event_type: timer.finished
@@ -207,6 +208,7 @@ automation:
 
   # Utente ha richiesto attivazione immediata
   - alias: night_mode_enable_now
+    id: da80db36-5890-4420-bedc-d5fd9bc4e45a
     trigger:
       - event_data:
           action: night_mode_enable_now
@@ -219,6 +221,7 @@ automation:
 
   # Utente ha richiesto annullamento per stanotte
   - alias: night_mode_cancel
+    id: 93ca163b-9f9f-4766-acee-865078ad58a9
     trigger:
       - event_data:
           action: night_mode_cancel
@@ -234,6 +237,7 @@ automation:
 
   # Abilita modalità notte disattivata dall'utente la sera prima
   - alias: night_mode_disabled_enable
+    id: a855daad-8caa-41b7-9948-b40725c07bd5
     trigger:
       platform: time
       at: "06:00:00"
@@ -242,6 +246,7 @@ automation:
         entity_id: input_boolean.night_mode_disabled_today
 
   - alias: house_mode_night_mode_night
+    id: 2153a2c5-751c-455c-be22-a38f274982ed
     trigger:
       - platform: state
         entity_id: input_select.house_mode
@@ -256,6 +261,7 @@ automation:
           - automation.night_mode_warning
 
   - alias: house_mode_night_mode_not_night
+    id: 7ae3d738-102a-4181-b37b-a9c684877187
     trigger:
       - platform: state
         entity_id: input_select.house_mode

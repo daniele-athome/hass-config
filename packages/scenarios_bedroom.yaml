@@ -1,6 +1,8 @@
 # Entity state scenes and scenarios for bedroom
+# FIXME merita una directory dedicata
 
 input_number:
+
   people_count_bedroom:
     name: 'Persone in camera'
     initial: 0

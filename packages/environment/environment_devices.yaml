@@ -1,0 +1,191 @@
+# ### Environment devices definitions
+
+group:
+  hvac_all:
+    name: "Sistemi HAVC"
+    entities:
+      - climate.boiler_main
+      - climate.living_ac
+      - climate.bedroom_ac
+
+  # TODO in teoria dovrebbe includere anche i condizionatori, ma la cosa è complicata
+  hvac_heat:
+    name: "HVAC riscaldamento"
+    entities:
+      - climate.boiler_main
+
+  hvac_cool:
+    name: "HVAC raffrescamento"
+    entities:
+      - climate.living_ac
+      - climate.bedroom_ac
+
+  env_kitchen:
+    name: "Ambiente: Cucina"
+    entities:
+      - sensor.temperature_kitchen
+      - sensor.humidity_kitchen
+
+  env_bedroom:
+    name: "Ambiente: Camera"
+    entities:
+      - sensor.temperature_bedroom
+      - sensor.humidity_bedroom
+      - sensor.pressure_bedroom
+
+  env_living:
+    name: "Ambiente: Soggiorno"
+    entities:
+      - sensor.temperature_living
+      - sensor.humidity_living
+
+  env_bathroom1:
+    name: "Ambiente: Bagno 1"
+    entities:
+      - sensor.temperature_bathroom1
+      - sensor.humidity_bathroom1
+
+  env_studio:
+    name: "Ambiente: Studio"
+    entities:
+      - sensor.temperature_studio
+      - sensor.humidity_studio
+
+  env_external:
+    name: "Ambiente: Esterno"
+    entities:
+      - sensor.temperature_external
+      - sensor.humidity_external
+      - sensor.pressure_external
+
+sensor:
+  - name: temperature_average
+    platform: average
+    precision: 1
+    entities:
+      - sensor.temperature_kitchen
+      - sensor.temperature_bedroom
+      - sensor.temperature_living
+      - sensor.temperature_bathroom1
+      - sensor.temperature_studio
+
+  - name: humidity_average
+    platform: average
+    precision: 1
+    entities:
+      - sensor.humidity_kitchen
+      - sensor.humidity_bedroom
+      - sensor.humidity_living
+      - sensor.humidity_bathroom1
+      - sensor.humidity_studio
+
+  - name: temperature_living
+    platform: average
+    precision: 1
+    entities:
+      - sensor.temperature_living_window
+      - sensor.temperature_living_table
+
+template:
+  - sensor:
+      - name: temperature_external
+        state: "{{ states('sensor.daikinap53460_outside_temperature') }}"
+        unit_of_measurement: '°C'
+        icon: mdi:thermometer
+
+      - name: temperature_living_window
+        state: "{{ states('sensor.daikinap53460_inside_temperature') }}"
+        unit_of_measurement: '°C'
+        icon: mdi:thermometer
+
+mqtt:
+  sensor:
+    - name: gas_level_kitchen
+      state_topic: shellies/gas-kitchen/sensor/gas
+
+    - name: gas_concentration_kitchen
+      state_topic: shellies/gas-kitchen/sensor/concentration
+      unit_of_measurement: 'PPM'
+
+climate:
+  # Termostato principale (Zigbee)
+  # Condizionatore soggiorno (Daikin AC)
+  # Condizionatore camera da letto (IRHVAC)
+  # TODO windfree
+  # TODO testare con IR receiver
+  - platform: tasmota_irhvac
+    name: bedroom_ac
+    command_topic: "homeassistant/tasmota/cmnd/bedroom_ac/irhvac"
+    state_topic: "homeassistant/tasmota/tele/bedroom_ac/RESULT"
+    state_topic_2: "homeassistant/tasmota/stat/bedroom_ac/RESULT"
+    availability_topic: "homeassistant/tasmota/tele/bedroom_ac/LWT"
+    temperature_sensor: sensor.temperature_bedroom
+    protocol: "SAMSUNG_AC"
+    min_temp: 16
+    max_temp: 30
+    target_temp: 26
+    initial_operation_mode: "off"
+    #away_temp: 24
+    precision: 1.0
+    supported_modes:
+      - heat
+      - cool
+      - dry
+      - fan_only
+      - auto
+      - "off"
+    supported_fan_speeds:
+      - max
+      - high
+      - medium
+      - min
+      - auto
+    supported_swing_list:
+      - "off"
+      - vertical # up to down
+      - horizontal # left to right
+      - both
+    toggle_list:
+      - Beep
+      #- Clean
+      - Econo
+      #- Filter
+      #- Light
+      - Quiet
+      #- Sleep
+      #- SwingH
+      #- SwingV
+      - Turbo
+
+automation:
+  - alias: thermostat_sync_local_temperature
+    description: 'Sincronizza la temperatura rilevata dal termostato principale'
+    trigger:
+      - platform: state
+        entity_id: climate.boiler_main
+        from: unavailable
+      # variazione della temperatura media dei sensori
+      - platform: state
+        entity_id: sensor.temperature_average
+      # variazione della temperatura rilevata dal termostato
+      - platform: state
+        entity_id: climate.boiler_main
+        attribute: current_temperature
+    condition: [ ]
+    action:
+      - variables:
+          tempcalc: >-
+            {{ (states('sensor.temperature_average')|float(0)|round(1) -
+            (state_attr('climate.boiler_main', 'current_temperature')|float(0) -
+            states('number.bosch_rbsh_rth0_zb_eu_local_temperature_offset')|float(0)))|round(1) }}
+      - if:
+          - condition: template
+            value_template: "{{ tempcalc != states('number.bosch_rbsh_rth0_zb_eu_local_temperature_offset')|float(0) }}"
+        then:
+          - service: number.set_value
+            data:
+              value: "{{ tempcalc }}"
+            target:
+              entity_id: number.bosch_rbsh_rth0_zb_eu_local_temperature_offset
+    mode: queued
+    max: 3
