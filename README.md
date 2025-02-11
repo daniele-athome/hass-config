@@ -168,7 +168,7 @@ A *house mode* for the night. It is an environment state where:
 * no assistant warnings are fired unless it's an emergency
 * I'm sleeping :)
 
-Night mode can be triggered manually by saying goodnight to Karen. Otherwise, starting 23:00, Home Assistant will check
+Night mode can be triggered manually by saying goodnight to Assist. Otherwise, starting 23:00, Home Assistant will check
 every minute that:
 
 * all lights are off
@@ -220,7 +220,7 @@ automation hardware is installed at the moment.
 When I watch something, all lights are turned off &mdash; I call this *cinema mode*.
 A LED strip facing my ceiling is gently turned on when I pause.
 
-Cinema mode is suspended if I ask Karen to keep some lights on &mdash; very useful
+Cinema mode is suspended if I ask Assist to keep some lights on &mdash; very useful
 when I'm watching something while eating &mdash; I do that a lot :spaghetti:
 
 Controlled lights are turned off automatically when too much light is detected in
