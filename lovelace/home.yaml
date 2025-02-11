@@ -130,7 +130,7 @@ cards:
         entities:
           - person.daniele
           - type: divider
-          - entity: sensor.daniele_payton_battery_level
+          - entity: sensor.daniele_shiba_battery_level
             name: Telefono
 
       # other people here
@@ -144,17 +144,30 @@ cards:
     num_segments: 4
     name: Prossime 12 ore
 
-  - type: custom:weather-chart-card
+  # TODO might be causing issues on long-running browsers
+  # https://github.com/thomasloven/lovelace-card-mod/issues/413
+#  - type: custom:weather-chart-card
+#    entity: weather.home
+#    #title: !secret weather_name_home
+#    show_time: true
+#    show_day: true
+#    show_date: true
+#    forecast:
+#      type: hourly
+#      condition_icons: false
+#      show_wind_forecast: false
+#    units:
+#      pressure: 'hPa'
+#      speed: 'km/h'
+#    locale: it
+
+  - type: weather-forecast
+    show_forecast: true
+    show_current: true
     entity: weather.home
-    #title: !secret weather_name_home
-    show_time: true
-    show_day: true
-    show_date: true
-    forecast:
-      type: hourly
-      condition_icons: false
-      show_wind_forecast: false
-    units:
-      pressure: 'hPa'
-      speed: 'km/h'
-    locale: it
+    forecast_type: hourly
+    card_mod:
+      style: |-
+        :host {
+          height: auto !important;
+        }

@@ -3,9 +3,9 @@ intent_script:
 
   SetDinnerEating:
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id: input_boolean.need_living_utility_light
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_SetDinnerEating
         response_variable: speech
@@ -18,11 +18,11 @@ intent_script:
 
   AllLightsOff:
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.need_living_utility_light
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: all
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_AllLightsOff
         response_variable: speech
@@ -35,12 +35,12 @@ intent_script:
 
   LivingUtilityLightOn:
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         entity_id: light.living_extra
 
   GuestModeOn:
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: guest
@@ -50,7 +50,7 @@ intent_script:
 
   GuestModeOff:
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"

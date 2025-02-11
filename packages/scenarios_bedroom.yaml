@@ -15,42 +15,42 @@ automation:
 
   - alias: bedroom_entering
     # disabilita finché non abbiamo qualcosa di più affidabile
-    initial_state: off
+    initial_state: false
     trigger:
-      - platform: mqtt
+      - trigger: mqtt
         topic: homeassistant/room-trespass/bedroom/direction
         payload: '1'
       # FIXME finché il sensore non sarà affidabile al 100%, per una persona sola va bene
-      - platform: state
+      - trigger: state
         entity_id: group.motion_bedroom
         to: 'on'
     action:
-      - service: input_number.increment
+      - action: input_number.increment
         entity_id: input_number.people_count_bedroom
       # Posso affermare che se una persona entra in camera non può essere anche in soggiorno
-      - service: input_number.decrement
+      - action: input_number.decrement
         entity_id: input_number.people_count_living
 
   - alias: bedroom_exiting
     # disabilita finché non abbiamo qualcosa di più affidabile
-    initial_state: off
+    initial_state: false
     trigger:
-      platform: mqtt
+      trigger: mqtt
       topic: homeassistant/room-trespass/bedroom/direction
       payload: '2'
     action:
-      - service: input_number.decrement
+      - action: input_number.decrement
         entity_id: input_number.people_count_bedroom
       # Una persona che esce dalla camera può essere forse in soggiorno.
       # Non affidabile finché non mettiamo un sensore di passaggio nel disimpegno,
       # tuttavia nel frattempo dobbiamo compensare l'azione di bedroom_entering
-      - service: input_number.increment
+      - action: input_number.increment
         entity_id: input_number.people_count_living
 
   - alias: bedroom_enter_light_on
     trigger:
       # Presenza in stanza
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: input_number.people_count_bedroom
         above: '0'
       # Luce naturale scarsa
@@ -59,7 +59,7 @@ automation:
       #  entity_id: sensor.bedroom_lux
       #  below: !secret bedroom_lux_darkness_threshold
       # Dieci minuti dopo il tramonto
-      - platform: sun
+      - trigger: sun
         event: sunset
         offset: "+00:10:00"
     condition:
@@ -85,17 +85,16 @@ automation:
               before_offset: "-00:30:00"
     action:
       # Accendi la luce principale o la luce del letto, a seconda dell'orario
-      - service: script.bedroom_turn_on_main_light_conditional
-      - service: script.bedroom_turn_on_left_light_conditional
+      - action: script.bedroom_turn_on_light_conditional
 
   - alias: bedroom_exit_light_off
     trigger:
       # Assenza in stanza
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: input_number.people_count_bedroom
         below: '1'
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id:
           - light.bedroom_main
           - light.bedroom_left
@@ -104,11 +103,11 @@ automation:
   - alias: bedroom_enter_speaker_on
     trigger:
       # Presenza in stanza
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: input_number.people_count_bedroom
         above: '0'
     action:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           # FIXME in teoria qui andrebbe messo il gruppo
           entity_id: media_player.snapcast_bedroom
@@ -118,11 +117,11 @@ automation:
   - alias: bedroom_exit_speaker_off
     trigger:
       # Assenza in stanza
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: input_number.people_count_bedroom
         below: '1'
     action:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           # FIXME in teoria qui andrebbe messo il gruppo
           entity_id: media_player.snapcast_bedroom
@@ -132,12 +131,12 @@ automation:
   # FIXME sensore inaffidabile
   - alias: bedroom_too_much_light
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.bedroom_lux
         # Questa soglia è superabile solo con la luce del sole
         above: !secret bedroom_lux_too_much_threshold
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id:
           - light.bedroom_main
           - light.bedroom_left
@@ -145,9 +144,9 @@ automation:
   # Attiva luce su movimento contro il muro
   - alias: motion_bedroom_wall
     trigger:
-      - platform: state
+      - trigger: state
         # non il gruppo, ci serve il sensore specifico qui
-        entity_id: binary_sensor.motion_bedroom
+        entity_id: binary_sensor.motion_bedroom_headrest
         to: 'on'
     condition:
       condition: or
@@ -162,16 +161,15 @@ automation:
           before_offset: "-00:30:00"
     action:
       # Accendi la luce principale o la luce del letto, a seconda dell'orario
-      - service: script.bedroom_turn_on_main_light_conditional
-      - service: script.bedroom_turn_on_left_light_conditional
+      - action: script.bedroom_turn_on_light_conditional
 
   - alias: motion_bedroom_day
-    initial_state: off
+    initial_state: false
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_bedroom
         to: 'on'
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.bedroom_lux
         below: !secret bedroom_lux_darkness_threshold
     condition:
@@ -185,28 +183,28 @@ automation:
           entity_id: sensor.bedroom_lux
           below: !secret bedroom_lux_darkness_threshold
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         entity_id: light.bedroom_main
 
   - alias: motion_bedroom_day_ended
-    initial_state: off
+    initial_state: false
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_bedroom
         from: 'on'
         to: 'off'
         for: "00:05:00"
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.bedroom_main
 
   - alias: house_mode_bedroom_night
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: night
     action:
-      - service: automation.turn_off
+      - action: automation.turn_off
         entity_id:
           #- automation.motion_bedroom_day
           - automation.bedroom_enter_light_on
@@ -214,11 +212,11 @@ automation:
 
   - alias: house_mode_bedroom_not_night
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: night
     action:
-      - service: automation.turn_on
+      - action: automation.turn_on
         entity_id:
           #- automation.motion_bedroom_day
           - automation.bedroom_enter_light_on
@@ -226,54 +224,51 @@ automation:
 
   - alias: house_mode_bedroom_away
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: away
     action:
       # Azzera il conteggio persone (evita falsi positivi)
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.people_count_bedroom
           value: '0'
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.bedroom
 
   # Spegni la luce principale quando è accesa la luce di sinistra
   - alias: bedroom_turn_off_main_when_left_is_turned_on
     trigger:
-      platform: state
+      trigger: state
       entity_id: light.bedroom_left
       to: 'on'
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.bedroom_main
 
   # Spegni la luce di sinistra quando è accesa la luce principale
   - alias: bedroom_turn_off_left_when_main_is_turned_on
     trigger:
-      platform: state
+      trigger: state
       entity_id: light.bedroom_main
       to: 'on'
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.bedroom_left
 
 script:
 
-  # Accende la luce principale prima tra le 10:00 e le 23:00
+  # Accende la luce di sinistra o la luce principale a seconda dell'orario
   # Non verifica altro, richiamata da automation.bedroom_enter_light_on previe opportune verifiche
-  bedroom_turn_on_main_light_conditional:
+  bedroom_turn_on_light_conditional:
     sequence:
-      - condition: template
-        value_template: '{{ 10 <= now().hour < 23 }}'
-      - service: light.turn_on
-        entity_id: light.bedroom_main
-
-  # Accende la luce di sinistra tra le 23:00 e le 10:00
-  # Non verifica altro, richiamata da automation.bedroom_enter_light_on previe opportune verifiche
-  bedroom_turn_on_left_light_conditional:
-    sequence:
-      - condition: template
-        value_template: '{{ now().hour >= 23 or now().hour < 10 }}'
-      - service: light.turn_on
-        entity_id: light.bedroom_left
+      - if:
+        - condition: time
+          after: "10:00:00"
+          before: "23:00:00"
+        then:
+        - action: light.turn_on
+          entity_id: light.bedroom_main
+        else:
+        - action: light.turn_on
+          entity_id: light.bedroom_left

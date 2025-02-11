@@ -1,0 +1,584 @@
+# ### Vacuum Robot operations
+
+# Roborock list of commands:
+# https://github.com/humbertogontijo/python-roborock/blob/main/docs/source/api_commands.rst
+
+homeassistant:
+  customize:
+    script.vacuum_clean_kitchen:
+      friendly_name: 'Pulizia cucina'
+      icon: mdi:robot-vacuum
+    script.vacuum_clean_bathroom1:
+      friendly_name: 'Pulizia bagno 1'
+      icon: mdi:robot-vacuum
+    script.vacuum_clean_bathroom2:
+      friendly_name: 'Pulizia bagno 2'
+      icon: mdi:robot-vacuum
+    script.vacuum_clean_nightway:
+      friendly_name: 'Pulizia nightway'
+      icon: mdi:robot-vacuum
+    script.vacuum_clean_bedroom:
+      friendly_name: 'Pulizia camera'
+      icon: mdi:robot-vacuum
+    script.vacuum_clean_living:
+      friendly_name: 'Pulizia soggiorno'
+      icon: mdi:robot-vacuum
+
+input_boolean:
+
+  vacuum_skip_next_cleaning:
+    name: Salta prossima pulizia
+    icon: mdi:robot-vacuum
+
+  vacuum_dirty_water:
+    name: Acqua sporca robot
+    icon: mdi:robot-vacuum
+
+input_text:
+  vacuum_finished_room:
+    name: Ultima stanza pulita
+    #initial: ""
+
+automation:
+
+  # FIXME in caso di cambiamento delle condizioni di avvio durante la finestra del preavviso, non riceverei la notifica
+  # probabilmente andrebbe creata un'altra automazione che ha per trigger le condizioni sotto e condizioni opposte
+  - alias: vacuum_clean_warning
+    id: 7e5be2a4-3dde-11ef-8846-530f4ec1a245
+    description: Preavviso di pulizia schedulata
+    trigger:
+      - trigger: calendar
+        entity_id: calendar.risucchiator
+        event: start
+        offset: -00:10:00
+    condition:
+      condition: and
+      conditions:
+        # only a few house modes are allowed for house cleaning
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.house_mode
+              state: day_not_working
+            - condition: state
+              entity_id: input_select.house_mode
+              state: away
+        - condition: state
+          entity_id: input_boolean.vacuum_skip_next_cleaning
+          state: 'off'
+    action:
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          title: "Pulizia prevista"
+          message: "Stanza: {{ states.calendar.risucchiator.attributes.message }}"
+          data:
+            tag: vacuum_clean_warning
+            sticky: 'true'
+            priority: high
+            ttl: 3600
+            actions:
+              # Annulla per questa volta
+              - action: vacuum_clean_cancel
+                title: Annulla
+
+  - alias: vacuum_clean_cancel
+    id: 7b06b570-3dde-11ef-bd23-73609e46b773
+    trigger:
+      - event_data:
+          action: vacuum_clean_cancel
+        event_type: mobile_app_notification_action
+        trigger: event
+    action:
+      - action: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.vacuum_skip_next_cleaning
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: clear_notification
+          data:
+            tag: vacuum_clean_warning
+
+  - alias: vacuum_clean_room
+    id: 79146ef6-3dde-11ef-9159-5f196ab9f413
+    description: Pulisci una stanza quando schedulato nel calendario
+    trigger:
+      - trigger: calendar
+        entity_id: calendar.risucchiator
+        event: start
+    condition:
+      condition: and
+      conditions:
+        # only a few house modes are allowed for house cleaning
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.house_mode
+              state: day_not_working
+            - condition: state
+              entity_id: input_select.house_mode
+              state: away
+        - condition: state
+          entity_id: input_boolean.vacuum_skip_next_cleaning
+          state: 'off'
+    action:
+      - action: homeassistant.turn_on
+        data:
+          entity_id: "script.vacuum_clean_{{ state_attr('calendar.risucchiator', 'message') | lower }}"
+
+  - alias: vacuum_clean_room_off_schedule
+    id: 759ad3aa-3dde-11ef-a68a-cb6bf8aeb5a7
+    description: Reset automatico blocco prossima pulizia
+    trigger:
+      - trigger: calendar
+        entity_id: calendar.risucchiator
+        event: end
+    action:
+      - action: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.vacuum_skip_next_cleaning
+
+  - alias: vacuum_started
+    id: 7240fe5a-3dde-11ef-aea7-67c50dc87192
+    description: Notifica all'utente l'inizio di una pulizia
+    trigger:
+      - trigger: state
+        entity_id: binary_sensor.spulicchiator_cleaning
+        from: "off"
+        to: "on"
+    condition:
+      # no vacuum clean script running (they are handling notifications)
+      - condition: state
+        entity_id:
+          - script.vacuum_clean_room_vacuum
+          - script.vacuum_clean_room_mop
+        state: "off"
+    action:
+      - action: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Pulizia iniziata
+
+  - alias: vacuum_finished
+    id: 6f6744be-3dde-11ef-9f6e-ef23b9ae77b6
+    description: Notifica all'utente la fine di una pulizia
+    trigger:
+      - trigger: state
+        entity_id: sensor.spulicchiator_status
+        not_from:
+          - ""
+          - "unavailable"
+          - "unknown"
+        to: charging
+    condition:
+      # no vacuum clean script running (they are handling notifications)
+      - condition: state
+        entity_id:
+          - script.vacuum_clean_room_vacuum
+          - script.vacuum_clean_room_mop
+        state: "off"
+    action:
+      - action: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Pulizia terminata
+
+  - alias: vacuum_cleaning_skipped
+    id: 6ac4a64a-3dde-11ef-9188-438cf8af5ee7
+    description: Blocca la pulizia in corso quando si salta la prossima pulizia
+    trigger:
+      - trigger: state
+        entity_id: input_boolean.vacuum_skip_next_cleaning
+        from: 'off'
+        to: 'on'
+    action:
+      - action: vacuum.pause
+        data:
+          entity_id: vacuum.spulicchiator
+
+  - alias: vacuum_reminder_dirty_water
+    id: ebf6a184-3ddc-11ef-8480-0bf83e16b43a
+    description: Notifica al rientro a casa di smaltire l'acqua sporca del robot
+    trigger:
+      # almeno una persona presente fisicamente in casa
+      - trigger: numeric_state
+        entity_id: sensor.people_count_home_local
+        above: '0'
+    condition:
+      - condition: state
+        entity_id: input_boolean.vacuum_dirty_water
+        state: 'on'
+    action:
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          title: "Faccende"
+          message: "Ricordati di svuotare l'acqua sporca del robot!"
+          data:
+            tag: vacuum_reminder_dirty_water
+            sticky: 'true'
+            actions:
+              - action: vacuum_cancel_dirty_water
+                title: Fatto
+
+  # attivato da notifica: ho svuotato l'acqua sporca
+  - alias: vacuum_cancel_dirty_water
+    id: d0a652e2-43ba-11ef-840a-6f726d94e32e
+    trigger:
+      - event_data:
+          action: vacuum_cancel_dirty_water
+        event_type: mobile_app_notification_action
+        trigger: event
+    action:
+      - action: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.vacuum_dirty_water
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: clear_notification
+          data:
+            tag: vacuum_reminder_dirty_water
+
+script:
+
+  vacuum_clean_room_vacuum:
+    description: "Starts a vacuum zone cleaning"
+    mode: queued
+    fields:
+      room_id:
+        description: "Room (segment) ID"
+        example: "18"
+        required: true
+        selector:
+          number:
+            # specific to roborock
+            min: 16
+            max: 100
+            mode: box
+      room_name:
+        description: "Room name"
+        example: "bedroom"
+        required: true
+        selector:
+          text:
+    sequence:
+      # workaround for HA/Roborock integration bug: https://github.com/home-assistant/core/issues/117439
+      # also happening in custom Roborock integration: https://github.com/humbertogontijo/homeassistant-roborock/issues/518
+      - alias: Reload Roborock integration
+        action: rest_command.reload_roborock
+      - alias: Wait for integration to reload
+        delay:
+          seconds: 6
+
+      - alias: Disable mop
+        action: select.select_option
+        data:
+          entity_id: select.spulicchiator_mop_intensity
+          option: 'off'
+      - alias: Wait for robot to settle
+        delay:
+          seconds: 1
+
+      - alias: "Set fan speed (high if no one is home, low if someone is home)"
+        action: vacuum.set_fan_speed
+        data:
+          entity_id: vacuum.spulicchiator
+          fan_speed: "{{ 'low' if states.sensor.people_count_home.state|int > 0 else 'high' }}"
+      - alias: Wait for robot to settle
+        delay:
+          seconds: 1
+
+      - alias: "Send clean command"
+        action: vacuum.send_command
+        data:
+          command: app_segment_clean
+          params:
+            - segments:
+                - "{{ room_id | int }}"
+              repeat: 2
+        target:
+          entity_id: vacuum.spulicchiator
+
+      - action: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Pulizia iniziata: {{ room_name }}
+
+      - alias: Wait for robot to finish vacuuming
+        wait_for_trigger:
+          - trigger: state
+            entity_id: sensor.spulicchiator_status
+            not_from:
+              - ""
+              - "unavailable"
+              - "unknown"
+            to: charging
+        timeout:
+          minutes: 30
+        continue_on_timeout: false
+
+      - alias: Reload Roborock integration
+        action: rest_command.reload_roborock
+      - alias: Wait for integration to reload
+        delay:
+          seconds: 6
+
+      - alias: "Empty dustbin"
+        action: vacuum.send_command
+        data:
+          command: app_start_collect_dust
+        target:
+          entity_id: vacuum.spulicchiator
+      - alias: Wait for dustbin emptying to finish
+        # FIXME API integration is not fast enough to notice the change
+        #        wait_for_trigger:
+        #          - trigger: state
+        #            entity_id: sensor.spulicchiator_status
+        #            to: charging
+        #        timeout:
+        #          minutes: 5
+        #        continue_on_timeout: false
+        delay:
+          seconds: 30
+
+      # set room last cleaned
+      - action: input_text.set_value
+        data:
+          entity_id: input_text.vacuum_finished_room
+          value: "{{ room_name }}"
+
+      - action: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Pulizia terminata: {{ room_name }}
+
+  vacuum_clean_room_mop:
+    description: "Starts a mop zone cleaning"
+    mode: queued
+    fields:
+      room_id:
+        description: "Room (segment) ID"
+        example: "18"
+        required: true
+        selector:
+          number:
+            # specific to roborock
+            min: 16
+            max: 100
+            mode: box
+      room_name:
+        description: "Room name"
+        example: "bedroom"
+        required: true
+        selector:
+          text:
+    sequence:
+      - alias: Reload Roborock integration
+        action: rest_command.reload_roborock
+      - alias: Wait for integration to reload
+        delay:
+          seconds: 6
+
+      - alias: "Check if water is available"
+        if: "{{ is_state('sensor.spulicchiator_dock_error', 'water_empty') }}"
+        then:
+          - action: script.notify_info
+            data:
+              category: Faccende
+              message: |-
+                Acqua mancante: {{ room_name }}
+        else:
+
+          - alias: "Set mop intensity"
+            action: select.select_option
+            data:
+              entity_id: select.spulicchiator_mop_intensity
+              option: 'high'
+          - alias: Wait for robot to settle
+            delay:
+              seconds: 1
+
+          - alias: "Set fan speed (off because we are mopping)"
+            action: vacuum.set_fan_speed
+            data:
+              entity_id: vacuum.spulicchiator
+              fan_speed: "off"
+          - alias: Wait for robot to settle
+            delay:
+              seconds: 1
+
+          - alias: "Send clean command"
+            action: vacuum.send_command
+            data:
+              command: app_segment_clean
+              params:
+                - segments:
+                    - "{{ room_id | int }}"
+                  repeat: 1
+            target:
+              entity_id: vacuum.spulicchiator
+
+          - alias: "Wait for robot to begin mopping"
+            wait_for_trigger:
+              - trigger: state
+                entity_id: sensor.spulicchiator_status
+                to:
+                  - segment_cleaning
+            timeout:
+              minutes: 5
+            continue_on_timeout: true
+
+          - alias: "Check: robot did not start mopping"
+            if: "{{ not is_state('sensor.spulicchiator_status', 'segment_cleaning') }}"
+            then:
+              - action: script.notify_info
+                data:
+                  category: Faccende
+                  message: |-
+                    Lavaggio fallito: {{ room_name }}
+            else:
+              - action: script.notify_info
+                data:
+                  category: Faccende
+                  message: |-
+                    Lavaggio iniziato: {{ room_name }}
+
+              - alias: "Set up reminder for dirty water"
+                action: input_boolean.turn_on
+                data:
+                  entity_id: input_boolean.vacuum_dirty_water
+
+              - alias: Wait for robot to finish mopping
+                wait_for_trigger:
+                  - trigger: state
+                    entity_id: sensor.spulicchiator_status
+                    not_from:
+                      - ""
+                      - "unavailable"
+                      - "unknown"
+                    to: charging
+                timeout:
+                  minutes: 20
+                continue_on_timeout: true
+
+              - action: script.notify_info
+                data:
+                  category: Faccende
+                  message: |-
+                    Lavaggio terminato: {{ room_name }}
+
+  vacuum_clean_room:
+    description: "Starts a zone cleaning"
+    mode: queued
+    fields:
+      room_id:
+        description: "Room (segment) ID"
+        example: "18"
+        required: true
+        selector:
+          number:
+            # specific to roborock
+            min: 16
+            max: 100
+            mode: box
+      room_name:
+        description: "Room name"
+        example: "bedroom"
+        required: true
+        selector:
+          text:
+      mop_after_vacuum:
+        description: "Mop after vacuuming"
+        example: "true"
+        required: false
+        default: false
+        selector:
+          boolean:
+    sequence:
+      - alias: Start room vacuum
+        action: script.vacuum_clean_room_vacuum
+        data:
+          room_id: "{{ room_id }}"
+          room_name: "{{ room_name }}"
+
+      - alias: Mop room if requested
+        if: "{{ mop_after_vacuum | bool(false) }}"
+        then:
+          - alias: Start room vacuum
+            action: script.vacuum_clean_room_mop
+            data:
+              room_id: "{{ room_id }}"
+              room_name: "{{ room_name }}"
+
+      - alias: Mark chore as done
+        action: chore_helper.complete
+        target:
+          entity_id: "sensor.chore_{{ room_name }}_floor_clean"
+
+  vacuum_clean_kitchen:
+    description: "Pulisci la cucina"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 21
+          room_name: kitchen
+
+  vacuum_clean_bathroom1:
+    description: "Pulisci il bagno 1"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 20
+          room_name: bathroom1
+          mop_after_vacuum: yes
+
+  vacuum_clean_bathroom2:
+    description: "Pulisci il bagno 2"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 18
+          room_name: bathroom2
+          mop_after_vacuum: yes
+
+  vacuum_clean_nightway:
+    description: "Pulisci il corridoio notte"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 17
+          room_name: nightway
+
+  vacuum_clean_bedroom:
+    description: "Pulisci la camera"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 16
+          room_name: bedroom
+
+  # include dayway
+  vacuum_clean_living:
+    description: "Pulisci il soggiorno"
+    mode: queued
+    sequence:
+      - action: script.vacuum_clean_room
+        data:
+          room_id: 19
+          room_name: living
+
+rest_command:
+
+  reload_roborock:
+    url: !secret roborock_reload_url
+    method: POST
+    headers:
+      authorization: !secret hass_authorization
+      content-type: 'application/json'

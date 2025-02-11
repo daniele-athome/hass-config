@@ -19,15 +19,6 @@ homeassistant:
 
 sensor:
 
-  - platform: hddtemp
-    name: hddtemp_homeserver
-    host: server
-    disks:
-      - /dev/disk/by-id/ata-WDC_WD1002FAEX-00Z3A0_WD-WCATR9149732
-      - /dev/disk/by-id/ata-WDC_WD1002FAEX-00Z3A0_WD-WCATR9159143
-      - /dev/disk/by-id/ata-WDC_WDS500G1R0A-68A4W0_214513802580
-      - /dev/disk/by-id/ata-WDC_WDS500G1R0A-68A4W0_214513802589
-
   # Unsupported by Glances integration
   - platform: rest
     resource: http://server:61208/api/4/uptime
@@ -39,23 +30,23 @@ automation:
 
   - alias: server_on_fire
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
         above: 51
         for:
           minutes: 10
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
         above: 51
         for:
           minutes: 10
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.homeserver_package_id_0_temperature
         above: 54
         for:
           minutes: 10
     action:
-      service: script.notify_important
+      action: script.notify_important
       data:
         category: Sistema
         speak: no
@@ -67,23 +58,23 @@ automation:
 
   - alias: house_mode_system_homeserver_day
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: day_working
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: day_not_working
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         entity_id: switch.homeserver
 
   - alias: house_mode_system_homeserver_night
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: night
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.homeserver
 
 switch:
@@ -98,3 +89,4 @@ shell_command:
   homeserver_suspend: ssh homeassistant@server sudo systemctl suspend
   homeserver_reboot: ssh homeassistant@server sudo systemctl reboot
   homeserver_poweroff: ssh homeassistant@server sudo systemctl poweroff
+  homeserver_gamingreboot: ssh homeassistant@server sudo gaming-reboot

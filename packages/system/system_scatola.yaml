@@ -33,13 +33,13 @@ automation:
 
   - alias: scatola_on_fire
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.cputemp_scatola
         above: 73
         for:
           minutes: 10
     action:
-      service: script.notify_important
+      action: script.notify_important
       data:
         category: Sistema
         speak: no
@@ -48,9 +48,9 @@ automation:
 
   - alias: speedtest
     trigger:
-      platform: time_pattern
+      trigger: time_pattern
       hours: "/3"
     action:
-      service: homeassistant.update_entity
+      action: homeassistant.update_entity
       target:
         entity_id: sensor.speedtest_ping

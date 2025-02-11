@@ -34,42 +34,50 @@ automation:
 
   - alias: mode_select_night
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: night
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: all
 
   - alias: mode_select_away
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: away
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: all
 
   # Impostazione automatica modalità giorno al mattino (risveglio)
   - alias: mode_auto_day
     trigger:
-      # Rilevato movimento in soggiorno
-      - platform: state
-        entity_id: group.motion_living
+      # Rilevato movimento fuori dalla camera da letto
+      - trigger: state
+        entity_id: group.motion_not_bedroom
         to: 'on'
+      - trigger: state
+        entity_id: media_player.music
+        to: 'playing'
+      - trigger: state
+        entity_id: binary_sensor.daniele_shiba_music_active
+        to: 'on'
+      # TODO accensione di luci specifiche (quali?)
+      # TODO smontamento dal letto (serve sensore affidabile)
     condition:
       condition: and
       conditions:
         # Entro una certa ora di "mattina"
         - condition: time
-          after: '06:00:00'
-          before: '16:00:00'
+          after: !secret day_mode_window_start
+          before: !secret day_mode_window_end
         # Eravamo in modalità notte
         - condition: state
           entity_id: input_select.house_mode
           state: night
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
@@ -77,25 +85,25 @@ automation:
   # Impostazione automatica modalità casa vuota lunga
   - alias: mode_auto_extended_away
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: away
         for: !secret extended_away_period
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: extended_away
 
   # Per debug: notifica cambio house mode
   - alias: notify_mode_change
-    initial_state: 'on'
+    initial_state: true
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to:
     action:
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: |-
             House mode: {{ states.input_select.house_mode.state }}
@@ -105,7 +113,7 @@ script:
   house_mode_night:
     description: Attiva la modalità notte
     sequence:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: night

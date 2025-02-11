@@ -3,7 +3,7 @@ intent_script:
 
   MusicPlayNowTitleByArtist:
     action:
-      - service: script.search_and_play_music
+      - action: script.search_and_play_music
         data:
           keyword_artist: "{{ music_artist }}"
           keyword_track_name: "{{ music_title }}"
@@ -11,7 +11,7 @@ intent_script:
           enqueue: play
         response_variable: play_result
       # TODO risposta speech dipendente da cosa abbiamo fatto
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -24,7 +24,7 @@ intent_script:
 
   MusicPlayNextTitleByArtist:
     action:
-      - service: script.search_and_play_music
+      - action: script.search_and_play_music
         data:
           keyword_artist: "{{ music_artist }}"
           keyword_track_name: "{{ music_title }}"
@@ -32,7 +32,7 @@ intent_script:
           enqueue: next
         response_variable: play_result
       # TODO risposta speech dipendente da cosa abbiamo fatto
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -48,13 +48,13 @@ script:
   # TODO non usato al momento
   start_playlist:
     sequence:
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.kodi
           media_content_id: >-
             special://profile/playlists/music/{{ playlist }}.m3u
           media_content_type: music
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.kodi
           # FIXME hard-coding variables: guest_mode_volume, no_guest_mode_volume
@@ -72,15 +72,15 @@ script:
       keyword_track_name:
         description: "Track name"
         example: "Perdere l'amore"
-        required: yes
+        required: true
       keyword_artist:
         description: "Track name"
         example: "Massimo Ranieri"
-        required: yes
+        required: true
       enqueue:
         description: "Queue mode"
         example: "play"
-        required: no
+        required: false
         # add: queue track at the end of the queue and do nothing
         # next: queue track after currently playing track and do nothing
         # play: queue track before currently playing track and play it
@@ -89,10 +89,10 @@ script:
       target:
         description: "Mopidy media player"
         example: "media_player.music"
-        required: no
+        required: false
         default: "media_player.music"
     sequence:
-      - service: mopidy.get_search_result
+      - action: mopidy.get_search_result
         data:
           keyword_artist: "{{ keyword_artist }}"
           keyword_track_name: "{{ keyword_track_name }}"
@@ -102,7 +102,7 @@ script:
         response_variable: music_tracks
       - if: "{{ music_tracks['media_player.music'].result|length > 0 }}"
         then:
-          - service: media_player.play_media
+          - action: media_player.play_media
             data:
               # TODO supporto per risultati multipli
               media_content_id: "{{ music_tracks['media_player.music'].result[0] }}"

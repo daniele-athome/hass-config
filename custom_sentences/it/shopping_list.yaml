@@ -1,0 +1,25 @@
+language: it
+
+intents:
+
+  HassListAddItem:
+    data:
+      - sentences:
+          - "(aggiungi|metti) <item> (alla|a) [mia|nostra] lista [della] {name}"
+          - "(aggiungi|metti) <item> (per la|alla) {name}"
+        response: item_added
+        requires_context:
+          domain: todo
+        expansion_rules:
+          item: "{shopping_list_item:item}"
+
+  HassListRemoveItem:
+    data:
+      - sentences:
+          - "(rimuovi|togli) <item> (dalla|da) [mia|nostra] lista [della] {name}"
+          - "(rimuovi|togli) <item> (dalla|da) {name}"
+        response: item_removed
+        requires_context:
+          domain: todo
+        expansion_rules:
+          item: "{shopping_list_item:item}"

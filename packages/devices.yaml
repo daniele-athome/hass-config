@@ -96,11 +96,10 @@ ble_monitor:
       name: 'toothbrush'
 
 mqtt:
-  device_tracker:
-  binary_sensor:
-    - name: motion_living_door
-      state_topic: homeassistant/camera/living_door/motion
-      device_class: motion
+  - binary_sensor:
+      - name: motion_living_door
+        state_topic: homeassistant/camera/living_door/motion
+        device_class: motion
 
 image_processing:
   - platform: deepstack_object
@@ -114,8 +113,18 @@ image_processing:
       - entity_id: camera.living_door
         name: deepstack_person_detector
 
+rest_command:
+  start_living_door_camera:
+    url: !secret motion_camera_start_url
+    method: get
+  stop_living_door_camera:
+    url: !secret motion_camera_stop_url
+    method: get
+
 shell_command:
+  # deprecated: motion is no longer running on the local host
   start_living_door_camera: sudo systemctl start motion.service
+  # deprecated: motion is no longer running on the local host
   stop_living_door_camera: sudo systemctl stop motion.service
 
 group:
@@ -130,9 +139,11 @@ group:
   motion_bedroom:
     name: Bedroom motion
     entities:
-      - binary_sensor.motion_bedroom
+      - binary_sensor.motion_bedroom_left
+      # TODO other sensors?
 
   motion_not_bedroom:
     name: All motion but bedroom
     entities:
       - group.motion_living
+      # TODO other sensors?

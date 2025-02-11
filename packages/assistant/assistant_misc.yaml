@@ -8,9 +8,9 @@ intent_script:
 
   TrashReminderMorning:
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id: input_boolean.reminder_trash_morning
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_TrashReminderMorning
           variables:
@@ -25,10 +25,10 @@ intent_script:
 
   GreetingGoodMorning:
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         data:
           entity_id: script.goodmorning_actions
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_goodmorning
         response_variable: speech
@@ -41,7 +41,7 @@ intent_script:
 
   GreetingGeneral:
     action:
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_GreetingGeneral
         response_variable: speech
@@ -54,7 +54,7 @@ intent_script:
 
   Thankyou:
     action:
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_thankyou
         response_variable: speech
@@ -67,10 +67,10 @@ intent_script:
 
   AnnounceGoingAway:
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         data:
           entity_id: script.announce_going_away_actions
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_announce_going_away
         response_variable: speech
@@ -84,11 +84,11 @@ intent_script:
   # Saluto della buonanotte
   GreetingGoodNight:
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: night
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_goodnight
         response_variable: speech
@@ -101,11 +101,11 @@ intent_script:
 
   DNDModeOn:
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: dnd
-      - service: random_template.render
+      - action: random_template.render
         data:
           key: assistant_DNDModeOn
         response_variable: speech
@@ -118,10 +118,24 @@ intent_script:
 
   PutTVNewsOn:
     action:
-      - service: script.tv_channel_favourite_news
-      - service: random_template.render
+      - action: script.tv_channel_favourite_news
+      - action: random_template.render
         data:
           key: assistant_PutTVNewsOn_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  GamingMode:
+    action:
+      - action: shell_command.homeserver_gamingreboot
+      - action: random_template.render
+        data:
+          key: assistant_gamingmode_ok
         response_variable: speech
       - stop: "Returning speech"
         response_variable: "speech"
@@ -135,28 +149,28 @@ input_boolean:
   # TODO prevedere variabile per indicare il giorno del reminder
   reminder_trash_morning:
     name: 'Porta la spazzatura domattina'
-    initial: off
+    initial: false
     icon: mdi:recycle
 
   reminder_refuel_car:
     name: "Rifornire di carburante l'automobile"
-    initial: off
+    initial: false
     icon: mdi:gas-station
 
 binary_sensor:
   - platform: template
     sensors:
       assistant_can_speak:
-        value_template: "{{ states.sensor.people_count_home_local.state | int > 0 }}"
+        value_template: "{{ states.sensor.people_count_home_local.state | int(0) > 0 }}"
 
 automation:
 
   # Avvisa di viaggi duri al lavoro se in mattina feriale e c'è Daniele in casa
   - alias: work_commute_hard
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.commute_to_work
-        above: 35
+        above: !secret work_commute_hard_duration
     condition:
       condition: and
       conditions:
@@ -173,9 +187,9 @@ automation:
 
   - alias: home_commute_hard
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.commute_to_home
-        above: 35
+        above: !secret work_commute_hard_duration
     condition:
       condition: and
       conditions:
@@ -185,7 +199,7 @@ automation:
         - condition: template
           value_template: "{{ not is_state('person.daniele', 'home') }}"
     action:
-      service: script.notify_info
+      action: script.notify_info
       data:
         category: Tempo di viaggio
         message: |-
@@ -193,7 +207,7 @@ automation:
 
   - alias: karen_internet_unavailable
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.internet
         from: 'on'
         to: 'off'
@@ -202,13 +216,13 @@ automation:
       entity_id: binary_sensor.assistant_can_speak
       state: 'on'
     action:
-      - service: script.say_something_rendered
+      - action: script.say_something_rendered
         data:
           url: "http://192.168.100.1:8124/local/tts/microsoft_tts/karen_internet_unavailable{{ range(1, 3) | random }}.mp3"
 
   - alias: karen_internet_restored
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.internet
         from: 'off'
         to: 'on'
@@ -217,15 +231,15 @@ automation:
       entity_id: binary_sensor.assistant_can_speak
       state: 'on'
     action:
-      - service: script.say_something_rendered
+      - action: script.say_something_rendered
         data:
           url: "http://192.168.100.1:8124/local/tts/microsoft_tts/karen_internet_restored{{ range(1, 4) | random }}.mp3"
 
   # Avviso vocale chiamata in arrivo sul cellulare
-  - alias: payton_phone_call_incoming
+  - alias: shiba_phone_call_incoming
     trigger:
-      - platform: template
-        value_template: '{{ states.sensor.payton_phone_call_incoming_caller.state|length > 0 }}'
+      - trigger: template
+        value_template: '{{ states.sensor.shiba_phone_call_incoming_caller.state|length > 0 }}'
     condition:
       condition: and
       conditions:
@@ -238,55 +252,55 @@ automation:
         event_data:
           template: incoming_phone_call
           variables:
-            caller: "{{ states.sensor.payton_phone_call_incoming_caller.state }}"
+            caller: "{{ states.sensor.shiba_phone_call_incoming_caller.state }}"
 
   # Alterazioni di stato della casa
 
   - alias: house_mode_assistant_misc_day
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: day_working
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: day_not_working
     action:
-      - service: automation.turn_on
+      - action: automation.turn_on
         entity_id:
           - automation.work_commute_hard
           - automation.karen_internet_unavailable
           - automation.karen_internet_restored
-          - automation.payton_phone_call_incoming
+          - automation.shiba_phone_call_incoming
 
   - alias: house_mode_assistant_misc_quiet1
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: night
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: dnd
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: away
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: extended_away
     action:
-      - service: automation.turn_off
+      - action: automation.turn_off
         entity_id:
           - automation.work_commute_hard
           - automation.karen_internet_unavailable
           - automation.karen_internet_restored
-          - automation.payton_phone_call_incoming
+          - automation.shiba_phone_call_incoming
 
   - alias: house_mode_assistant_misc_quiet2
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: guest
     action:
-      - service: automation.turn_off
+      - action: automation.turn_off
         entity_id:
           - automation.work_commute_hard
           - automation.karen_internet_unavailable
@@ -294,14 +308,14 @@ automation:
 
   - alias: reminder_refuel_car
     trigger:
-      - platform: time
+      - trigger: time
         at: "06:30:00"
     condition:
       - condition: state
         entity_id: input_boolean.reminder_refuel_car
         state: 'on'
     action:
-      service: script.notify_info
+      action: script.notify_info
       data:
         category: Promemoria benzina
         message: |-
@@ -310,8 +324,8 @@ automation:
   - alias: announce_going_away_on_wifi_disconnect
     description: 'Messaggio di uscita per Daniele alla disconnessione del WiFi'
     trigger:
-      - platform: state
-        entity_id: sensor.daniele_payton_wifi_connection
+      - trigger: state
+        entity_id: sensor.daniele_shiba_wifi_connection
         from: !secret wifi_home
     condition:
       - condition: and
@@ -327,12 +341,12 @@ automation:
                 (as_timestamp(now()) - as_timestamp(states.binary_sensor.door_main.last_changed)) > 300 }}
     action:
       # non proseguire se la porta è aperta o è stata chiusa da poco
-      - service: script.announce_going_away
+      - action: script.announce_going_away
 
 mqtt:
   sensor:
-    - name: payton_phone_call_incoming_caller
-      state_topic: homeassistant/payton/device/phone/state
+    - name: shiba_phone_call_incoming_caller
+      state_topic: homeassistant/shiba/device/phone/state
       value_template: "{{ value_json.caller_name if value_json.state == 'ringing' else '' }}"
 
 script:
@@ -340,7 +354,7 @@ script:
   # Saluto del buongiorno
   goodmorning_actions:
     sequence:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
@@ -350,11 +364,11 @@ script:
           seconds: 10
       - wait_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'paused') }}"
         timeout: '00:01:00'
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.lounge
           volume_level: !secret lounge_volume
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.lounge
           media_content_id: >-
@@ -375,7 +389,7 @@ script:
           seconds: 5
       #- wait_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'paused') }}"
       #  timeout: '00:01:00'
-      - service: script.tv_channel_favourite_news
+      - action: script.tv_channel_favourite_news
 
   # Andando via
   # TODO da sistemare con altre informazioni
@@ -386,16 +400,16 @@ script:
       - event: assistant_speak_tts
         event_data:
           template: announce_going_away
-      - service: script.announce_going_away_actions
+      - action: script.announce_going_away_actions
 
   announce_going_away_actions:
     sequence:
       - delay:
           seconds: 10
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.reminder_trash_morning
       # diamo per scontato che se stiamo uscendo metteremo benzina
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.reminder_refuel_car
-      - service: switch.turn_on
+      - action: switch.turn_on
         entity_id: switch.homeserver

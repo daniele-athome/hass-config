@@ -1,5 +1,19 @@
 # ### Environment devices definitions
 
+homeassistant:
+  customize:
+    sensor.temperature_living:
+      icon: mdi:thermometer
+      device_class: temperature
+    sensor.temperature_average:
+      icon: mdi:thermometer
+      device_class: temperature
+    sensor.humidity_average:
+      icon: mdi:water-percent
+      device_class: temperature
+    sensor.temperature_living_window:
+      device_class: temperature
+
 group:
   hvac_all:
     name: "Sistemi HAVC"
@@ -60,9 +74,10 @@ group:
 
 sensor:
   - name: temperature_average
-    platform: average
-    precision: 1
-    entities:
+    platform: min_max
+    type: mean
+    round_digits: 1
+    entity_ids:
       - sensor.temperature_kitchen
       - sensor.temperature_bedroom
       - sensor.temperature_living
@@ -70,9 +85,10 @@ sensor:
       - sensor.temperature_studio
 
   - name: humidity_average
-    platform: average
-    precision: 1
-    entities:
+    platform: min_max
+    type: mean
+    round_digits: 1
+    entity_ids:
       - sensor.humidity_kitchen
       - sensor.humidity_bedroom
       - sensor.humidity_living
@@ -80,10 +96,12 @@ sensor:
       - sensor.humidity_studio
 
   - name: temperature_living
-    platform: average
-    precision: 1
-    entities:
-      - sensor.temperature_living_window
+    platform: min_max
+    type: mean
+    round_digits: 1
+    entity_ids:
+      # FIXME can't be used in winter because it's placed above a radiator
+      #- sensor.temperature_living_window
       - sensor.temperature_living_table
 
 template:
@@ -92,11 +110,13 @@ template:
         state: "{{ states('sensor.daikinap53460_outside_temperature') }}"
         unit_of_measurement: '°C'
         icon: mdi:thermometer
+        state_class: measurement
 
       - name: temperature_living_window
         state: "{{ states('sensor.daikinap53460_inside_temperature') }}"
         unit_of_measurement: '°C'
         icon: mdi:thermometer
+        state_class: measurement
 
 mqtt:
   sensor:
@@ -161,14 +181,14 @@ automation:
   - alias: thermostat_sync_local_temperature
     description: 'Sincronizza la temperatura rilevata dal termostato principale'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: climate.boiler_main
         from: unavailable
       # variazione della temperatura media dei sensori
-      - platform: state
+      - trigger: state
         entity_id: sensor.temperature_average
       # variazione della temperatura rilevata dal termostato
-      - platform: state
+      - trigger: state
         entity_id: climate.boiler_main
         attribute: current_temperature
     condition: [ ]
@@ -182,7 +202,7 @@ automation:
           - condition: template
             value_template: "{{ tempcalc != states('number.bosch_rbsh_rth0_zb_eu_local_temperature_offset')|float(0) }}"
         then:
-          - service: number.set_value
+          - action: number.set_value
             data:
               value: "{{ tempcalc }}"
             target:

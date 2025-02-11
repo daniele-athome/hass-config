@@ -7,10 +7,10 @@ automation:
     id: e966000a-5681-11ef-9ec5-2b514de4e49e
     description: Spegni la luce dello specchio quando è spenta la luce principale del bagno 1
     trigger:
-      platform: state
+      trigger: state
       entity_id: light.bathroom1_main
       from: 'on'
       to: 'off'
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.bathroom1_mirror

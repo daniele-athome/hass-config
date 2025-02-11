@@ -23,15 +23,15 @@ automation:
 
   - alias: media_rasp_on_fire
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.mediarasp_cpu_thermal_1_temperature
         above: 75
         for:
           minutes: 15
     action:
-      service: script.notify_important
-      data:
-        category: Sistema
-        speak: no
-        message: |-
-          Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temperature.state_with_unit }}
+      - action: script.notify_important
+        data:
+          category: Sistema
+          speak: no
+          message: |-
+            Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temperature.state_with_unit }}

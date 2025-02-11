@@ -1,12 +1,18 @@
-
 intent_script:
 
-  # Pronuncia l'ora
-  GetTime:
+  # FIXME this doesn't seem to be invoked at all (we can't override built-in intents??)
+  HassListAddItem:
     action:
+      - action: todo.add_item
+        data:
+          item: "{{ item }}"
+        target:
+          entity_id: "todo.{{ name }}"
       - action: random_template.render
         data:
-          key: assistant_say_time
+          key: assistant_shopping_list_added
+          variables:
+            item: "{{ item }}"
         response_variable: speech
       - stop: "Returning speech"
         response_variable: "speech"
@@ -15,12 +21,18 @@ intent_script:
       type: plain
       text: "<p>{{ action_response.text }}</p>"
 
-  # Pronuncia la data
-  GetDate:
+  HassListRemoveItem:
     action:
+      - action: todo.remove_item
+        data:
+          item: "{{ item }}"
+        target:
+          entity_id: "todo.{{ name }}"
       - action: random_template.render
         data:
-          key: assistant_say_date
+          key: assistant_shopping_list_removed
+          variables:
+            item: "{{ item }}"
         response_variable: speech
       - stop: "Returning speech"
         response_variable: "speech"

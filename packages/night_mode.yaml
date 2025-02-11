@@ -3,25 +3,23 @@
 homeassistant:
   customize:
     input_boolean.night_mode_disabled_today:
-      friendly_name: 'Modalità notte disattivata per oggi'
+      friendly_name: "Modalità notte disattivata per oggi"
       icon: mdi:weather-night
 
 script:
 
   night_mode_warning_start:
+    description: "Avvia il timer del warning della modalità notte"
     sequence:
-      - service: timer.cancel
-        data:
-          entity_id: timer.night_mode_warning
-      - service: timer.start
+      - action: timer.start
         data:
           entity_id: timer.night_mode_warning
           duration: "00:02:59"
 
-  # Notifica l'utente che sta per attivarsi la modalità notte
   notify_night_mode_warning:
+    description: "Notifica l'utente che sta per attivarsi la modalità notte"
     sequence:
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           title: "Modalità notte"
           message: "Sto per attivare la modalità notte!"
@@ -41,10 +39,10 @@ script:
               - action: night_mode_cancel
                 title: Annulla
 
-  # Cancella la notifica della modalità notte
   cancel_night_mode_warning:
+    description: "Cancella la notifica della modalità notte"
     sequence:
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           message: clear_notification
           data:
@@ -58,7 +56,7 @@ automation:
   - alias: night_mode_warning
     id: bcf91662-890e-41f7-a5bd-c6a55852624b
     trigger:
-      platform: time_pattern
+      trigger: time_pattern
       # FIXME hard-coding variables
       # because secrets in templates are not supported
       minutes: "/1"
@@ -69,10 +67,8 @@ automation:
       conditions:
         # Ora notturna
         - condition: time
-          # FIXME hard-coding variables: night_mode_hour_start, night_mode_hour_end
-          # because secrets in templates are not supported
-          after: '23:00:00'
-          before: '04:00:00'
+          after: !secret night_mode_window_start
+          before: !secret night_mode_window_end
         # Non siamo già in modalità notte
         - condition: template
           value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
@@ -99,7 +95,7 @@ automation:
           value_template: >
             {% set domain = 'light' %}
             {% set state = 'off' %}
-            {{ states[domain] | rejectattr('entity_id','eq', 'light.bedroom_left') | list | count ==
+            {{ states[domain] | rejectattr('entity_id','eq', 'light.bedroom_left') | rejectattr('state', 'eq', 'unavailable') | rejectattr('state', 'eq', 'unknown') | list | count ==
               states[domain] | selectattr('state','eq', state) | rejectattr('entity_id','eq', 'light.bedroom_left') | list | count }}
         # Tutte i media idle
         - condition: state
@@ -119,34 +115,27 @@ automation:
           state: 'off'
         # Cellulare in carica
         - condition: template
-          value_template: "{{ is_state('sensor.daniele_payton_battery_state', 'charging') }}"
+          value_template: "{{ is_state('sensor.daniele_shiba_battery_state', 'charging') }}"
         # TODO Cellulare in standby (non in uso)
         # ...
-        # Luminosità bassa in tutte le stanze
-        - condition: numeric_state
-          entity_id: sensor.lux_living
-          below: !secret living_lux_darkness_threshold
-        - condition: numeric_state
-          entity_id: sensor.bedroom_lux
-          below: !secret bedroom_lux_darkness_threshold
         # Notebook spento o idle
         - condition: state
           entity_id: binary_sensor.activity_notebook_daniele
           state: 'off'
     action:
-      - service: script.night_mode_warning_start
+      - action: script.night_mode_warning_start
 
   # Attivazione modalità notte per scadenza del timer
   - alias: night_mode_enable
     id: c365ea4e-2c99-48be-94db-71499fbea546
     trigger:
-      platform: event
+      trigger: event
       event_type: timer.finished
       event_data:
         entity_id: timer.night_mode_warning
     action:
-      - service: script.cancel_night_mode_warning
-      - service: input_select.select_option
+      - action: script.cancel_night_mode_warning
+      - action: input_select.select_option
         data:
           entity_id: input_select.house_mode
           option: night
@@ -155,24 +144,24 @@ automation:
   - alias: night_mode_warning_started
     id: 207bc889-a191-4085-b386-7b1fb69ad5ea
     trigger:
-      platform: event
+      trigger: event
       event_type: timer.started
       event_data:
         entity_id: timer.night_mode_warning
     action:
       # Notifica per override/snooze
-      - service: script.notify_night_mode_warning
+      - action: script.notify_night_mode_warning
 
   # Annullamento del timer di warning della modalità notte
   - alias: night_mode_cancelled
     id: 66b695b7-1043-4346-84aa-22bbe6b4c589
     trigger:
-      platform: event
+      trigger: event
       event_type: timer.cancelled
       event_data:
         entity_id: timer.night_mode_warning
     action:
-      - service: script.cancel_night_mode_warning
+      - action: script.cancel_night_mode_warning
 
   # Utente ha richiesto snooze, riavvia il timer per 15 minuti (12 snooze + 3 warning)
   - alias: night_mode_snooze
@@ -181,15 +170,15 @@ automation:
       - event_data:
           action: night_mode_snooze
         event_type: mobile_app_notification_action
-        platform: event
+        trigger: event
     action:
-      - service: timer.cancel
+      - action: timer.cancel
         data:
           entity_id: timer.night_mode_warning
-      - service: timer.cancel
+      - action: timer.cancel
         data:
           entity_id: timer.night_mode_snooze
-      - service: timer.start
+      - action: timer.start
         data:
           entity_id: timer.night_mode_snooze
           duration: "00:12:00"
@@ -198,13 +187,13 @@ automation:
   - alias: night_mode_snoozed
     id: e65a336a-56ab-4974-9324-1680972f9e0c
     trigger:
-      platform: event
+      trigger: event
       event_type: timer.finished
       event_data:
         entity_id: timer.night_mode_snooze
     action:
       # Riavvia timer warning
-      - service: script.night_mode_warning_start
+      - action: script.night_mode_warning_start
 
   # Utente ha richiesto attivazione immediata
   - alias: night_mode_enable_now
@@ -213,9 +202,9 @@ automation:
       - event_data:
           action: night_mode_enable_now
         event_type: mobile_app_notification_action
-        platform: event
+        trigger: event
     action:
-      - service: timer.finish
+      - action: timer.finish
         data:
           entity_id: timer.night_mode_warning
 
@@ -226,12 +215,12 @@ automation:
       - event_data:
           action: night_mode_cancel
         event_type: mobile_app_notification_action
-        platform: event
+        trigger: event
     action:
       # Imposta qualche flag per evitare che night_mode_warning si riattivi
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id: input_boolean.night_mode_disabled_today
-      - service: timer.cancel
+      - action: timer.cancel
         data:
           entity_id: timer.night_mode_warning
 
@@ -239,36 +228,36 @@ automation:
   - alias: night_mode_disabled_enable
     id: a855daad-8caa-41b7-9948-b40725c07bd5
     trigger:
-      platform: time
-      at: "06:00:00"
+      trigger: time
+      at: !secret day_mode_window_start
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.night_mode_disabled_today
 
   - alias: house_mode_night_mode_night
     id: 2153a2c5-751c-455c-be22-a38f274982ed
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: night
     action:
       # Usato per far capire all'automazione che non deve attivarsi
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id: input_boolean.night_mode_disabled_today
       # Inutile stare a controllare le condizioni della night mode se ci siamo già
-      - service: automation.turn_off
+      - action: automation.turn_off
         entity_id:
           - automation.night_mode_warning
 
   - alias: house_mode_night_mode_not_night
     id: 7ae3d738-102a-4181-b37b-a9c684877187
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: night
     action:
       # Riattiva i controlli per la night mode automatica
-      - service: automation.turn_on
+      - action: automation.turn_on
         entity_id:
           - automation.night_mode_warning
 
@@ -286,4 +275,4 @@ input_boolean:
 
   # TODO automazione basata su questo booleano che attiva/disattiva le altre (invece di usare il booleano come condizione)
   night_mode_disabled_today:
-    initial: off
+    initial: false

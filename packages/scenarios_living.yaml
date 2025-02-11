@@ -25,7 +25,7 @@ input_boolean:
 
   need_living_utility_light:
     name: 'Ho bisogno di una luce minima in soggiorno'
-    initial: off
+    initial: false
     icon: mdi:lighthouse-on
 
 scene:
@@ -33,14 +33,13 @@ scene:
   - name: dinner_watching
     entities:
       light.living_extra: on
-      # TODO light.living_main_light: off
-      # TODO light.living_table_light: off
+      light.living_main: off
+      light.dayway: on
 
   - name: cinema_mode
     entities:
       light.living_extra: off
-      # TODO light.living_main_light: off
-      # TODO light.living_table_light: off
+      light.living_main: off
 
   # Luci guida notturne
   - name: living_night_guidance_on
@@ -59,16 +58,16 @@ automation:
 
   - alias: need_utility_light_toggle_tag
     trigger:
-      - platform: tag
+      - trigger: tag
         tag_id: 573fa973-7041-4431-a3ef-541f37fffe34
     action:
-      - service: input_boolean.toggle
+      - action: input_boolean.toggle
         entity_id: input_boolean.need_living_utility_light
       # TODO maybe say something?
 
   - alias: need_utility_light_on
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.need_living_utility_light
         to: 'on'
     condition:
@@ -76,12 +75,12 @@ automation:
         entity_id: binary_sensor.living_need_light
         state: 'on'
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         entity_id: light.living_extra
 
   - alias: need_utility_light_off
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.need_living_utility_light
         to: 'off'
     condition:
@@ -94,15 +93,15 @@ automation:
           entity_id: binary_sensor.cinema_mode
           state: 'on'
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.living_extra
 
   - alias: dinner_watching
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: 'media_player.kodi'
         to: 'playing'
-      - platform: template
+      - trigger: template
         value_template: "{{ is_state_attr('media_player.tv', 'media_content_type', 'channel') }}"
     condition:
       condition: and
@@ -117,15 +116,15 @@ automation:
           entity_id: binary_sensor.cinema_mode
           state: 'on'
     action:
-      - service: scene.turn_on
+      - action: scene.turn_on
         entity_id: scene.dinner_watching
 
   - alias: cinema_mode
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: 'media_player.kodi'
         to: 'playing'
-      - platform: template
+      - trigger: template
         value_template: >-
           {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'media_content_type', 'channel') }}
     condition:
@@ -142,13 +141,13 @@ automation:
           entity_id: input_boolean.house_entrance_lights
           state: 'off'
     action:
-      - service: scene.turn_on
+      - action: scene.turn_on
         entity_id: scene.cinema_mode
 
-  # Accendi luce utility se mettiamo in pausa un video
   - alias: media_paused
+    description: 'Accendi luce utility se mettiamo in pausa un video'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: 'media_player.kodi'
         from: 'playing'
         to: 'paused'
@@ -161,13 +160,13 @@ automation:
         - condition: template
           value_template: '{{ states.media_player.kodi.attributes.media_content_type in ["movie","tvshow","video"] }}'
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         entity_id: light.living_ceiling
 
-  # Accendi luce utility se fermiamo Kodi
   - alias: media_stopped
+    description: Accendi luce utility se fermiamo Kodi
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: 'media_player.kodi'
         to: 'idle'
     condition:
@@ -183,99 +182,99 @@ automation:
         - condition: template
           value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         entity_id: light.living_ceiling
 
   - alias: house_mode_living_guest
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: guest
     action:
       - delay:
           seconds: 5
-      - service: media_player.clear_playlist
+      - action: media_player.clear_playlist
         entity_id: media_player.music
       # for Kodi
-      #- service: media_player.play_media
+      #- action: media_player.play_media
       #  data:
       #    entity_id: media_player.music
       #    media_content_id: !secret guest_mode_playlist
       #    media_content_type: music
       # for Mopidy/MPD
-      - service: media_player.select_source
+      - action: media_player.select_source
         data:
           entity_id: media_player.music
           source: !secret guest_mode_playlist
       # TODO we need a scenario here to set the various speakers
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.music
           volume_level: !secret guest_mode_volume
 
   - alias: house_mode_living_not_guest
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: guest
     action:
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.music
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.music
           volume_level: !secret no_guest_mode_volume
 
-  # Troppa luce in soggiorno: spegni le luci extra
   - alias: living_too_much_light
+    description: 'Troppa luce in soggiorno: spegni le luci extra'
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.lux_living
         above: !secret living_lux_too_much_threshold
     action:
-      - service: light.turn_off
+      - action: light.turn_off
         entity_id: light.living_extra
 
   - alias: house_mode_living_night
     trigger:
-      platform: state
+      trigger: state
       entity_id: input_select.house_mode
       to: night
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.need_living_utility_light
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.kodi
       # Questo potrebbe fallire quindi lo mettiamo per ultimo
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.tv
 
   - alias: house_mode_living_away
     trigger:
-      platform: state
+      trigger: state
       entity_id: input_select.house_mode
       to: away
     action:
       # Azzera il conteggio persone (evita falsi positivi)
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.people_count_living
           value: '0'
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         entity_id: input_boolean.need_living_utility_light
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id:
           - media_player.kodi
           - media_player.music
           - media_player.tv
 
-  # Accendi una lieve luce notturna in caso di movimento in soggiorno
   - alias: living_motion_night
+    description: Accendi una lieve luce notturna in caso di movimento in soggiorno
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_living
         to: 'on'
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.lux_living
         below: !secret living_lux_darkness_threshold
     condition:
@@ -309,16 +308,16 @@ automation:
           entity_id: sensor.lux_living
           below: !secret living_lux_darkness_threshold
     action:
-      - service: scene.turn_on
+      - action: scene.turn_on
         entity_id: scene.living_night_guidance_on
 
-  # Spegni la luce notturna quando il movimento in soggiorno è cessato
   - alias: living_motion_night_end
+    description: Spegni la luce notturna quando il movimento in soggiorno è cessato
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_living
         to: 'off'
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.activity_notebook_daniele
         to: 'off'
     condition:
@@ -348,5 +347,5 @@ automation:
           entity_id: binary_sensor.activity_notebook_daniele
           state: 'off'
     action:
-      - service: scene.turn_on
+      - action: scene.turn_on
         entity_id: scene.living_night_guidance_off

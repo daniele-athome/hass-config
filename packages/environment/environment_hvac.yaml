@@ -43,16 +43,16 @@ automation:
     id: 60cc16ce-2c12-11ef-b1b3-e70f9ab977cb
     description: 'Disattiva climatizzazione quando usciti da casa per un certo tempo'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: "away"
         for:
           minutes: 10
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: "extended_away"
     action:
-      - service: climate.turn_off
+      - action: climate.turn_off
         data:
           entity_id: all
 
@@ -60,18 +60,18 @@ automation:
     id: 64f2de2c-2c12-11ef-9c8a-cfa6c350e6d1
     description: 'Attiva climatizzazione quando rientrati in casa per un certo tempo'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: "away"
         for:
           minutes: 3
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: "extended_away"
         for:
           minutes: 3
     action:
-      - service: climate.turn_on
+      - action: climate.turn_on
         data:
           entity_id: climate.boiler_main
 
@@ -79,20 +79,20 @@ automation:
     id: 66da72c2-2c12-11ef-bdc8-572722b11976
     description: 'Diminuisci la temperatura target di notte'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: "night"
     action:
       # salva la temperatura target attuale
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.hvac_heating_temperature_day
           value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
-      - service: climate.set_temperature
+      - action: climate.set_temperature
         data:
           entity_id: climate.boiler_main
           temperature: "{{ states('input_number.hvac_heating_temperature_night') }}"
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: |-
             Riscaldamento notturno impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
@@ -102,17 +102,17 @@ automation:
     id: e8b98858-3727-11ef-857f-7fa1b81b44d3
     description: 'Spegni tutti i condizionatori dopo 3 ore di notte'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         to: "night"
         for:
           hours: 3
     action:
       # spegni tutti i condizionatori
-      - service: climate.turn_off
+      - action: climate.turn_off
         data:
           entity_id: group.hvac_cool
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: |-
             Condizionatori spenti di notte
@@ -122,7 +122,7 @@ automation:
     id: 69bfec42-2c12-11ef-80ef-6fcf182ea6d8
     description: 'Ripristina la temperatura target di giorno'
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: input_select.house_mode
         from: "night"
     action:
@@ -133,15 +133,15 @@ automation:
                 state: 'off'
             sequence:
               # salva la temperatura target attuale
-              - service: input_number.set_value
+              - action: input_number.set_value
                 data:
                   entity_id: input_number.hvac_heating_temperature_night
                   value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
-              - service: climate.set_temperature
+              - action: climate.set_temperature
                 data:
                   entity_id: climate.boiler_main
                   temperature: "{{ states('input_number.hvac_heating_temperature_day') }}"
-              - service: script.notify_debug
+              - action: script.notify_debug
                 data:
                   message: |-
                     Riscaldamento diurno impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
@@ -149,7 +149,7 @@ automation:
         default:
           # non procedere se stiamo aspettando la sveglia
           # vuol dire che X ore prima della sveglia è stata già impostata la temperatura diurna
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.hvac_heating_waiting_alarm_clock
 
@@ -158,10 +158,10 @@ automation:
     description: 'Ripristina la temperatura target di giorno prima della sveglia'
     trigger:
       # 1 ora prima dell'orario del prossimo allarme configurato sul telefono
-      - platform: template
+      - trigger: template
         # FIXME andrebbero usati oggetti datetime ecc. ma per colpa del c***o di fuso orario non sono riuscito a trovare un modo affidabile
         # FIXME hard-coded Android application name
-        value_template: "{{ state_attr('sensor.daniele_payton_next_alarm', 'Package') == 'com.chen.deskclock' and now() | as_timestamp - (state_attr('sensor.daniele_payton_next_alarm', 'Time in Milliseconds') / 1000) >= -3600 }}"
+        value_template: "{{ state_attr('sensor.daniele_shiba_next_alarm', 'Package') == 'com.google.android.deskclock' and now() | as_timestamp - (state_attr('sensor.daniele_shiba_next_alarm', 'Time in Milliseconds') / 1000) >= -3600 }}"
     condition:
       condition: and
       conditions:
@@ -172,19 +172,19 @@ automation:
           entity_id: input_select.house_mode
           state: "night"
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.hvac_heating_waiting_alarm_clock
       # salva la temperatura target attuale
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.hvac_heating_temperature_night
           value: "{{ state_attr('climate.boiler_main', 'temperature') }}"
-      - service: climate.set_temperature
+      - action: climate.set_temperature
         data:
           entity_id: climate.boiler_main
           temperature: "{{ states('input_number.hvac_heating_temperature_day') }}"
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: |-
             Riscaldamento pre-sveglia impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C

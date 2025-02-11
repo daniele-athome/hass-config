@@ -29,12 +29,12 @@ sensor:
 automation:
   - alias: Notifica aggiornamento HASS
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.latest_version_update_available
         from: 'off'
         to: 'on'
     action:
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: "Home Assistant {{ states('sensor.latest_version') }} è stato rilasciato."
 

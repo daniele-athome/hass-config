@@ -3,23 +3,23 @@
 automation:
   - alias: house_on_fire
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.temperature_kitchen
         above: 42
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.temperature_bedroom
         above: 40
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.temperature_living
         above: 40
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.temperature_bathroom1
         above: 40
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.temperature_studio
         above: 40
     action:
-      - service: script.notify_emergency
+      - action: script.notify_emergency
         data:
           title: "Emergenza"
           speak: no
@@ -34,34 +34,34 @@ automation:
 
   - alias: bathroom_flooded
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.water_bathroom1
         from: 'off'
         to: 'on'
     action:
-      - service: script.notify_emergency
+      - action: script.notify_emergency
         data:
           category: Ambiente
           message: |-
             Bagno 1 allagato!
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.washing_machine
 
   - alias: gas_leak
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: sensor.gas_level_kitchen
         to: 'mild'
-      - platform: state
+      - trigger: state
         entity_id: sensor.gas_level_kitchen
         to: 'heavy'
     action:
-      - service: script.notify_emergency
+      - action: script.notify_emergency
         data:
           category: Ambiente
           message: |-
             Perdita di gas in cucina!
-      - service: script.notify_info
+      - action: script.notify_info
         data:
           category: Ambiente
           message: |-
@@ -71,14 +71,14 @@ automation:
   # Riscaldamento acceso da troppo tempo (qualcosa non va)
   - alias: boiler_main_stuck
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: climate.boiler_main
         attribute: hvac_action
         to: "heating"
         for:
           hours: 6
     action:
-      - service: script.notify_important
+      - action: script.notify_important
         data:
           category: Ambiente
           speak: no
@@ -88,15 +88,15 @@ automation:
   # Termostato down
   # TODO usare stato del termostato Zigbee; spostare in device_monitoring e usare automazione generica
   - alias: thermostat_down
-    initial_state: off
+    initial_state: false
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: device_tracker.thermostat
         to: 'not_home'
         for:
           minutes: 8
     action:
-      - service: script.notify_important
+      - action: script.notify_important
         data:
           category: Sistema
           speak: no

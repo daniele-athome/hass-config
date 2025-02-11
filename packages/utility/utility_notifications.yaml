@@ -1,10 +1,10 @@
 # Servizi di notifica
 
-signal_messenger2:
+# disabled for now -- signal_messenger2:
 
 # Strumenti di notifica
 notify:
-  # notify.mobile_app_daniele_payton definito da integrazione mobile
+  # notify.mobile_app_daniele_shiba definito da integrazione mobile
 
   - platform: kodi
     name: kodi
@@ -69,19 +69,6 @@ notify:
     data:
       speak: "{{ data['speak'] if data and 'speak' in data else false }}"
 
-# TEST signal messages
-automation:
-  - alias: test_signal_cli_message
-    trigger:
-      platform: signal_messenger2
-      account: !secret signal_account
-      sender: !secret signal_account
-    action:
-      - service: system_log.write
-        data:
-          message: "Got Signal message!!"
-          level: "warning"
-
 script:
 
   notify_debug:
@@ -91,7 +78,7 @@ script:
         description: "Message content"
         example: "An event has occured"
     sequence:
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           title: "Debug"
           message: "{{ message }}"
@@ -102,16 +89,16 @@ script:
       category:
         description: "Message category"
         example: "Environment"
-        required: yes
+        required: true
       message:
         description: "Message content"
         example: "An event has occured"
-        required: yes
+        required: true
       speak:
         description: "Make Karen speak this message (only if people present at home)"
-        example: "yes"
-        default: no
-        required: no
+        example: "true"
+        default: false
+        required: false
     sequence:
       # notify to Kodi if TV is on and on the right source
       - choose:
@@ -120,25 +107,24 @@ script:
                 entity_id: binary_sensor.tv_on_kodi
                 state: 'on'
             sequence:
-              - service: notify.kodi
+              - action: notify.kodi
                 data:
                   title: "{{ category }}"
                   message: "{{ message }}"
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           title: "{{ category }}"
           message: "{{ message }}"
           data:
             channel: "Information"
             priority: high
-            ttl: 60
       - choose:
           - conditions: >
               {{ (speak if speak is defined else False) and is_state('binary_sensor.cinema_mode', 'off') and
                  states.input_select.house_mode.state in ['day_working','day_not_working'] and
                  is_state('binary_sensor.assistant_can_speak', 'on') }}
             sequence:
-              - service: script.say_something
+              - action: script.say_something
                 data:
                   message: "{{ message }}"
 
@@ -148,15 +134,15 @@ script:
       category:
         description: "Message category"
         example: "Environment"
-        required: yes
+        required: true
       message:
         description: "Message content"
         example: "An event has occured"
       speak:
         description: "Make Karen speak this message (only if people present at home)"
-        example: "yes"
-        default: yes
-        required: no
+        example: "true"
+        default: true
+        required: false
     sequence:
       # notify to Kodi if TV is on and on the right source
       - choose:
@@ -165,24 +151,23 @@ script:
                 entity_id: binary_sensor.tv_on_kodi
                 state: 'on'
             sequence:
-              - service: notify.kodi
+              - action: notify.kodi
                 data:
                   title: "{{ category }}"
                   message: "{{ message }}"
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           title: "{{ category }}"
           message: "{{ message }}"
           data:
             priority: high
-            ttl: 0
             channel: "Important"
       - choose:
           - conditions: >
               {{ (speak if speak is defined else True) and states.input_select.house_mode.state in ['day_working','day_not_working'] and
                  is_state('binary_sensor.assistant_can_speak', 'on') }}
             sequence:
-              - service: script.say_something
+              - action: script.say_something
                 data:
                   message: "{{ message }}"
 
@@ -192,15 +177,15 @@ script:
       category:
         description: "Message category"
         example: "Environment"
-        required: yes
+        required: true
       message:
         description: "Message content"
         example: "An event has occured"
       speak:
         description: "Make Karen speak this message (only if people present at home)"
-        example: "yes"
-        default: yes
-        required: no
+        example: "true"
+        default: true
+        required: false
     sequence:
       # notify to Kodi if TV is on and on the right source
       - choose:
@@ -209,22 +194,21 @@ script:
                 entity_id: binary_sensor.tv_on_kodi
                 state: 'on'
             sequence:
-              - service: notify.kodi
+              - action: notify.kodi
                 data:
                   title: "{{ category }}"
                   message: "{{ message }}"
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           title: "{{ category }}"
           message: "{{ message }}"
           data:
             priority: high
-            ttl: 0
             channel: "Emergency"
       - choose:
           - conditions: >
               {{ (speak if speak is defined else True) and is_state('binary_sensor.assistant_can_speak', 'on') }}
             sequence:
-              - service: script.say_something
+              - action: script.say_something
                 data:
                   message: "Attenzione! {{ message }}"

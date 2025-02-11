@@ -1,7 +1,5 @@
 # Domotics Network management
 
-homeassistant:
-
 # TODO probabilmente è sufficiente la domonet_interface; external_interface è ridondante
 # cerchiamo di usare più gli IP in generale
 shell_command:
@@ -26,7 +24,7 @@ script:
         description: "Device description (it will be added as iptables rule comment)"
         example: "Google Home"
     sequence:
-      - service: shell_command.domonet_device_allow_internet
+      - action: shell_command.domonet_device_allow_internet
         data:
           domonet_interface: !secret domonet_interface
           external_interface: !secret external_interface
@@ -43,18 +41,18 @@ script:
       - choose:
         - conditions: "{{ is_state(entity_id, 'on') }}"
           sequence:
-            - service: shell_command.domonet_device_disallow_internet
+            - action: shell_command.domonet_device_disallow_internet
               data:
                 host_address: "{{ states[entity_id].attributes['device_address'] }}"
         default:
-          - service: shell_command.domonet_device_allow_internet
+          - action: shell_command.domonet_device_allow_internet
             data:
               domonet_interface: !secret domonet_interface
               external_interface: !secret external_interface
               host_address: "{{ states[entity_id].attributes['device_address'] }}"
               host_description: "{{ states[entity_id].attributes['device_name'] }}"
       # FIXME questo non funziona
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         data:
           entity_id: sensor.domonet_devices
 
@@ -65,28 +63,28 @@ script:
         description: "Device address"
         example: "192.168.100.220"
     sequence:
-      - service: shell_command.domonet_device_disallow_internet
+      - action: shell_command.domonet_device_disallow_internet
         data:
           host_address: "{{ host_address }}"
 
   domonet_all_enable_internet:
     description: "Enable Internet access for all Domonet devices"
     sequence:
-      - service: shell_command.domonet_global_allow_internet
+      - action: shell_command.domonet_global_allow_internet
         data:
           domonet_interface: !secret domonet_interface
           external_interface: !secret external_interface
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         entity_id: binary_sensor.domonet_allowed_global
 
   domonet_all_disable_internet:
     description: "Disable Internet access for all Domonet devices"
     sequence:
-      - service: shell_command.domonet_global_disallow_internet
+      - action: shell_command.domonet_global_disallow_internet
         data:
           domonet_interface: !secret domonet_interface
           external_interface: !secret external_interface
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         entity_id: binary_sensor.domonet_allowed_global
 
 command_line:

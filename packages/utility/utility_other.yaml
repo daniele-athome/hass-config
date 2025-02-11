@@ -29,24 +29,24 @@ automation:
 
   - alias: Attivazione ritardata automazioni
     id: ab1a8506-f203-423f-9264-237b1c548415
-    initial_state: 'on'
+    initial_state: true
     trigger:
-      - platform: homeassistant
+      - trigger: homeassistant
         event: start
     action:
       - delay: '00:02:00'
-      - service: automation.turn_on
+      - action: automation.turn_on
         entity_id:
           - automation.daniele_arrived
           - automation.daniele_left
 
   - alias: Imposta tema di default
     id: 647f2d4d-ec5e-4e7a-9b5d-a35eeb215101
-    initial_state: 'on'
+    initial_state: true
     trigger:
-      - platform: homeassistant
+      - trigger: homeassistant
         event: start
     action:
-      - service: frontend.set_theme
+      - action: frontend.set_theme
         data:
           name: !secret default_theme

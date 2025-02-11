@@ -23,6 +23,29 @@ sensor:
             {%- endfor -%}
             {{ result.items }}
 
+      # Sensori di temperatura bloccati
+      temperature_sensors_stuck:
+        friendly_name: Sensori di temperatura bloccati
+        value_template: >
+          {%- set threshold = 24 -%}
+          {%- set result = namespace(count=0) -%}
+          {%- for item in states['sensor']
+            if item.entity_id.startswith('sensor.temperature_') and item.state not in ('unknown', 'unavailable')
+              and now() - item.last_changed >= timedelta (hours=threshold) -%}
+          {%- set result.count = result.count + 1 -%}
+          {%- endfor -%}
+          {{ result.count }}
+        attribute_templates:
+          devices: >
+            {%- set threshold = 24 -%}
+            {%- set result = namespace(items=[]) -%}
+            {%- for item in states['sensor']
+              if item.entity_id.startswith('sensor.temperature_') and item.state not in ('unknown', 'unavailable')
+                and now() - item.last_changed >= timedelta (hours=threshold) -%}
+            {% set result.items = result.items + [item.entity_id] %}
+            {%- endfor -%}
+            {{ result.items }}
+
       # da usare in UI per rappresentare stato assente
       status_controlcenter:
         unit_of_measurement: "%"
@@ -59,11 +82,11 @@ automation:
     id: a64c4dea-2c0d-11ef-9cb5-e7d9d5cb4346
     description: Notifica centro di controllo scarico
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.controlcenter_battery_level
         below: 10
     action:
-      - service: script.notify_info
+      - action: script.notify_info
         data:
           category: Sistema
           message: |-
@@ -73,13 +96,13 @@ automation:
     id: d60577fa-2c0d-11ef-b5c7-9ff802017551
     description: Notifica batterie scariche
     trigger:
-      platform: numeric_state
+      trigger: numeric_state
       entity_id: sensor.low_batteries
       above: '0'
       # evita sensori che riportano microcambiamenti
       for: 02:00:00
     action:
-      - service: persistent_notification.create
+      - action: persistent_notification.create
         data:
           title: Batterie scariche
           message: >
@@ -87,7 +110,7 @@ automation:
             - {{ item.attributes.friendly_name }} ({{ item.state }}%)
             {% endfor -%}
           notification_id: alert_low_batteries
-      - service: script.notify_info
+      - action: script.notify_info
         data:
           category: Sistema
           message: |-
@@ -98,20 +121,57 @@ automation:
 
   - alias: alert_low_batteries_dismiss
     trigger:
-      platform: numeric_state
+      trigger: numeric_state
       entity_id: sensor.low_batteries
       below: '1'
     action:
-      - service: persistent_notification.dismiss
+      - action: persistent_notification.dismiss
         data:
           notification_id: alert_low_batteries
 
+  - alias: alert_temperature_sensors_stuck
+    id: 8fc0c7f2-78b3-11ef-ade2-ffb2e6ef8276
+    description: Notifica sensori di temperature bloccati
+    trigger:
+      trigger: numeric_state
+      entity_id: sensor.temperature_sensors_stuck
+      above: '0'
+      # evita sensori che riportano microcambiamenti
+      for: 02:00:00
+    action:
+      - action: persistent_notification.create
+        data:
+          title: Sensori bloccati
+          message: >
+            {%- for item in states['sensor'] if item.entity_id in states.sensor.temperature_sensors_stuck.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
+          notification_id: alert_temperature_sensors_stuck
+      - action: script.notify_info
+        data:
+          category: Sistema
+          message: |-
+            Sensori bloccati:
+            {% for item in states['sensor'] if item.entity_id in states.sensor.temperature_sensors_stuck.attributes.devices -%}
+            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
+            {% endfor -%}
+
+  - alias: alert_temperature_sensors_stuck_dismiss
+    trigger:
+      trigger: numeric_state
+      entity_id: sensor.temperature_sensors_stuck
+      below: '1'
+    action:
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: alert_temperature_sensors_stuck
+
   - alias: alert_home_assistant_startup
     trigger:
-      platform: homeassistant
+      trigger: homeassistant
       event: start
     action:
-      - service: script.notify_debug
+      - action: script.notify_debug
         data:
           message: |-
             Home Assistant avviato

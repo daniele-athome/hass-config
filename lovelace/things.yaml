@@ -252,6 +252,7 @@ cards:
           - sensor.battery_lux_living
           - sensor.battery_motion_entrance
           - sensor.battery_motion_bedroom_left
+          - sensor.battery_motion_bedroom_headrest
           - sensor.battery_water_bathroom1
         severity:
           - color: '#bf4040'
@@ -301,3 +302,11 @@ cards:
         hold_action:
           action: call-service
           service: script.toggle_living_extra
+
+      - type: custom:browser-control-card
+        hide_fullscreen: false
+        hide_screenlock: true
+        hide_zoom: true
+        hide_refresh: false
+        no_padding: false
+        small_buttons: false

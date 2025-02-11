@@ -4,29 +4,12 @@ homeassistant:
   customize:
     sensor.date_long:
       friendly_name: Data
-    calendar.my_calendar_events:
+    calendar.my_calendar:
       friendly_name: Personale
-    calendar.lavoro_events:
+    calendar.lavoro:
       friendly_name: Lavoro
-    calendar.risucchiator_events:
+    calendar.risucchiator:
       friendly_name: Risucchiator
-
-# Calendario personale
-calendar:
-  - platform: caldav
-    username: !secret caldav_username
-    password: !secret caldav_password
-    url: !secret caldav_url
-    custom_calendars:
-      - name: "events"
-        calendar: "My Calendar"
-        search: ".*"
-      - name: "events"
-        calendar: "Lavoro"
-        search: ".*"
-      - name: "events"
-        calendar: "Risucchiator"
-        search: ".*"
 
 sensor:
   - platform: time_date
@@ -59,5 +42,5 @@ binary_sensor:
       workday:
         value_template: >-
           {{ is_state("binary_sensor.workday_home", "on") and
-             not (is_state("calendar.lavoro_events", "on") and
-             state_attr("calendar.lavoro_events", "message") in ("Ferie", "Malattia", "Lutto")) }}
+             not (is_state("calendar.lavoro", "on") and
+             state_attr("calendar.lavoro", "message") in ("Ferie", "Malattia", "Lutto")) }}

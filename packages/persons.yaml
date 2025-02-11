@@ -14,40 +14,51 @@ homeassistant:
       icon: mdi:cellphone
     device_tracker.daniele_paytonble:
       friendly_name: Payton (BLE)
+    device_tracker.daniele_shibarouter:
+      friendly_name: Shiba (Router)
+    device_tracker.daniele_shibawifi:
+      friendly_name: Shiba (WiFi)
+    device_tracker.daniele_shibagps:
+      friendly_name: Shiba (GPS)
+      icon: mdi:cellphone
+    device_tracker.daniele_shibable:
+      friendly_name: Shiba (BLE)
 
 mqtt:
   device_tracker:
     - name: daniele_paytonble
       state_topic: 'homeassistant/monitor/rasp/payton/device_tracker'
       source_type: bluetooth
+    - name: daniele_shibable
+      state_topic: 'homeassistant/monitor/rasp/shiba/device_tracker'
+      source_type: bluetooth
     - name: daniele_swimtwo
       state_topic: 'homeassistant/monitor/rasp/swimtwo/device_tracker'
       source_type: bluetooth
 
-# TEST
 composite:
   trackers:
     - name: daniele_composite
       require_movement: true
       entity_id:
-        #- device_tracker.daniele_paytongps
+        #- device_tracker.daniele_shibagps
         # tracker device nativo usato come GPS
-        - device_tracker.daniele_payton
-        #- device_tracker.daniele_paytonwifi
-        - device_tracker.daniele_paytonrouter
-        - device_tracker.daniele_paytonble
+        - device_tracker.daniele_shiba
+        #- device_tracker.daniele_shibawifi
+        - device_tracker.daniele_shibarouter
+        - device_tracker.daniele_shibable
 
 person:
   - name: daniele
     id: daniele
     user_id: !secret userid_daniele
     device_trackers:
-      #- device_tracker.daniele_paytongps
+      #- device_tracker.daniele_shibagps
       # tracker device nativo usato come GPS
-      - device_tracker.daniele_payton
-      - device_tracker.daniele_paytonble
-      #- device_tracker.daniele_paytonwifi
-      - device_tracker.daniele_paytonrouter
+      - device_tracker.daniele_shiba
+      - device_tracker.daniele_shibable
+      #- device_tracker.daniele_shibawifi
+      - device_tracker.daniele_shibarouter
 
 sensor:
   - platform: history_stats
@@ -72,26 +83,26 @@ command_line:
       payload_off: "0"
 
 automation:
-  - alias: paytonble_detect_workaround_1
-    description: 'Forza uno scan di arrivo BLE quando il router rileva payton.'
+  - alias: shibable_detect_workaround_1
+    description: 'Forza uno scan di arrivo BLE quando il router rileva shiba.'
     trigger:
-      platform: state
-      entity_id: device_tracker.daniele_paytonrouter
+      trigger: state
+      entity_id: device_tracker.daniele_shibarouter
       from: not_home
       to: home
     condition:
       # inutile fare lo scan se è già stato rilevato
       condition: state
-      entity_id: device_tracker.daniele_paytonble
+      entity_id: device_tracker.daniele_shibable
       state: not_home
     action:
-      - service: script.scan_arrival
+      - action: script.scan_arrival
 
-  - alias: paytonble_detect_workaround_2
-    description: 'Forza uno scan di partenza BLE quando il router non rileva payton per 3 minuti.'
+  - alias: shibable_detect_workaround_2
+    description: 'Forza uno scan di partenza BLE quando il router non rileva shiba per 3 minuti.'
     trigger:
-      platform: state
-      entity_id: device_tracker.daniele_paytonrouter
+      trigger: state
+      entity_id: device_tracker.daniele_shibarouter
       from: home
       to: not_home
       for:
@@ -99,7 +110,37 @@ automation:
     condition:
       # inutile fare lo scan se è già stato rilevato come non a casa
       condition: state
-      entity_id: device_tracker.daniele_paytonble
+      entity_id: device_tracker.daniele_shibable
       state: home
     action:
-      - service: script.scan_departure
+      - action: script.scan_departure
+
+  - alias: shiba_house_mode_night
+    id: 2c718444-d8f7-11ef-ad94-b4b686ed2aba
+    description: 'Attiva DnD sul telefono in modalità notte'
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        to: night
+    action:
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: command_dnd
+          data:
+            priority: high
+            command: priority_only
+
+  - alias: shiba_house_mode_not_night
+    id: afb28f6e-fccb-48df-a58d-0115f7a639fe
+    description: 'Disattiva DnD sul telefono uscendo dalla modalità notte'
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        from: night
+    action:
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: command_dnd
+          data:
+            priority: high
+            command: "off"

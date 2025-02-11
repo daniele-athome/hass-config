@@ -3,8 +3,8 @@ intent_script:
 
   CleanNightway:
     action:
-      - service: script.vacuum_clean_nightway
-      - service: random_template.render
+      - action: script.vacuum_clean_nightway
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -17,8 +17,8 @@ intent_script:
 
   CleanKitchen:
     action:
-      - service: script.vacuum_clean_kitchen
-      - service: random_template.render
+      - action: script.vacuum_clean_kitchen
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -31,8 +31,8 @@ intent_script:
 
   CleanBathroom1:
     action:
-      - service: script.vacuum_clean_bathroom1
-      - service: random_template.render
+      - action: script.vacuum_clean_bathroom1
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -45,8 +45,8 @@ intent_script:
 
   CleanBathroom2:
     action:
-      - service: script.vacuum_clean_bathroom2
-      - service: random_template.render
+      - action: script.vacuum_clean_bathroom2
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -59,8 +59,8 @@ intent_script:
 
   CleanBedroom:
     action:
-      - service: script.vacuum_clean_bedroom
-      - service: random_template.render
+      - action: script.vacuum_clean_bedroom
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech
@@ -73,8 +73,8 @@ intent_script:
 
   CleanLiving:
     action:
-      - service: script.vacuum_clean_living
-      - service: random_template.render
+      - action: script.vacuum_clean_living
+      - action: random_template.render
         data:
           key: assistant_ok
         response_variable: speech

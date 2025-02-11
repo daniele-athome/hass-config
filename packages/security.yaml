@@ -20,11 +20,11 @@ automation:
   - alias: security_trigger_alarm
     trigger:
       # Qualsiasi sensore di movimento scattato
-      - platform: state
+      - trigger: state
         entity_id: group.motion_living
         to: 'on'
       # Porta di ingresso aperta
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.door_main
         to: 'on'
     condition:
@@ -34,17 +34,17 @@ automation:
           entity_id: alarm_control_panel.main
           state: 'armed_away'
     action:
-      - service: alarm_control_panel.alarm_trigger
+      - action: alarm_control_panel.alarm_trigger
         entity_id: alarm_control_panel.main
 
   # Tutti usciti, attiva allarme
   - alias: security_autoactivate
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.people_count_home
         below: '1'
     action:
-      - service: alarm_control_panel.alarm_arm_away
+      - action: alarm_control_panel.alarm_arm_away
         data:
           entity_id: alarm_control_panel.main
           code: !secret alarm_code
@@ -52,11 +52,11 @@ automation:
   # Ingresso in casa di persone autorizzate, disattiva allarme
   - alias: security_authorized_entry
     trigger:
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.people_count_home
         above: '0'
     action:
-      - service: alarm_control_panel.alarm_disarm
+      - action: alarm_control_panel.alarm_disarm
         data:
           entity_id: alarm_control_panel.main
           code: !secret alarm_code
@@ -64,15 +64,15 @@ automation:
   # Movimento rilevato, avvia allarme preliminare
   - alias: security_alarm_pending
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: alarm_control_panel.main
         to: 'pending'
     action:
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.lounge
           volume_level: 0.05
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.lounge
           media_content_id: !secret security_alarm_warning_media_url
@@ -80,63 +80,63 @@ automation:
       # Aspetta che lo stato dell'allarme cambi
       - wait_template: "{{ not is_state('alarm_control_panel.main', 'pending') }}"
         timeout: '00:01:00'
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.lounge
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.lounge
           volume_level: !secret lounge_volume
 
   - alias: security_alarm_triggered
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: alarm_control_panel.main
         to: 'triggered'
     action:
-      - service: script.notify_emergency
+      - action: script.notify_emergency
         data:
           category: Allarme
           speak: no
           message: |-
             Rilevato movimento in casa!
         # TODO invia fotogramma del movimento e/o link al video
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           message: command_webview
           data:
             command: "/lovelace/security"
             priority: high
-            ttl: 0
+            channel: alarm_stream
             tag: security_alarm_triggered
 
   # Attiva telecamera ingresso su attivazione allarme
   - alias: security_alarm_arming
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: alarm_control_panel.main
         to: 'arming'
     action:
-      - service: shell_command.start_living_door_camera
+      - action: rest_command.start_living_door_camera
 
   # Disattiva telecamera ingresso su disattivazione allarme
   - alias: security_alarm_disarmed
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: alarm_control_panel.main
         to: 'disarmed'
     action:
-      - service: shell_command.stop_living_door_camera
+      - action: rest_command.stop_living_door_camera
 
   # Porta di ingresso aperta per troppo tempo
   - alias: security_door_opened_long_time
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.door_main
         to: 'on'
         for:
           minutes: 5
     action:
-      - service: script.notify_important
+      - action: script.notify_important
         data:
           speak: no
           category: Allarme
@@ -146,12 +146,12 @@ automation:
   # Notifica attivazione allarme
   - alias: security_alarm_armed
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: alarm_control_panel.main
         to: 'armed_away'
     action:
-      - service: shell_command.start_living_door_camera
-      - service: script.notify_info
+      - action: rest_command.start_living_door_camera
+      - action: script.notify_info
         data:
           category: Allarme
           message: |-

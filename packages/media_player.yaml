@@ -119,9 +119,9 @@ binary_sensor:
 script:
   tv_channel_favourite_news:
     sequence:
-      - service: media_player.turn_on
+      - action: media_player.turn_on
         entity_id: media_player.tv
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.kodi
           media_content_type: 'channel'
@@ -131,12 +131,12 @@ script:
   say_something:
     sequence:
       # Metti tutto in pausa
-      - service: script.suspend_media_for_lounge
+      - action: script.suspend_media_for_lounge
       # Ferma la riproduzione da lounge
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.lounge
-      - service: script.set_tts_volume
-      - service: tts.microsoft_say
+      - action: script.set_tts_volume
+      - action: tts.microsoft_say
         entity_id: media_player.lounge
         data:
           # not supported by Amazon Polly -- language: "{{ language|default('it') }}"
@@ -146,12 +146,12 @@ script:
   say_something_rendered:
     sequence:
       # Metti tutto in pausa
-      - service: script.suspend_media_for_lounge
+      - action: script.suspend_media_for_lounge
       # Ferma la riproduzione da lounge
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.lounge
-      - service: script.set_tts_volume
-      - service: media_player.play_media
+      - action: script.set_tts_volume
+      - action: media_player.play_media
         data:
           entity_id: media_player.lounge
           media_content_type: music
@@ -160,7 +160,7 @@ script:
   # Un buon volume per la pronuncia
   set_tts_volume:
     sequence:
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.lounge
           volume_level: !secret lounge_volume
@@ -169,7 +169,7 @@ script:
   suspend_media_for_lounge:
     sequence:
       # Pausa tutti i media grandi suoni
-      - service: media_player.media_pause
+      - action: media_player.media_pause
         data:
           entity_id: group.media_big_sound
 
@@ -179,7 +179,7 @@ script:
       - condition: template
         value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', false) }}"
       # FIXME Philips API seems to act as toggle always
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           entity_id: media_player.tv
           is_volume_muted: true
@@ -190,7 +190,7 @@ script:
       - condition: template
         value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', true) }}"
       # FIXME Philips API seems to act as toggle always
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           entity_id: media_player.tv
           is_volume_muted: false
@@ -207,7 +207,7 @@ input_select:
 input_text:
   volume_preduck:
     name: Volume pre-duck
-    initial: 0.5
+    initial: "0.5"
   news_tv_channel_name:
     name: TV news channel
 
@@ -215,12 +215,12 @@ automation:
 
   - alias: tv_request_turn_on
     trigger:
-      - platform: device
+      - trigger: device
         device_id: 91f5981788a21313c9056f8ba1de975f
         domain: webostv
         type: webostv.turn_on
     action:
-      service: kodi.call_method
+      action: kodi.call_method
       data:
         entity_id: media_player.kodi
         method: Addons.ExecuteAddon
@@ -230,27 +230,27 @@ automation:
 
   - alias: kodi_request_turn_on
     trigger:
-      platform: device
+      trigger: device
       device_id: 990074f3127e3df453ac96e856d47c37
       domain: kodi
       entity_id: media_player.kodi
       type: turn_on
     action:
-      - service: wake_on_lan.send_magic_packet
+      - action: wake_on_lan.send_magic_packet
         data:
           mac: !secret mediarasp_mac_address
 
   - alias: kodi_request_turn_off
     trigger:
-      platform: device
+      trigger: device
       device_id: 990074f3127e3df453ac96e856d47c37
       domain: kodi
       entity_id: media_player.kodi
       type: turn_off
     action:
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.kodi
-      - service: kodi.call_method
+      - action: kodi.call_method
         data:
           entity_id: media_player.kodi
           method: Addons.ExecuteAddon
@@ -260,57 +260,56 @@ automation:
 
   - alias: update_kodi_last_media
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: 'media_player.kodi'
         to: 'playing'
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.kodi_last_media
           option: "{{ states.media_player.kodi.attributes.media_content_type }}"
 
   - alias: pause_on_phone_call
     trigger:
-      - platform: state
-        entity_id: sensor.daniele_payton_phone_state
+      - trigger: state
+        entity_id: sensor.daniele_shiba_phone_state
         from: 'idle'
     action:
       # Chiamata entrante o uscente, pausa i media grandi suoni
-      - service: media_player.media_pause
+      - action: media_player.media_pause
         data:
           entity_id: group.media_big_sound
 
   - alias: pause_music_on_video_start
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: media_player.kodi
         to: 'playing'
     action:
       # Pausa musica
-      - service: media_player.media_pause
+      - action: media_player.media_pause
         data:
           entity_id: media_player.music
 
   - alias: pause_video_on_music_start
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: media_player.music
         to: 'playing'
     action:
       # Pausa Kodi
-      - service: media_player.media_pause
+      - action: media_player.media_pause
         data:
           entity_id: media_player.kodi
 
   # Abbassa la musica quando non c'è attività in soggiorno
   - alias: duck_volume_living
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_living
         to: 'off'
-    condition:
     action:
-      - service: input_text.set_value
+      - action: input_text.set_value
         data:
           entity_id: input_text.volume_preduck
           value: '{{ states.media_player.snapcast_living.attributes.volume_level }}'
@@ -324,7 +323,7 @@ automation:
       - condition: state
         entity_id: binary_sensor.activity_notebook_daniele
         state: 'off'
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           # Living
           entity_id: media_player.snapcast_living
@@ -333,11 +332,11 @@ automation:
   # Ripristina volume della musica quando c'è attività in soggiorno
   - alias: unduck_volume_living
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: group.motion_living
         to: 'on'
     action:
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.snapcast_living
           volume_level: '{{ states.input_text.volume_preduck.state }}'
@@ -345,36 +344,36 @@ automation:
   # Se bedroom in pausa da più di tot tempo, stoppalo
   - alias: stop_speaker_bedroom_if_paused
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: media_player.bedroom
         to: 'paused'
         for: '00:05:00'
     action:
-      - service: media_player.media_stop
+      - action: media_player.media_stop
         entity_id: media_player.bedroom
 
   - alias: trigger_mediarasp_update
     trigger:
-      platform: mqtt
+      trigger: mqtt
       topic: mopidy/music/i/sta
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         data:
           entity_id: media_player.music
 
   - alias: trigger_speaker_bedroom_update
     trigger:
-      platform: mqtt
+      trigger: mqtt
       topic: mopidy/bedroom/i/sta
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         data:
           entity_id: media_player.bedroom
 
   - alias: kodi_crash_workaround
     description: Spegni la TV dopo un crash di Kodi se nessuno sta guardando
     trigger:
-      platform: state
+      trigger: state
       # il media player non supporta gli stati on/off apparentemente
       entity_id: device_tracker.tv
       to: "home"
@@ -391,16 +390,16 @@ automation:
           entity_id: input_select.house_mode
           state: extended_away
     action:
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.kodi
       # Questo potrebbe fallire quindi lo mettiamo per ultimo
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.tv
 
   - alias: bathroom_activate_media_controller
     description: Attiva BubbleUPnP sul telefono quando lo speaker in bagno si connette
     trigger:
-      platform: state
+      trigger: state
       entity_id: media_player.snapcast_bathroom
       to: "idle"
     condition:
@@ -408,14 +407,14 @@ automation:
       entity_id: person.daniele
       state: home
     action:
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           message: command_broadcast_intent
           data:
             intent_package_name: "com.bubblesoft.android.bubbleupnp"
             intent_action: "com.bubblesoft.android.bubbleupnp.START_SERVICE"
       - delay: 6
-      - service: notify.mobile_app_daniele_payton
+      - action: notify.mobile_app_daniele_shiba
         data:
           message: command_broadcast_intent
           data:

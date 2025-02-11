@@ -19,9 +19,9 @@ automation:
     description: Accende la radiosveglia sulla radio configurata all'orario della sveglia impostata sul telefono.
     trigger:
       # Data e ora correnti corrispondono all'orario del prossimo allarme configurato sul telefono (da 61 secondi prima: tolleranza orologi non sincronizzati)
-      - platform: template
+      - trigger: template
         # FIXME hard-coded Android application name
-        value_template: "{{ state_attr('sensor.daniele_payton_next_alarm', 'Package') == 'com.chen.deskclock' and as_timestamp(states('sensor.daniele_payton_next_alarm')) - 61 < as_timestamp(now()) }}"
+        value_template: "{{ state_attr('sensor.daniele_shiba_next_alarm', 'Package') == 'com.google.android.deskclock' and as_timestamp(states('sensor.daniele_shiba_next_alarm')) - 61 < as_timestamp(now()) }}"
     condition:
       condition: and
       conditions:
@@ -35,33 +35,47 @@ automation:
         - condition: template
           value_template: "{{ not is_state('media_player.bedroom', 'playing') }}"
     action:
-      - service: media_player.volume_set
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          title: "Sveglia"
+          message: "Sveglia!!!"
+          data:
+            tag: alarm_clock
+            sticky: 'true'
+            priority: high
+            ttl: 3600
+            channel: alarm_stream
+            actions:
+              # Muta radiosveglia
+              - action: alarm_clock_dismiss
+                title: Annulla
+      - action: media_player.volume_set
         data:
           entity_id: media_player.bedroom
           volume_level: '0'
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.bedroom
           # TODO fallback su media da media server o addirittura locale
           media_content_id: !secret alarm_clock_radio_station
           media_content_type: music
       # Incremento graduale del volume
-      - service: script.alarm_clock_volume_increase
+      - action: script.alarm_clock_volume_increase
 
   - alias: alarm_clock_stop_increase
     id: 46c480ab-7d19-40e5-8597-96ef4b25f8e9
     description: Ferma l'incremento graduale del volume se la radiosveglia è stato stoppata o messa in pausa.
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: media_player.bedroom
         to:
           - 'off'
           - idle
           - paused
     action:
-      - service: script.turn_off
+      - action: script.turn_off
         entity_id: script.alarm_clock_volume_increase
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.bedroom
           volume_level: "{{ states('input_number.alarm_clock_volume')|float }}"
@@ -70,7 +84,7 @@ automation:
     id: 68eed46a-204e-11ef-8c7c-ab3783afe1ef
     description: Spegni la radiosveglia se il letto principale diventa vuoto
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.presence_mainbed
         to: 'off'
     condition:
@@ -78,8 +92,22 @@ automation:
         entity_id: media_player.bedroom
         state: playing
     action:
-      - service: media_player.media_stop
-        entity_id: media_player.bedroom
+      - action: script.alarm_clock_dismiss
+
+  - alias: alarm_clock_dismiss
+    id: e43a2a64-d1b3-11ef-8aa3-0800277ca3d8
+    trigger:
+      - event_data:
+          action: alarm_clock_dismiss
+        event_type: mobile_app_notification_action
+        trigger: event
+    action:
+      - action: script.alarm_clock_dismiss
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: clear_notification
+          data:
+            tag: alarm_clock
 
 script:
 
@@ -88,7 +116,7 @@ script:
     description: Incrementa gradualmente il volume della radiosveglia.
     mode: restart
     sequence:
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.bedroom
           volume_level: '0'
@@ -102,7 +130,7 @@ script:
             - condition: template
               value_template: "{{ state_attr('media_player.bedroom', 'volume_level')|float < states('input_number.alarm_clock_volume')|float }}"
           sequence:
-            - service: media_player.volume_set
+            - action: media_player.volume_set
               data:
                 entity_id: media_player.bedroom
                 volume_level: >
@@ -113,3 +141,10 @@ script:
                   {% endif %}
             - delay:
                 seconds: 5
+
+  alarm_clock_dismiss:
+    description: Annulla la radiosveglia
+    mode: restart
+    sequence:
+      - action: media_player.media_stop
+        entity_id: media_player.bedroom

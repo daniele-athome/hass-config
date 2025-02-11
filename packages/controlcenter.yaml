@@ -1,0 +1,26 @@
+# ### Stuff strictly related to the control center tablet.
+
+automation:
+
+  - alias: controlcenter_house_mode_night
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        to: night
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id
+          path: /lovelace/environment
+
+  - alias: controlcenter_house_mode_not_night
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        from: night
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id
+          # TODO use a dedicated morning dashboard (e.g. with weather, traffic conditions, calendar overview)
+          path: /lovelace/home

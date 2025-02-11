@@ -14,7 +14,7 @@ automation:
 
   - alias: TimerFinished
     trigger:
-      platform: event
+      trigger: event
       event_type: timer.finished
       event_data:
         entity_id: timer.spoken
@@ -22,11 +22,11 @@ automation:
       - condition: state
         entity_id: timer.spoken
         state: idle
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.lounge
           volume_level: !secret lounge_volume
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: media_player.lounge
           media_content_id: !secret alarm_media_url

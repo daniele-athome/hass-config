@@ -23,6 +23,7 @@ logger:
   logs:
     homeassistant.components.assist_pipeline: debug
     homeassistant.components.random_template: debug
+    homeassistant.components.roborock: debug
     homeassistant.components.signal_messenger2: debug
     homeassistant.components.signal_messenger2.client: debug
     homeassistant.components.signal_messenger2.signalcli_jsonrpc: debug
@@ -55,7 +56,7 @@ my:
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 http:
   server_host: 127.0.0.1
-  use_x_forwarded_for: yes
+  use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
     - ::1
@@ -73,6 +74,7 @@ assist_pipeline:
 zeroconf:
 network:
 energy:
+import_statistics:
 
 # Enables support for tracking state changes over time
 history:
@@ -88,29 +90,16 @@ recorder:
   include:
     entities:
       - input_select.house_mode
-      - person.daniele
-      - climate.boiler_main
-      - climate.living_ac
       - vacuum.valetudo_risucchiator
       - vacuum.spulicchiator
-      - sensor.battery_vacuum_spulicchiator
       - binary_sensor.spulicchiator_cleaning
       - binary_sensor.spulicchiator_mop_drying
       - binary_sensor.spulicchiator_water_box_attached
       - binary_sensor.spulicchiator_water_shortage
       - sensor.spulicchiator_status
-      - sensor.battery_scatola
       - sensor.controlcenter_battery_level
       - sensor.daniele_payton_battery_level
-      - sensor.battery_env_bedroom
-      - sensor.battery_env_external
-      - sensor.battery_env_living
-      - sensor.battery_door_main
-      - sensor.battery_motion_living
-      - sensor.battery_motion_bedroom
-      - sensor.battery_motion_entrance
-      - sensor.battery_button_dustbin
-      - sensor.battery_presence_mainbed
+      - sensor.daniele_shiba_battery_level
       - sensor.homeserver_cpu_used
       - sensor.homeserver_ram_used_percent
       - sensor.cputemp_scatola
@@ -124,6 +113,8 @@ recorder:
       - sensor.temperature_bedroom
       - sensor.pressure_bedroom
       - sensor.humidity_bedroom
+      - sensor.daikinap53460_inside_temperature
+      - sensor.daikinap53460_outside_temperature
       - sensor.temperature_living
       - sensor.temperature_living_window
       - sensor.temperature_living_table
@@ -136,13 +127,10 @@ recorder:
       - sensor.humidity_studio
       - sensor.gas_concentration_kitchen
       - binary_sensor.water_bathroom1
-      - sensor.battery_water_bathroom1
-      - sensor.battery_env_bathroom1
       - sensor.humidity_bathroom1
       - sensor.temperature_bathroom1
       - sensor.temperature_average
       - sensor.humidity_average
-      - sensor.battery_motion_bedroom_left
       - sensor.lux_motion_bedroom_left
       - binary_sensor.motion_bedroom_left
       - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
@@ -154,11 +142,16 @@ recorder:
       - sensor.mediarasp_cpu_thermal_1_temperature
       - device_tracker.controlcenter
       - binary_sensor.presence_mainbed
+      - binary_sensor.activity_notebook_daniele
       # TEST presence >>>
       - device_tracker.daniele_payton
       - device_tracker.daniele_paytonwifi
       - device_tracker.daniele_paytonrouter
       - device_tracker.daniele_paytonble
+      - device_tracker.daniele_shiba
+      - device_tracker.daniele_shibawifi
+      - device_tracker.daniele_shibarouter
+      - device_tracker.daniele_shibable
       - sensor.people_count_home
       - sensor.people_count_home_local
       # <<< TEST
@@ -177,26 +170,18 @@ recorder:
       - media_player.kodi
       - media_player.music
       # <<< TEST
-      - input_number.energy_gas_total
-      - sensor.energy_gas_total
-      - sensor.energy_water_total
-      - input_number.energy_water_total
-      - sensor.energy_washing_machine
-      - sensor.power_washing_machine
-      - sensor.power_light_bedroom_left
-      - sensor.energy_light_bedroom_left
-      - sensor.power_light_bedroom_main
-      - sensor.energy_light_bedroom_main
-      - sensor.power_datacenter
-      - sensor.energy_datacenter
       - sensor.speedtest_download
       - sensor.speedtest_ping
       - sensor.speedtest_upload
-      - input_text.vacuum_current_room
       - input_text.vacuum_finished_room
     entity_globs:
-      - input_number.energy_mains_total_*
-      - sensor.energy_mains_*
+      - input_number.energy_*
+      - sensor.energy_*
+      - sensor.power_*
+      - light.*
+      - sensor.battery_*
+      - climate.*
+      - person.*
 
 influxdb:
   api_version: 2
@@ -240,23 +225,24 @@ tts:
     type: IsabellaNeural
     region: westeurope
 
-stt:
-  - platform: google_cloud_stt
-    key_file: !secret google_stt_credentials
-    model: command_and_search
-
 mqtt:
 
 zha:
   database_path: /home/homeassistant/.homeassistant/zigbee.db
   zigpy_config:
     ota:
+      # https://github.com/zigpy/zha-device-handlers/issues/2476#issuecomment-2598382464
+      extra_providers:
+        - type: z2m
       otau_directory: /home/homeassistant/.homeassistant/zigpy_ota
 zha_toolkit:
 
 system_health:
 wake_on_lan:
 homeassistant_alerts:
+
+# for quick testing
+automation: !include automations.yaml
 
 lovelace_gen:
 
@@ -306,6 +292,10 @@ lovelace:
     - url: /hacsfiles/lovelace-xiaomi-vacuum-map-card/xiaomi-vacuum-map-card.js
       type: module
     - url: /hacsfiles/lovelace-thermostat-dark-card/thermostat-dark-card.js
+      type: module
+#    - url: /hacsfiles/ha-floorplan/floorplan.js
+#      type: module
+    - url: /hacsfiles/homeassistant-browser-control-card/browser-control-card.js
       type: module
     # untracked
     - url: /local/ui/custom_ui/moment-with-locales.min.js?v=2.29.2

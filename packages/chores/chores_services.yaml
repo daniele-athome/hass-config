@@ -1,0 +1,48 @@
+# ### Chores services and support data
+
+template:
+  - binary_sensor:
+      - name: washing_machine_operating
+        #icon: todo
+        state: "{{ states.sensor.power_washing_machine.state|int > 10 }}"
+        delay_on: "00:00:10"
+        delay_off: "00:00:60"
+
+automation:
+
+  - alias: washing_machine_finished
+    id: dc758df2-3df4-11ef-9f43-9797b302512e
+    description: Notifica la fine di una lavatrice
+    mode: single
+    trigger:
+      - trigger: state
+        entity_id: binary_sensor.washing_machine_operating
+        from: "on"
+        to: "off"
+    action:
+      - action: script.notify_info
+        data:
+          category: Faccende
+          message: |-
+            Lavatrice terminata
+      # TODO forse qualcosa di parlato e magari un altro reminder dopo un tot di tempo
+
+# TODO device not available
+#  - alias: trigger_reminder_trash_morning
+#    id: cb974a36-3de3-11ef-9892-bb0d0252ddd1
+#    mode: single
+#    # FIXME this trigger causes validation to fail (but not really)
+#    trigger:
+#      - device_id: 949aad0be16512bcf2671f392f17de26
+#        domain: zha
+#        trigger: device
+#        type: remote_button_short_press
+#        subtype: remote_button_short_press
+#    action:
+#      - action: input_boolean.turn_on
+#        entity_id: input_boolean.reminder_trash_morning
+#      - event: assistant_speak_tts
+#        event_data_template:
+#          template: TrashReminderMorning_manual
+#          variables:
+#            when: "domani"

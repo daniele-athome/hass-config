@@ -108,51 +108,33 @@ powercalc:
   power_sensor_friendly_naming: 'Potenza: {}'
   energy_sensor_naming: 'energy_{}'
   energy_sensor_friendly_naming: 'Consumo: {}'
-
-  sensors:
-    # Shelly 1 controlled devices
-    # https://github.com/bramstroker/homeassistant-powercalc/discussions/330#discussioncomment-1498521
-
-    - entity_id: light.bedroom_left
-      energy_sensor_naming: 'energy_light_{}'
-      power_sensor_naming: 'power_light_{}'
-      standby_power: 0.3
-      fixed:
-        # 3 from lamp, 0.6 from shelly
-        power: 3.6
-
-    - entity_id: light.bedroom_main
-      energy_sensor_naming: 'energy_light_{}'
-      power_sensor_naming: 'power_light_{}'
-      standby_power: 0.3
-      fixed:
-        # 4.3+4.3+4.5 from lamps, 0.6 from shelly
-        power: 13.7
+  # Shelly 1 controlled devices
+  # https://github.com/bramstroker/homeassistant-powercalc/discussions/330#discussioncomment-1498521
 
 automation:
 
   - alias: energy_mains_sync
     description: Sincronizza letture corrente agli helper
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: sensor.energy_mains_total_f1
         to:
-      - platform: state
+      - trigger: state
         entity_id: sensor.energy_mains_total_f2
         to:
-      - platform: state
+      - trigger: state
         entity_id: sensor.energy_mains_total_f3
         to:
     action:
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.energy_mains_total_f1
           value: "{{ states('sensor.energy_mains_total_f1') }}"
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.energy_mains_total_f2
           value: "{{ states('sensor.energy_mains_total_f2') }}"
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.energy_mains_total_f3
           value: "{{ states('sensor.energy_mains_total_f3') }}"
@@ -160,11 +142,11 @@ automation:
   - alias: energy_gas_sync
     description: "Sincronizza letture gas all'helper"
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: sensor.energy_gas_total
         to:
     action:
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.energy_gas_total
           value: "{{ states('sensor.energy_gas_total') }}"
@@ -172,11 +154,11 @@ automation:
   - alias: energy_water_sync
     description: "Sincronizza letture acqua all'helper"
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: sensor.energy_water_total
         to:
     action:
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: input_number.energy_water_total
           value: "{{ states('sensor.energy_water_total') }}"
@@ -185,29 +167,29 @@ script:
 
   input_reading_energy_mains:
     sequence:
-      - service: utility_meter.calibrate
+      - action: utility_meter.calibrate
         data:
           entity_id: sensor.energy_mains_total_f1
           value: "{{ states('input_number.energy_mains_total_f1') }}"
-      - service: utility_meter.calibrate
+      - action: utility_meter.calibrate
         data:
           entity_id: sensor.energy_mains_total_f2
           value: "{{ states('input_number.energy_mains_total_f2') }}"
-      - service: utility_meter.calibrate
+      - action: utility_meter.calibrate
         data:
           entity_id: sensor.energy_mains_total_f3
           value: "{{ states('input_number.energy_mains_total_f3') }}"
 
   input_reading_energy_gas:
     sequence:
-      - service: utility_meter.calibrate
+      - action: utility_meter.calibrate
         data:
           entity_id: sensor.energy_gas_total
           value: "{{ states('input_number.energy_gas_total') }}"
 
   input_reading_energy_water:
     sequence:
-      - service: utility_meter.calibrate
+      - action: utility_meter.calibrate
         data:
           entity_id: sensor.energy_water_total
           value: "{{ states('input_number.energy_water_total') }}"

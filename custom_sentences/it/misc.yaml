@@ -47,6 +47,12 @@ intents:
       - sentences:
         - "ricordami [di portare] (la spazzatura | l'immondizia) {when_simple:when}"
 
+  GamingMode:
+    data:
+      - sentences:
+        - "riavvia il server in [modalità] gaming"
+        - "[(attiva [la]|avvia [la]|entra in|passa (a|in))] modalità gaming"
+
 lists:
   when_simple:
     values:

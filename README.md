@@ -1,9 +1,7 @@
 # My Home Assistant configuration
 
-> This readme might be behind the actual configuration files. I will update it when I can.
-
 This is a mirror of my home automation configuration for Home Assistant.
-It's been stripped down of some templates for speech and notifications (and of course secrets).
+It's been stripped down of some templates for speech and notifications.
 
 ## What's a Smart Home for me
 
@@ -33,29 +31,23 @@ TODO home automation view diagram
 ## Hardware used
 
 * An unused 2012 laptop running Home Assistant and Rhasspy
-* ConBee II ZigBee USB controller attached to the laptop
-* Raspberry Pi 3B running Kodi
+* Home Assistant Connect ZBT-1 USB controller attached to the laptop
+* Raspberry Pi 4B running Kodi
 * A cheap Android tablet as my control center
 * Google Home (used only as speaker)
+* Bosch Thermostat II
 * Sonoff Basic flashed with Tasmota
-* Shelly One flashed with Tasmota
-* Shelly Gas
+* Shelly 1 (some with native firmare, some with Tasmota)
 * Xiaomi Mi Bluetooth LE sensors
 * ZigBee Aqara temperature sensors
 * ZigBee Aqara motion sensors
 * ZigBee Aqara door sensor
 * ZigBee RGB LED strips
+* Custom desk radio (Raspberry Pi Zero W + Pimoroni Pirate Audio)
 
-TODO also include a wishlist or planning to buy  
-TODO include custom built hardware  
-TODO new Bosch ZigBee thermostat  
-TODO new media raspberry  
-TODO Rhasspy dismissal  
-TODO new ZigBee/Thread controller
+> TODO also include a wishlist or planning to buy
 
 ## Lovelace interface
-
-> Screenshots are outdated.
 
 I view this mainly from my tablet hanging on a wall. I had to take some measures
 to make it work on the tablet because a complex web application like Lovelace
@@ -66,7 +58,7 @@ A few tricks to keep it fast:
 * Don't use animated icons
 * Don't put too many cards on a view
 
-I tried pretty much every browser on the tablet and the fastest seems to be Chrome.
+The native Home Assistant app seems to work well enough.
 
 My views are pretty tailored to my tablet display: I made them so all content
 would fit and I wouldn't need to scroll up and down.
@@ -85,19 +77,13 @@ would fit and I wouldn't need to scroll up and down.
 
 ### Home automation devices
 
+> I'm refactoring some stuff so not all devices are reporting their status yet.
+
 ![Things](lovelace-things.png)
 
 ### Network monitor
 
-TODO network view screenshot
-
-### Chores
-
-TODO chores view
-
-### Security
-
-![Security](lovelace-security.png)
+![Network](lovelace-network.png)
 
 ## Software setup
 
@@ -113,30 +99,12 @@ like to share about that, feel free to write to me on the Home Assistant forum.
 
 ### Assistant
 
-Meet **Karen**, my voice assistant made with [Rhasspy](https://github.com/rhasspy).
-Everything is done through MQTT using the [Hermes protocol](https://docs.snips.ai/reference/hermes).
-I built a somewhat primitive implementation of "skills" that do something and speak
-some reply. What my voice commands can do:
+I use the built-in Assist feature in Home Assistant and often experiment with different
+voice recognition and hardware (I've been trying Voice Preview lately, it works really
+well if you use the well-trained wake words and a cloud speech-to-text service).
 
-* say date or time
-* get weather/environment information (temperature, some forecasts)
-* play some music from my media center
-* start a countdown
-* commute traffic information
-* good morning/good night with some useful actions for morning and night
-
-There is some dialogue support provided by a few AppDaemon apps but it requires
-patching Rhasspy 2.5 (pull requests pending). Anyway Rhasspy 2.5 is still in a very
-alpha stage. In time, I hope those "skills" could contribute to a framework that would
-simplify the implementation.
-
-I use my own wake word &mdash; trained on my own dataset &mdash; and a
-ReSpeaker microphone array to listen for voice commands. Speech recognition is
-possible with Google Speech-to-text API. I might publish my Rhasspy configuration
-one day.
-
-Speech templates for Karen lives in a specific directory that I won't publish.
-To introduce some sense of "nuisance" in Karen, I created multiple versions for
+Speech templates for the assistant lives in a specific directory that I won't publish.
+To introduce some sense of "nuisance" in sentences, I created multiple versions for
 each type of sentence to be spoken. Templates are used by the Assistant Speak app
 in `apps/assistant_speak.py`.
 
@@ -152,8 +120,7 @@ used by other automations elsewhere.
 
 ### Chores
 
-A very rough and very home-made chores management package. I still have to figure out
-some stuff, you should avoid looking at this for now.
+A very rough and very home-made chores management package. Mainly vacuum robot automations and chores tracking.
 
 ### Devices
 
@@ -162,8 +129,7 @@ also includes some automations for notifying about low battery levels.
 
 ### Environment
 
-House environment sensors (temperature, humidity) and an automation that alerts
-me if the house is on fire :fire:
+House environment sensors (temperature, humidity), HVAC automations and scripts.
 
 ### Firmware
 
@@ -175,11 +141,6 @@ Configuration data and some automations for what I call the *house mode*. Basica
 Each state represents specific behaviors that my place will have, automations to be enabled, stuff to turn on and off,
 and so on. The house mode input_select is used throughout the packages.
 
-### HVAC
-
-A simple NodeMCU with a relay controls my heating boiler. It is controlled via MQTT with basic automations for when I
-leave and return home or when I go to sleep.
-
 ### Lights
 
 Some light entities and a few scenes that are used in automations elsewhere.
@@ -189,8 +150,8 @@ Some light entities and a few scenes that are used in automations elsewhere.
 Some fun with my media players:
 
 * :cinema: Kodi on a Raspberry PI
-* :tv: Philips TV set
-* :speaker: Google Home (used only for Karen's voice)
+* :tv: LG TV set
+* :speaker: Google Home (used only for Assist voice)
 * :musical_note: House music system powered by Mopidy and Snapcast
 
 It contains mainly utility scripts for handling those players and a few sensors that
@@ -207,7 +168,8 @@ A *house mode* for the night. It is an environment state where:
 * no assistant warnings are fired unless it's an emergency
 * I'm sleeping :)
 
-Night mode can be triggered manually by saying goodnight to Karen. Otherwise, starting 23:00, Home Assistant will check every minute that:
+Night mode can be triggered manually by saying goodnight to Karen. Otherwise, starting 23:00, Home Assistant will check
+every minute that:
 
 * all lights are off
 * all media players are off
@@ -217,8 +179,8 @@ Night mode can be triggered manually by saying goodnight to Karen. Otherwise, st
 * my notebook is turned off or idle
 
 Those are my very personal conditions for which I can be declared sleeping or going to sleep.
-If all those conditions are met, Home Assistant will start a 3 minutes timer and send a push notification to my phone warning me that night mode is about to be activated.
-The notification will have 3 actions:
+If all those conditions are met, Home Assistant will start a 3 minutes timer and send a push notification to my phone
+warning me that night mode is about to be activated. The notification will have 3 actions:
 
 1. Snooze: delay night mode for 15 minutes (after 12 minutes another notification will be sent)
 2. Enable now: enable night mode immediately
@@ -226,29 +188,16 @@ The notification will have 3 actions:
 
 If no action is taken, night mode will be enabled automatically after the timer expires.
 
-### Notifications
-
-Still a work in progress, this will host centralized scripts and automations for notifying me through various means
-about stuff happening.
-
-### Other
-
-I didn't know where else to put these.
-
-### Persons
-
-Known people living at my place (just me for now).
-
 ### Presence
 
 I use a combination of sources to determine my presence:
 
-* Network (nmap integration)
+* Network from nmap and Mikrotik integrations
 * Bluetooth using [monitor](https://github.com/andrewjfreyer/monitor/)
-* GPS using [GPSLogger](https://gpslogger.app/)
+* GPS from the Home Assistant app
 
 When my entrance door opens, some lights are turned on if needed and a presence
-arrival scan is initiated. When my phone is detected, Karen greets me and tells
+arrival scan is initiated. When my phone is detected, Assist greets me and tells
 me some information about the house. Also, the alarm system is disarmed.
 
 When I leave, a deperture scan is initiated. When my phone is no longer detected,
@@ -287,12 +236,11 @@ files.
 
 #### Guest mode
 
-I need to improve this, but mainly it does something when I tell Karen that I have
-guests:
+I need to improve this, but mainly it does something when I tell Assist that I have guests:
 
 * set a specific light scene
 * put some ambient playlist on ([ThePianoGuys](https://www.youtube.com/channel/UCmKurapML4BF9Bjtj4RbvXw)!!)
-* Karen won't speak unless it's an emergency
+* Assist won't speak unless it's an emergency
 
 ### Security
 
@@ -303,31 +251,13 @@ and is disarmed when I'm back. No need to think about it, ever.
 ### System
 
 My system is made up of a few running machines. This is a how a keep an eye on
-them. Heavy use of [Glances](https://github.com/nicolargo/glances/).  
-Since the Home Assistant system hosts a dedicated WiFi access point, this view is used to control the devices connected
-to it and to selectively allow them access to the Internet.
-
-### Theme control
-
-Just an automation for setting my preferred theme on startup:
-[Google Dark Theme](https://github.com/JuanMTech/google_dark_theme) by
-[@JuanMTech](https://github.com/JuanMTech).
-
-### Weather
-
-Some sensors for weather information in my area.
-
-### Zones
-
-Home and work :-)
+them. Heavy use of [Glances](https://github.com/nicolargo/glances/).
 
 ## AppDaemon
 
 I use AppDaemon mainly for my assistant. Basic question-answer skills are handled
 directly in Home Assistant, but more complex stuff required some coding, so I've
 implemented a few apps for those.  
-Since I use Rhasspy, I've been developing a Hermes plugin for AppDaemon which
-I will contribute when it will reach a mature state.
 
 ## Acknowledgements
 
