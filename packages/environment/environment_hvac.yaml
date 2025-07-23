@@ -170,7 +170,7 @@ automation:
           state: 'off'
         - condition: state
           entity_id: input_select.house_mode
-          state: "night"
+          state: night
     action:
       - action: input_boolean.turn_on
         data:

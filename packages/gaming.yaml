@@ -1,0 +1,112 @@
+# ### Gaming automations
+
+automation:
+
+  - alias: gaming_mode_on
+    id: b58a7dc5-4ae3-4255-a9f2-eb5856c63fdb
+    description: Gaming mode attivata
+    triggers:
+      # FIXME weak detection
+      - trigger: state
+        entity_id: media_player.kodi
+        to:
+          - "off"
+          - unavailable
+        for: '00:00:05'
+    conditions:
+      condition: state
+      entity_id: media_player.tv
+      state: "on"
+    actions:
+      - action: webostv.command
+        data:
+          entity_id: media_player.tv
+          command: settings/setSystemSettings
+          payload:
+            category: "picture"
+            settings:
+              pictureMode: game
+      - action: webostv.command
+        data:
+          entity_id: media_player.tv
+          command: system.notifications/createAlert
+          payload:
+            message: Entering game mode
+            modal: false
+            buttons:
+              - label: "OK"
+                focus: true
+                buttonType: "ok"
+                onClick: "luna://com.webos.settingsservice/setSystemSettings"
+                params:
+                  category: "sound"
+                  settings:
+                    soundMode: game
+            type: "confirm"
+            isSysReq: true
+      # FIXME doesn't work
+#      - action: webostv.command
+#        data:
+#          entity_id: media_player.tv
+#          command: settings/setSystemSettings
+#          payload:
+#            category: "sound"
+#            settings:
+#              soundMode: game
+
+  - alias: gaming_mode_off
+    id: cf1ef680-2144-4a08-93ca-caecc582b94e
+    description: Gaming mode disattivata
+    triggers:
+      # FIXME weak detection
+      - trigger: state
+        entity_id: media_player.kodi
+        from:
+          - "off"
+          - unavailable
+        for: '00:00:05'
+    conditions:
+      condition: state
+      entity_id: media_player.tv
+      state: "on"
+    actions:
+      - action: webostv.command
+        data:
+          entity_id: media_player.tv
+          command: settings/setSystemSettings
+          payload:
+            category: "picture"
+            settings:
+              pictureMode: filmMaker
+      - action: webostv.command
+        data:
+          entity_id: media_player.tv
+          command: system.notifications/createAlert
+          payload:
+            message: Leaving game mode
+            modal: false
+            buttons:
+              - label: "OK"
+                focus: true
+                buttonType: "ok"
+                onClick: "luna://com.webos.settingsservice/setSystemSettings"
+                params:
+                  category: "sound"
+                  settings:
+                    soundMode: standard
+            type: "confirm"
+            isSysReq: true
+      # FIXME doesn't work
+#      - action: webostv.command
+#        data:
+#          entity_id: media_player.tv
+#          command: settings/setSystemSettings
+#          payload:
+#            category: "sound"
+#            settings:
+#              soundMode: standard
+
+script:
+  gaming_mode_activate:
+    sequence:
+      - action: shell_command.homeserver_gamingreboot

@@ -16,3 +16,4 @@ views:
   - !include lovelace/network.yaml
   - !include lovelace/chores.yaml
   - !include lovelace/security.yaml
+  - !include lovelace/energy.yaml

@@ -3,12 +3,12 @@
 homeassistant:
   customize:
     # FIXME generato da integrazione, dovremmo cambiarla?
-    sensor.mediarasp_cpu_thermal_1_temperature:
-      friendly_name: Temperatura CPU Media Rasp
+    sensor.mediarasp_package_id_0_temperature:
+      friendly_name: Temperatura CPU mediarasp
     sensor.uptime_mediarasp:
       friendly_name: Uptime
     automation.media_rasp_on_fire:
-      friendly_name: Media Rasp calda
+      friendly_name: Mediarasp calda
 
 sensor:
 
@@ -24,7 +24,7 @@ automation:
   - alias: media_rasp_on_fire
     trigger:
       - trigger: numeric_state
-        entity_id: sensor.mediarasp_cpu_thermal_1_temperature
+        entity_id: sensor.mediarasp_package_id_0_temperature
         above: 75
         for:
           minutes: 15
@@ -34,4 +34,4 @@ automation:
           category: Sistema
           speak: no
           message: |-
-            Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_cpu_thermal_1_temperature.state_with_unit }}
+            Temperatura media rasp eccessiva: {{ states.sensor.mediarasp_package_id_0_temperature.state_with_unit }}

@@ -143,6 +143,7 @@ automation:
 
   # Attiva luce su movimento contro il muro
   - alias: motion_bedroom_wall
+    id: 06c396b8-f9fc-11ef-b763-b4b686ed2aba
     trigger:
       - trigger: state
         # non il gruppo, ci serve il sensore specifico qui
@@ -258,17 +259,26 @@ automation:
 
 script:
 
-  # Accende la luce di sinistra o la luce principale a seconda dell'orario
-  # Non verifica altro, richiamata da automation.bedroom_enter_light_on previe opportune verifiche
   bedroom_turn_on_light_conditional:
+    description: >-
+      Accende la luce di sinistra o la luce principale a seconda dell'orario.
+      Se la casa è calma, spegne anche tutte le altre luci.
+      Non verifica altre condizioni (tipo la quantità di luce presente).
     sequence:
       - if:
-        - condition: time
-          after: "10:00:00"
-          before: "23:00:00"
+          - condition: time
+            after: "10:00:00"
+            before: "23:00:00"
         then:
-        - action: light.turn_on
-          entity_id: light.bedroom_main
+          - action: light.turn_on
+            entity_id: light.bedroom_main
         else:
-        - action: light.turn_on
-          entity_id: light.bedroom_left
+          - action: light.turn_on
+            entity_id: light.bedroom_left
+          - if:
+              - condition: state
+                entity_id: binary_sensor.house_night_calm
+                state: 'on'
+            then:
+              - action: light.turn_off
+                entity_id: light.all_but_bedroom

@@ -223,9 +223,9 @@ automation:
           entity_id: input_select.house_mode
           option: guest
 
-  # Porta di ingresso aperta
-  # Metti in pausa tutti i media
   - alias: main_door_opened_full
+    id: 8fa8d6f0-ec5d-11ef-ba71-b4b686ed2aba
+    description: "Porta di ingresso aperta: metti in pausa tutti i media"
     trigger:
       - trigger: state
         entity_id: binary_sensor.door_main

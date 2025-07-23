@@ -36,10 +36,9 @@ cards:
       - type: custom:mini-graph-card
         entities:
           - sensor.temperature_external
-          # TODO installare sensore
-#          - entity: sensor.humidity_external
-#            show_state: true
-#            show_graph: false
+          - entity: sensor.humidity_external
+            show_state: true
+            show_graph: false
         name: Esterno
         height: 46
         line_width: 2

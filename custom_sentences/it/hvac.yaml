@@ -2,11 +2,10 @@ language: it
 
 intents:
 
-  # TODO frasi composte per includere la temperatura target
   HeatingOn:
     data:
       - sentences:
-          - "(accendi|attiva) [il] riscaldamento"
+          - "(accendi|attiva) [il] riscaldamento [[a] {heating_temperature}(°| gradi)]"
 
   HeatingOff:
     data:
@@ -16,7 +15,7 @@ intents:
   ACLivingOn:
     data:
        - sentences:
-                   - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_living>;[[modo] {living_ac_mode}];[[a] {living_ac_temperature}(°| gradi)];[{living_ac_fan_mode}])"
+           - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_living>;[[modo] {living_ac_mode}];[[a] {living_ac_temperature}(°| gradi)];[{living_ac_fan_mode}])"
 
   ACLivingOff:
     data:
@@ -34,6 +33,11 @@ intents:
           - "(accendi|accendere|attiva|attivare) ([il] (ventilatore);<area_living>;{living_ac_fan_mode})"
 
 lists:
+  heating_temperature:
+    range:
+      from: 5
+      to: 30
+
   living_ac_mode:
     values:
       - in: "(freddo|a freddo)"

@@ -6,6 +6,13 @@ intent_script:
       - action: climate.turn_on
         data:
           entity_id: climate.boiler_main
+      - if: "{{ heating_temperature | default(0) > 0 }}"
+        then:
+          - action: climate.set_temperature
+            data:
+              temperature: "{{ heating_temperature }}"
+            target:
+              entity_id: climate.boiler_main
       - action: random_template.render
         data:
           key: assistant_ok
@@ -35,7 +42,7 @@ intent_script:
 
   ACLivingOn:
     action:
-      - if: "{{ living_ac_temperature }}"
+      - if: "{{ living_ac_temperature | default(0) > 0 }}"
         then:
           - action: input_number.set_value
             data:

@@ -63,7 +63,13 @@ automation:
       - trigger: state
         entity_id: binary_sensor.daniele_shiba_music_active
         to: 'on'
-      # TODO accensione di luci specifiche (quali?)
+      - trigger: state
+        entity_id:
+          - light.bathroom1_main
+          - light.bathroom1_mirror
+          - light.bathroom2
+          - light.kitchen_main
+        to: 'on'
       # TODO smontamento dal letto (serve sensore affidabile)
     condition:
       condition: and

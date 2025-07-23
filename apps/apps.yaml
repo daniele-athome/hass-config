@@ -42,6 +42,6 @@ app_domonet_devices:
   log_level: DEBUG
   devices_entity: sensor.domonet_devices
   devices_attribute: clients
-  check_command: bin/domonet_check_device.sh
+  check_command: sudo bin/domonet_check_device.sh
   domonet_interface: !secret domonet_interface
   external_interface: !secret external_interface

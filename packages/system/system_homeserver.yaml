@@ -17,6 +17,15 @@ homeassistant:
     automation.server_on_fire:
       friendly_name: Server caldo
 
+input_text:
+  monitoring_homeserver_night_silence_id:
+    name: "Silence ID monitoring homeserver in night mode"
+
+  # read-only (it should be a template sensor probably?)
+  monitoring_silence_delete_url:
+    name: "DO NOT EDIT - SECRET TEMPLATE HELPER"
+    initial: !secret monitoring_silence_delete_url
+
 sensor:
 
   # Unsupported by Glances integration
@@ -27,34 +36,6 @@ sensor:
     scan_interval: 300
 
 automation:
-
-  - alias: server_on_fire
-    trigger:
-      - trigger: numeric_state
-        entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
-        above: 51
-        for:
-          minutes: 10
-      - trigger: numeric_state
-        entity_id: sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
-        above: 51
-        for:
-          minutes: 10
-      - trigger: numeric_state
-        entity_id: sensor.homeserver_package_id_0_temperature
-        above: 54
-        for:
-          minutes: 10
-    action:
-      action: script.notify_important
-      data:
-        category: Sistema
-        speak: no
-        message: |-
-          Temperatura server eccessiva!
-          Core: {{ states.sensor.homeserver_package_id_0_temperature.state_with_unit }}
-          Disco 1: {{ states.sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732.state_with_unit }}
-          Disco 2: {{ states.sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143.state_with_unit }}
 
   - alias: house_mode_system_homeserver_day
     trigger:
@@ -77,6 +58,26 @@ automation:
       - action: switch.turn_off
         entity_id: switch.homeserver
 
+  - alias: homeserver_monitoring_disable
+    id: f8226eb1-1450-11f0-a5ae-0800277ca3d8
+    description: 'Disabilita monitoraggio homeserver di notte'
+    trigger:
+      - trigger: state
+        entity_id: switch.homeserver
+        to: 'off'
+    action:
+      - action: script.monitoring_homeserver_night_create_silence
+
+  - alias: homeserver_monitoring_enable
+    id: 4ae1dc3e-1458-11f0-a235-0800277ca3d8
+    description: 'Abilita monitoraggio homeserver di giorno'
+    trigger:
+      - trigger: state
+        entity_id: switch.homeserver
+        to: 'on'
+    action:
+      - action: script.monitoring_homeserver_night_delete_silence
+
 switch:
   - platform: wake_on_lan
     name: homeserver
@@ -90,3 +91,68 @@ shell_command:
   homeserver_reboot: ssh homeassistant@server sudo systemctl reboot
   homeserver_poweroff: ssh homeassistant@server sudo systemctl poweroff
   homeserver_gamingreboot: ssh homeassistant@server sudo gaming-reboot
+
+rest_command:
+  monitoring_homeserver_create_silence:
+    url: !secret monitoring_silence_create_url
+    method: POST
+    payload: >-
+      {
+        "comment": "{{ comment }}",
+        "startsAt": "{{ now().strftime('%Y-%m-%dT%H:%M:%S%:z') }}",
+        "endsAt": "{{ end_time }}",
+        "matchers": [
+          {
+            "isEqual": true,
+            "isRegex": false,
+            "name": "alertname",
+            "value": "InstanceDown"
+          },
+          {
+            "isEqual": true,
+            "isRegex": false,
+            "name": "node",
+            "value": "homeserver"
+          }
+        ],
+        "createdBy": "homeassistant"
+      }
+    headers:
+      content-type: 'application/json'
+
+  monitoring_homeserver_delete_silence:
+    url: "{{ states('input_text.monitoring_silence_delete_url') }}/{{ silence_id }}"
+    method: DELETE
+    headers:
+      content-type: 'application/json'
+
+script:
+
+  monitoring_homeserver_night_create_silence:
+    sequence:
+      - action: rest_command.monitoring_homeserver_create_silence
+        data:
+          comment: 'House mode: night'
+          end_time: "{{ (now() + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M:%S%:z') }}"
+        response_variable: silence_response
+      - if: "{{ silence_response['status'] == 200 }}"
+        then:
+          - action: input_text.set_value
+            data:
+              value: "{{ silence_response['content']['silenceID'] }}"
+            target:
+              entity_id: input_text.monitoring_homeserver_night_silence_id
+
+  monitoring_homeserver_night_delete_silence:
+    sequence:
+      - action: rest_command.monitoring_homeserver_delete_silence
+        data:
+          silence_id: "{{ states('input_text.monitoring_homeserver_night_silence_id') }}"
+        response_variable: silence_response
+      - if: "{{ silence_response['status'] == 200 }}"
+        then:
+          - action: input_text.set_value
+            data:
+              value: ""
+            target:
+              entity_id: input_text.monitoring_homeserver_night_silence_id

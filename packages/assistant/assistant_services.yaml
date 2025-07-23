@@ -57,6 +57,15 @@ automation:
     action:
       - action: rest_command.wakeword_enable
 
+  - alias: assist_suspend_media
+    id: 7719bcba-6701-11f0-be78-0800277ca3d8
+    trigger:
+      - trigger: state
+        entity_id: assist_satellite.voice_living
+        to: listening
+    action:
+      - action: script.suspend_media_for_assist
+
 rest_command:
 
   wakeword_enable:

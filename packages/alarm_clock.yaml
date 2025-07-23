@@ -35,6 +35,16 @@ automation:
         - condition: template
           value_template: "{{ not is_state('media_player.bedroom', 'playing') }}"
     action:
+      - action: media_player.volume_set
+        data:
+          entity_id: media_player.bedroom
+          volume_level: '0'
+      - action: media_player.play_media
+        data:
+          entity_id: media_player.bedroom
+          # TODO fallback su media da media server o addirittura locale
+          media_content_id: !secret alarm_clock_radio_station
+          media_content_type: music
       - action: notify.mobile_app_daniele_shiba
         data:
           title: "Sveglia"
@@ -49,16 +59,6 @@ automation:
               # Muta radiosveglia
               - action: alarm_clock_dismiss
                 title: Annulla
-      - action: media_player.volume_set
-        data:
-          entity_id: media_player.bedroom
-          volume_level: '0'
-      - action: media_player.play_media
-        data:
-          entity_id: media_player.bedroom
-          # TODO fallback su media da media server o addirittura locale
-          media_content_id: !secret alarm_clock_radio_station
-          media_content_type: music
       # Incremento graduale del volume
       - action: script.alarm_clock_volume_increase
 

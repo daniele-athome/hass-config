@@ -49,18 +49,19 @@ group:
       - media_player.music
       - media_player.bedroom
 
-  # Media non coinvolti nel TTS
-  media_non_tts:
-    name: Media non TTS
+  # Media non coinvolti in Assist
+  media_non_assist:
+    name: Media non assist
     icon: mdi:television-classic
     entities:
       # conflicts with Kodi - media_player.tv
       - media_player.kodi
       - media_player.music
       - media_player.bedroom
+      - media_player.lounge
 
   # Media che producono i suoni principali (living room)
-  # Usato per mettere in pausa quando deve parlare il TTS
+  # Usato per mettere in pausa quando deve parlare Assist
   media_big_sound:
     name: Media grandi suoni
     icon: mdi:speaker
@@ -69,6 +70,7 @@ group:
       #- media_player.tv
       - media_player.kodi
       - media_player.music
+      - media_player.lounge
 
   media_audio_only:
     name: Media solo audio
@@ -131,42 +133,30 @@ script:
   say_something:
     sequence:
       # Metti tutto in pausa
-      - action: script.suspend_media_for_lounge
-      # Ferma la riproduzione da lounge
-      - action: media_player.media_stop
-        entity_id: media_player.lounge
-      - action: script.set_tts_volume
-      - action: tts.microsoft_say
-        entity_id: media_player.lounge
+      - action: script.suspend_media_for_assist
+      - action: assist_satellite.announce
         data:
           # not supported by Amazon Polly -- language: "{{ language|default('it') }}"
           message: "<p>{{ message }}</p>"
+          preannounce: false
+        target:
+          entity_id: assist_satellite.voice_living
 
   # Pronuncia qualcosa da un audio di TTS pregenerato
   say_something_rendered:
     sequence:
       # Metti tutto in pausa
-      - action: script.suspend_media_for_lounge
-      # Ferma la riproduzione da lounge
-      - action: media_player.media_stop
-        entity_id: media_player.lounge
-      - action: script.set_tts_volume
-      - action: media_player.play_media
+      # TODO convert this into automation on state=playing or something
+      - action: script.suspend_media_for_assist
+      - action: assist_satellite.announce
         data:
-          entity_id: media_player.lounge
-          media_content_type: music
-          media_content_id: "{{ url }}"
+          media_id: "{{ url }}"
+          preannounce: false
+        target:
+          entity_id: assist_satellite.voice_living
 
-  # Un buon volume per la pronuncia
-  set_tts_volume:
-    sequence:
-      - action: media_player.volume_set
-        data:
-          entity_id: media_player.lounge
-          volume_level: !secret lounge_volume
-
-  # Sospende tutti i media per una riproduzione da lounge imminente
-  suspend_media_for_lounge:
+  # Sospende tutti i media per una riproduzione da assist imminente
+  suspend_media_for_assist:
     sequence:
       # Pausa tutti i media grandi suoni
       - action: media_player.media_pause
@@ -224,7 +214,7 @@ automation:
       data:
         entity_id: media_player.kodi
         method: Addons.ExecuteAddon
-        addonid: script.json-cec
+        addonid: script.module.json-cec
         params:
           command: activate
 
@@ -254,7 +244,7 @@ automation:
         data:
           entity_id: media_player.kodi
           method: Addons.ExecuteAddon
-          addonid: script.json-cec
+          addonid: script.module.json-cec
           params:
             command: standby
 

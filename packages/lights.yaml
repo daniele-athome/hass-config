@@ -101,6 +101,18 @@ light:
       - light.external_living
       - light.external_bedroom
 
+  - platform: group
+    name: all_but_bedroom
+    entities:
+      - light.bathroom1_main
+      - light.bathroom1_mirror
+      - light.living_main
+      - light.external
+      - light.kitchen_main
+      - light.dayway
+      - light.nightway
+      - light.studio
+
 mqtt:
   light:
     - name: "living_stand"

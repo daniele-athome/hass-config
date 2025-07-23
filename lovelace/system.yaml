@@ -26,54 +26,16 @@ cards:
                     border-radius: var(--ha-card-border-radius);
                   }
 
-          - type: 'custom:bar-card'
+          - type: glance
+            show_name: false
+            show_icon: false
+            show_state: true
             entities:
-              - entity: sensor.uptime_homeserver
-                name: Uptime
-            animation:
-              state: 'off'
-            positions:
-              icon: 'off'
-              indicator: 'off'
-              minmax: 'off'
-              name: inside
-              value: inside
-            height: '100%'
+              - sensor.uptime_homeserver
             card_mod:
               style: |-
                 :host {
-                  --bar-card-border-radius: 4px;
-                }
-                :host .card-content {
-                  padding: 0 10px;
-                }
-                bar-card-card {
-                  padding: 14px;
-                }
-                bar-card-name {
-                  margin: 2px 0 0 0;
-                }
-                @media (min-width: 576px) {
-                  bar-card-name {
-                    overflow: visible;
-                    margin: 2px 0 0 0;
-                  }
-                  bar-card-card {
-                    padding: 9px;
-                  }
-                }
-                bar-card-value {
                   font-weight: bold;
-                  margin-right: auto;
-                  margin-left: auto;
-                  margin-bottom: auto;
-                  margin-top: 0px;
-                }
-                bar-card-divider {
-                  display: none;
-                }
-                bar-card-contentbar {
-                  flex-direction: column !important;
                 }
 
   - type: 'custom:bar-card'
@@ -234,61 +196,23 @@ cards:
                     border-radius: var(--ha-card-border-radius);
                   }
 
-          - type: 'custom:bar-card'
+          - type: glance
+            show_name: false
+            show_icon: false
+            show_state: true
             entities:
-              - entity: sensor.uptime_mediarasp
-                name: Uptime
-            animation:
-              state: 'off'
-            positions:
-              icon: 'off'
-              indicator: 'off'
-              minmax: 'off'
-              name: inside
-              value: inside
-            height: '100%'
+              - sensor.uptime_mediarasp
             card_mod:
               style: |-
                 :host {
-                  --bar-card-border-radius: 4px;
-                }
-                :host .card-content {
-                  padding: 0 10px;
-                }
-                bar-card-card {
-                  padding: 14px;
-                }
-                bar-card-name {
-                  margin: 2px 0 0 0;
-                }
-                @media (min-width: 576px) {
-                  bar-card-name {
-                    overflow: visible;
-                    margin: 2px 0 0 0;
-                  }
-                  bar-card-card {
-                    padding: 9px;
-                  }
-                }
-                bar-card-value {
                   font-weight: bold;
-                  margin-right: auto;
-                  margin-left: auto;
-                  margin-bottom: auto;
-                  margin-top: 0px;
-                }
-                bar-card-divider {
-                  display: none;
-                }
-                bar-card-contentbar {
-                  flex-direction: column !important;
                 }
 
   - type: 'custom:bar-card'
     entities:
       - entity: sensor.mediarasp_cpu_used
         icon: 'mdi:cpu-64-bit'
-      - entity: sensor.mediarasp_cpu_thermal_0_temperature
+      - entity: sensor.mediarasp_package_id_0_temperature
         icon: 'mdi:thermometer'
     columns: 2
     positions:

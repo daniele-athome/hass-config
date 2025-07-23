@@ -125,27 +125,6 @@ cards:
     show_header_toggle: off
     entities:
       - type: section
-        label: 'CORRENTE (kWh)'
-
-      - entity: input_number.energy_mains_total_f1
-      - entity: input_number.energy_mains_total_f2
-      - entity: input_number.energy_mains_total_f3
-
-      - type: 'custom:button-card'
-        icon: mdi:transmission-tower
-        name: Applica
-        layout: icon_name
-        styles:
-          card:
-            - height: 70px
-        tap_action:
-          action: call-service
-          service: script.input_reading_energy_mains
-
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
         label: 'GAS (m³)'
 
       - entity: input_number.energy_gas_total
@@ -241,19 +220,30 @@ cards:
 
       - type: custom:bar-card
         entities:
-          - sensor.battery_env_external
-          - sensor.battery_env_living
-          - sensor.battery_env_bedroom
-          - sensor.battery_env_bathroom1
-          - sensor.battery_env_kitchen
-          - sensor.battery_env_studio
-          - sensor.battery_door_main
-          - sensor.battery_motion_living
-          - sensor.battery_lux_living
-          - sensor.battery_motion_entrance
-          - sensor.battery_motion_bedroom_left
-          - sensor.battery_motion_bedroom_headrest
-          - sensor.battery_water_bathroom1
+          - entity: sensor.battery_env_external
+            name: 'Ambiente: Esterno'
+          - entity: sensor.battery_env_living
+            name: 'Ambiente: Soggiorno'
+          - entity: sensor.battery_env_bedroom
+            name: 'Ambiente: Camera'
+          - entity: sensor.battery_env_bathroom1
+            name: 'Ambiente: Bagno 1'
+          - entity: sensor.battery_env_kitchen
+            name: 'Ambiente: Cucina'
+          - entity: sensor.battery_env_studio
+            name: 'Ambiente: Studio'
+          - entity: sensor.battery_door_main
+            name: 'Porta: Entrata'
+          - entity: sensor.battery_lux_living
+            name: 'Lux: Soggiorno'
+          - entity: sensor.battery_motion_entrance
+            name: 'Movimento: Ingresso'
+          - entity: sensor.battery_motion_bedroom_left
+            name: 'Movimento: Camera (sx)'
+          - entity: sensor.battery_motion_bedroom_headrest
+            name: 'Movimento: Camera (letto)'
+          #- entity: sensor.battery_water_bathroom1
+          #  name: 'Acqua: Bagno 1'
         severity:
           - color: '#bf4040'
             from: 0

@@ -132,7 +132,7 @@ intent_script:
 
   GamingMode:
     action:
-      - action: shell_command.homeserver_gamingreboot
+      - action: script.gaming_mode_activate
       - action: random_template.render
         data:
           key: assistant_gamingmode_ok
@@ -352,6 +352,7 @@ mqtt:
 script:
 
   # Saluto del buongiorno
+  # TODO usare assist per il giornale radio?
   goodmorning_actions:
     sequence:
       - action: input_select.select_option
@@ -377,6 +378,7 @@ script:
           media_content_type: music
 
   # Bentornato a casa
+  # TODO usare assist (se manteniamo annuncio vocale)
   welcome_home:
     sequence:
       # TODO da ripensare

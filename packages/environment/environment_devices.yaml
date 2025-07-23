@@ -106,12 +106,6 @@ sensor:
 
 template:
   - sensor:
-      - name: temperature_external
-        state: "{{ states('sensor.daikinap53460_outside_temperature') }}"
-        unit_of_measurement: '°C'
-        icon: mdi:thermometer
-        state_class: measurement
-
       - name: temperature_living_window
         state: "{{ states('sensor.daikinap53460_inside_temperature') }}"
         unit_of_measurement: '°C'

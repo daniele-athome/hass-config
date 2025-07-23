@@ -3,6 +3,8 @@
 automation:
 
   - alias: controlcenter_house_mode_night
+    id: e5b2bbf8-24fc-11f0-aff5-0800277ca3d8
+    description: Imposta la dashboard visibile nel centro di controllo di notte
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -14,6 +16,8 @@ automation:
           path: /lovelace/environment
 
   - alias: controlcenter_house_mode_not_night
+    id: e899fc29-24fc-11f0-8cdc-0800277ca3d8
+    description: Imposta la dashboard visibile nel centro di controllo al risveglio
     trigger:
       - trigger: state
         entity_id: input_select.house_mode

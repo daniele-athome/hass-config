@@ -156,3 +156,39 @@ automation:
           category: Allarme
           message: |-
             Allarme armato.
+
+  - alias: security_living_door_camera_disabled
+    description: Assicurati che la telecamera di ingresso sia disattiva quando non serve
+    id: 64852d3e-eded-11ef-874d-0800277ca3d8
+    # casi possibili: avvio HA, restart rasp(motion)
+    trigger:
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: binary_sensor.living_door_camera_status
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: alarm_control_panel.main
+        state: 'disarmed'
+    action:
+      - action: rest_command.stop_living_door_camera
+
+  - alias: security_living_door_camera_enabled
+    description: Assicurati che la telecamera di ingresso sia attiva quando serve
+    id: 1d2d5f2f-edee-11ef-b9cd-0800277ca3d8
+    trigger:
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: binary_sensor.living_door_camera_status
+        to: 'off'
+    condition:
+      - condition: state
+        entity_id: alarm_control_panel.main
+        state:
+          - 'arming'
+          - 'armed_away'
+          - 'triggered'
+    action:
+      - action: rest_command.start_living_door_camera

@@ -6,6 +6,16 @@ homeassistant:
       friendly_name: "Modalità notte disattivata per oggi"
       icon: mdi:weather-night
 
+template:
+  - binary_sensor:
+      - name: house_night_calm
+        state: >-
+          {{ is_state('media_player.kodi', ['off', 'idle', 'unavailable']) and
+             is_state('media_player.tv', ['off', 'idle', 'unavailable']) and
+             is_state('media_player.music', ['paused', 'off', 'idle', 'unavailable']) and
+             is_state('media_player.lounge', ['off', 'idle', 'unavailable']) and
+             is_state('binary_sensor.activity_notebook_daniele', 'off') }}
+
 script:
 
   night_mode_warning_start:
@@ -51,34 +61,37 @@ script:
 
 automation:
 
-  # Avvisami che sta per attivarsi la modalità notte
-  # Se non ci saranno cambiamenti si attiverà automaticamente in 3 minuti
   - alias: night_mode_warning
     id: bcf91662-890e-41f7-a5bd-c6a55852624b
+    description: >
+      Avvisami che sta per attivarsi la modalità notte.
+      Se non ci saranno cambiamenti si attiverà automaticamente in 3 minuti
     trigger:
       trigger: time_pattern
-      # FIXME hard-coding variables
-      # because secrets in templates are not supported
+      # check every minute
       minutes: "/1"
     condition:
       # Le condizioni sono solo in questa automazione perché
       # dopo il primo triggering la cancellazione viene delegata all'utente.
       condition: and
       conditions:
-        # Ora notturna
-        - condition: time
+        - alias: Ora notturna
+          condition: time
           after: !secret night_mode_window_start
           before: !secret night_mode_window_end
-        # Non siamo già in modalità notte
-        - condition: template
+        - alias: Non siamo già in modalità notte
+          condition: template
           value_template: "{{ not is_state('input_select.house_mode', 'night') }}"
-        # Modalità notte non disabilitata
-        - condition: state
+        - alias: Modalità notte non disabilitata
+          condition: state
           entity_id: input_boolean.night_mode_disabled_today
           state: 'off'
         # Qualcuno in casa
         - condition: numeric_state
           entity_id: sensor.people_count_home
+          above: '0'
+        - condition: numeric_state
+          entity_id: sensor.people_count_home_local
           above: '0'
         # Tutte i presenti in camera
         # FIXME sensore rimosso
@@ -97,18 +110,17 @@ automation:
             {% set state = 'off' %}
             {{ states[domain] | rejectattr('entity_id','eq', 'light.bedroom_left') | rejectattr('state', 'eq', 'unavailable') | rejectattr('state', 'eq', 'unknown') | list | count ==
               states[domain] | selectattr('state','eq', state) | rejectattr('entity_id','eq', 'light.bedroom_left') | list | count }}
-        # Tutte i media idle
+        # Tutti i media idle
         - condition: state
-          entity_id: media_player.kodi
-          state: idle
-        - condition: template
-          value_template: "{{ is_state('media_player.music', 'off') or is_state('media_player.music', 'paused') or is_state('media_player.music', 'unavailable')}}"
-        - condition: template
-          value_template: "{{ is_state('media_player.tv', 'idle') or is_state('media_player.tv', 'off') or is_state('media_player.tv', 'unavailable') }}"
-        - condition: template
-          value_template: "{{ is_state('device_tracker.tv', 'not_home') or is_state('device_tracker.tv', 'unavailable') }}"
-        - condition: template
-          value_template: "{{ is_state('media_player.lounge', 'idle') or is_state('media_player.lounge', 'off') or is_state('media_player.lounge', 'unavailable') }}"
+          entity_id: binary_sensor.house_night_calm
+          state: 'on'
+        - condition: state
+          entity_id: media_player.music
+          state:
+            - "off"
+            - "idle"
+            - "paused"
+            - "unavailable"
         # Ogni movimento tranne in camera da letto cessato
         - condition: state
           entity_id: group.motion_not_bedroom
@@ -118,10 +130,7 @@ automation:
           value_template: "{{ is_state('sensor.daniele_shiba_battery_state', 'charging') }}"
         # TODO Cellulare in standby (non in uso)
         # ...
-        # Notebook spento o idle
-        - condition: state
-          entity_id: binary_sensor.activity_notebook_daniele
-          state: 'off'
+        # TODO presenza sul letto (serve sensore affidabile)
     action:
       - action: script.night_mode_warning_start
 

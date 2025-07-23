@@ -4,13 +4,13 @@
 # cerchiamo di usare più gli IP in generale
 shell_command:
   domonet_device_allow_internet: >-
-    bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} {{ host_address }} "{{ host_description }}"
+    sudo bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} {{ host_address }} "{{ host_description }}"
   domonet_device_disallow_internet: >-
-    bin/domonet_disallow.sh {{ host_address }}
+    sudo bin/domonet_disallow.sh {{ host_address }}
   domonet_global_allow_internet: >-
-    bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} 0.0.0.0/0 "(all devices)"
+    sudo bin/domonet_allow.sh {{ domonet_interface }} {{ external_interface }} 0.0.0.0/0 "(all devices)"
   domonet_global_disallow_internet: >-
-    bin/domonet_disallow_global.sh {{ domonet_interface }} {{ external_interface }} "(all devices)"
+    sudo bin/domonet_disallow_global.sh {{ domonet_interface }} {{ external_interface }} "(all devices)"
 
 script:
 
@@ -23,6 +23,7 @@ script:
       host_description:
         description: "Device description (it will be added as iptables rule comment)"
         example: "Google Home"
+    mode: queued
     sequence:
       - action: shell_command.domonet_device_allow_internet
         data:
@@ -37,6 +38,7 @@ script:
       entity_id:
         description: "Domonet client entity id"
         example: "binary_sensor.domonet_allowed_googlehome"
+    mode: queued
     sequence:
       - choose:
         - conditions: "{{ is_state(entity_id, 'on') }}"
@@ -51,10 +53,11 @@ script:
               external_interface: !secret external_interface
               host_address: "{{ states[entity_id].attributes['device_address'] }}"
               host_description: "{{ states[entity_id].attributes['device_name'] }}"
-      # FIXME questo non funziona
-      - action: homeassistant.update_entity
-        data:
-          entity_id: sensor.domonet_devices
+      - alias: Update status of domonet devices
+        event: domonet_update
+        event_data:
+          device_name: "{{ states[entity_id].attributes['device_name'] }}"
+          device_address: "{{ states[entity_id].attributes['device_address'] }}"
 
   domonet_device_disable_internet:
     description: "Disable Internet access for a Domonet device"
@@ -62,6 +65,7 @@ script:
       host_address:
         description: "Device address"
         example: "192.168.100.220"
+    mode: queued
     sequence:
       - action: shell_command.domonet_device_disallow_internet
         data:
@@ -69,6 +73,7 @@ script:
 
   domonet_all_enable_internet:
     description: "Enable Internet access for all Domonet devices"
+    mode: queued
     sequence:
       - action: shell_command.domonet_global_allow_internet
         data:
@@ -79,6 +84,7 @@ script:
 
   domonet_all_disable_internet:
     description: "Disable Internet access for all Domonet devices"
+    mode: queued
     sequence:
       - action: shell_command.domonet_global_disallow_internet
         data:
@@ -99,7 +105,7 @@ command_line:
   - binary_sensor:
       name: domonet_allowed_global
       scan_interval: 60
-      command: bin/domonet_check_global.sh {{ states.sensor.domonet_interface.state }} {{ states.sensor.external_interface.state }} "(all devices)"
+      command: sudo bin/domonet_check_global.sh {{ states.sensor.domonet_interface.state }} {{ states.sensor.external_interface.state }} "(all devices)"
       payload_on: "1"
       payload_off: "0"
 

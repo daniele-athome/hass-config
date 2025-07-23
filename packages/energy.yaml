@@ -27,9 +27,14 @@ homeassistant:
     sensor.energy_light_bedroom_left:
       friendly_name: 'Consumo: luce camera SX'
 
+    sensor.power_measured_total:
+      friendly_name: 'Potenza misurata totale'
+    sensor.power_unmeasured_total:
+      friendly_name: 'Potenza non misurata totale'
+
 utility_meter:
   energy_mains_total:
-    source: sensor.dummy_energy_mains_total
+    source: sensor.energy_mains_alfa_total
     tariffs:
       - F1
       - F2
@@ -50,10 +55,6 @@ sensor:
 
   - platform: template
     sensors:
-      dummy_energy_mains_total:
-        value_template: '0'
-        device_class: energy
-        unit_of_measurement: kWh
       dummy_energy_gas_total:
         value_template: '0'
         device_class: gas
@@ -63,29 +64,24 @@ sensor:
         device_class: water
         unit_of_measurement: m³
 
-input_number:
+      power_measured_total:
+        value_template: |-
+          {{ states.sensor|selectattr(
+               'entity_id','match','sensor.power_')|
+               rejectattr('entity_id','match', 'sensor.power_mains_')|
+               rejectattr('entity_id','match', 'sensor.power_measured_')|
+               rejectattr('entity_id','match', 'sensor.power_unmeasured_')
+             |map(attribute='state')|map('float')|sum }}
+        device_class: power
+        unit_of_measurement: W
 
-  energy_mains_total_f1:
-    name: 'Energia totale (F1)'
-    min: 0
-    max: 9999999
-    step: 0.01
-    mode: box
-    unit_of_measurement: kWh
-  energy_mains_total_f2:
-    name: 'Energia totale (F2)'
-    min: 0
-    max: 9999999
-    step: 0.01
-    mode: box
-    unit_of_measurement: kWh
-  energy_mains_total_f3:
-    name: 'Energia totale (F3)'
-    min: 0
-    max: 9999999
-    step: 0.01
-    mode: box
-    unit_of_measurement: kWh
+      power_unmeasured_total:
+        value_template: |-
+          {{ states('sensor.power_mains_total')|float-states('sensor.power_measured_total')|float }}
+        device_class: power
+        unit_of_measurement: W
+
+input_number:
 
   energy_gas_total:
     name: 'Gas totale'
@@ -113,32 +109,6 @@ powercalc:
 
 automation:
 
-  - alias: energy_mains_sync
-    description: Sincronizza letture corrente agli helper
-    trigger:
-      - trigger: state
-        entity_id: sensor.energy_mains_total_f1
-        to:
-      - trigger: state
-        entity_id: sensor.energy_mains_total_f2
-        to:
-      - trigger: state
-        entity_id: sensor.energy_mains_total_f3
-        to:
-    action:
-      - action: input_number.set_value
-        data:
-          entity_id: input_number.energy_mains_total_f1
-          value: "{{ states('sensor.energy_mains_total_f1') }}"
-      - action: input_number.set_value
-        data:
-          entity_id: input_number.energy_mains_total_f2
-          value: "{{ states('sensor.energy_mains_total_f2') }}"
-      - action: input_number.set_value
-        data:
-          entity_id: input_number.energy_mains_total_f3
-          value: "{{ states('sensor.energy_mains_total_f3') }}"
-
   - alias: energy_gas_sync
     description: "Sincronizza letture gas all'helper"
     trigger:
@@ -163,22 +133,20 @@ automation:
           entity_id: input_number.energy_water_total
           value: "{{ states('sensor.energy_water_total') }}"
 
-script:
+  - alias: energy_mains_tariff_sync
+    id: c47f1388-51ed-4bfe-914b-b15aed53afee
+    description: "Sincronizza la tariffa dal sensore del contatore all'utility meter"
+    triggers:
+      - trigger: state
+        entity_id: sensor.energy_mains_alfa_tariff
+    action:
+      - action: select.select_option
+        data:
+          option: "{{ states('sensor.energy_mains_alfa_tariff') }}"
+        target:
+          entity_id: select.energy_mains_total
 
-  input_reading_energy_mains:
-    sequence:
-      - action: utility_meter.calibrate
-        data:
-          entity_id: sensor.energy_mains_total_f1
-          value: "{{ states('input_number.energy_mains_total_f1') }}"
-      - action: utility_meter.calibrate
-        data:
-          entity_id: sensor.energy_mains_total_f2
-          value: "{{ states('input_number.energy_mains_total_f2') }}"
-      - action: utility_meter.calibrate
-        data:
-          entity_id: sensor.energy_mains_total_f3
-          value: "{{ states('input_number.energy_mains_total_f3') }}"
+script:
 
   input_reading_energy_gas:
     sequence:

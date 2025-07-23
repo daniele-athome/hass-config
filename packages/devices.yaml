@@ -1,76 +1,5 @@
 # Generic device definitions
 
-homeassistant:
-  customize:
-    sensor.controlcenter_battery_level:
-      friendly_name: Centro di controllo
-
-    sensor.battery_water_bathroom1:
-      friendly_name: 'Acqua: bagno'
-
-    sensor.battery_env_external:
-      friendly_name: 'Ambiente: Esterno'
-      unit_of_measurement: '%'
-
-    sensor.battery_env_living:
-      friendly_name: 'Ambiente: Soggiorno'
-      unit_of_measurement: '%'
-
-    sensor.battery_env_bathroom1:
-      friendly_name: 'Ambiente: Bagno'
-      unit_of_measurement: '%'
-
-    sensor.battery_env_bedroom:
-      friendly_name: 'Ambiente: Camera'
-      unit_of_measurement: '%'
-
-    sensor.battery_env_kitchen:
-      friendly_name: 'Ambiente: Cucina'
-      unit_of_measurement: '%'
-
-    sensor.battery_env_studio:
-      friendly_name: 'Ambiente: Studio'
-      unit_of_measurement: '%'
-
-    sensor.battery_door_main:
-      friendly_name: 'Porta: Entrata'
-
-    binary_sensor.door_main:
-      friendly_name: 'Porta: Entrata'
-
-    sensor.battery_lux_living:
-      friendly_name: 'Lux: Soggiorno'
-
-    sensor.battery_motion_living:
-      friendly_name: 'Movimento: Soggiorno'
-
-    sensor.battery_motion_bedroom:
-      friendly_name: 'Movimento: Camera'
-
-    sensor.battery_motion_entrance:
-      friendly_name: 'Movimento: Ingresso'
-
-    sensor.battery_presence_mainbed:
-      friendly_name: 'Presenza: letto'
-
-    sensor.battery_button_dustbin:
-      friendly_name: 'Pulsante: Pattumiera'
-
-    binary_sensor.living_main_motion:
-      friendly_name: 'Movimento: Soggiorno'
-
-    binary_sensor.motion_living_door:
-      friendly_name: 'Movimento: Entrata'
-
-    binary_sensor.living_entrance_motion:
-      friendly_name: 'Movimento: Ingresso'
-
-    binary_sensor.presence_mainbed:
-      friendly_name: 'Presenza: letto'
-
-    binary_sensor.water_bathroom1:
-      friendly_name: 'Acqua: bagno'
-
 ble_monitor:
   bt_interface: '5C:F3:70:99:5B:83'
   discovery: false
@@ -101,17 +30,12 @@ mqtt:
         state_topic: homeassistant/camera/living_door/motion
         device_class: motion
 
-image_processing:
-  - platform: deepstack_object
-    ip_address: localhost
-    port: 5000
-    api_key: Mysecretkey
-    # scan_interval: 30 # Optional, in seconds
-    #save_file_folder: /config/www/
-    save_timestamped_file: True
-    source:
-      - entity_id: camera.living_door
-        name: deepstack_person_detector
+rest:
+  - resource: !secret motion_camera_status_url
+    scan_interval: 30
+    binary_sensor:
+      - name: living_door_camera_status
+        value_template: "{{ 'status ACTIVE' in value }}"
 
 rest_command:
   start_living_door_camera:
@@ -121,18 +45,12 @@ rest_command:
     url: !secret motion_camera_stop_url
     method: get
 
-shell_command:
-  # deprecated: motion is no longer running on the local host
-  start_living_door_camera: sudo systemctl start motion.service
-  # deprecated: motion is no longer running on the local host
-  stop_living_door_camera: sudo systemctl stop motion.service
-
 group:
   motion_living:
     name: Living room motion
     entities:
+      - binary_sensor.motion_living_door
       # TODO da configurare
-      #- binary_sensor.motion_living_door
       #- binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
 

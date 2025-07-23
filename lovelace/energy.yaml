@@ -1,0 +1,118 @@
+path: energy
+title: Energia
+icon: mdi:flash
+type: custom:layout-card
+layout_type: custom:vertical-layout
+layout:
+  max_cols: 2
+cards:
+
+  # Column 1
+
+  - type: gauge
+    min: 0
+    entity: sensor.power_mains_total
+    name: Potenza attuale
+    max: 5000
+    needle: true
+    severity:
+      green: 0
+      yellow: 2000
+      red: 3000
+
+  - type: entities
+    show_header_toggle: off
+    entities:
+      - type: custom:auto-entities
+        card:
+          type: custom:bar-card
+          positions:
+            name: inside
+            value: inside
+            indicator: 'off'
+            icon: 'off'
+          unit_of_measurement: W
+          max: 100
+          severity:
+            - color: '#7bc13c'
+              from: 0
+              to: 50
+            - color: '#c1bb3c'
+              from: 50
+              to: 200
+            - color: '#ff8100'
+              from: 200
+              to: 500
+            - color: '#ff6700'
+              from: 500
+              to: 1000
+            - color: '#ff4d00'
+              from: 1000
+              to: 50000
+          height: 30px
+          stack: vertical
+          direction: right
+          decimals: 2
+          card_mod:
+            style: |-
+              #states {
+                padding: 0
+              }
+              bar-card-name,
+              bar-card-value {
+                color: #ffffff;
+              }
+              bar-card-value {
+                font-weight: bold;
+              }
+              bar-card-indicator {
+               transform: scaleY(-1);
+              }
+        entities: [ ]
+        sort:
+          method: state
+          numeric: true
+          reverse: true
+        filter:
+          include:
+            - entity_id: sensor.power_*
+          exclude:
+            - entity_id: sensor.power_mains_*
+            - entity_id: sensor.power_measured_*
+            - entity_id: sensor.power_unmeasured_*
+            - state: < 0.1
+      - type: custom:bar-card
+        entities:
+          - sensor.power_unmeasured_total
+        positions:
+          name: inside
+          value: inside
+          indicator: 'off'
+          icon: 'off'
+        unit_of_measurement: W
+        max: 100
+        color: '#a1a1a1'
+        height: 30px
+        stack: vertical
+        direction: right
+        decimals: 2
+        card_mod:
+          style: |-
+            #states {
+              padding: 0
+            }
+            bar-card-name,
+            bar-card-value {
+              color: #ffffff;
+            }
+            bar-card-value {
+              font-weight: bold;
+            }
+            bar-card-indicator {
+             transform: scaleY(-1);
+            }
+
+
+  - type: custom:layout-break
+
+  # Column 2

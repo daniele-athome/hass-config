@@ -46,6 +46,25 @@ sensor:
             {%- endfor -%}
             {{ result.items }}
 
+      # Luci non disponibili
+      lights_unavailable:
+        friendly_name: Luci non disponibili
+        value_template: >
+          {%- set result = namespace(count=0) -%}
+          {%- for item in states['light']
+            if item.state in ('unknown', 'unavailable') -%}
+          {%- set result.count = result.count + 1 -%}
+          {%- endfor -%}
+          {{ result.count }}
+        attribute_templates:
+          devices: >
+            {%- set result = namespace(items=[]) -%}
+            {%- for item in states['light']
+              if item.state in ('unknown', 'unavailable') -%}
+            {% set result.items = result.items + [item.entity_id] %}
+            {%- endfor -%}
+            {{ result.items }}
+
       # da usare in UI per rappresentare stato assente
       status_controlcenter:
         unit_of_measurement: "%"

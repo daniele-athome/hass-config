@@ -50,8 +50,9 @@ intents:
   GamingMode:
     data:
       - sentences:
-        - "riavvia il server in [modalità] gaming"
-        - "[(attiva [la]|avvia [la]|entra in|passa (a|in))] modalità gaming"
+        - "riavvia [il] server [in] [modalità] gaming"
+        - "[(attiva [la]|avvia [la]|entra [in]|passa (a|in))] modalità gaming"
+        - "(devo|voglio|vorrei) giocare [(a un videogioco|ai videogiochi)]"
 
 lists:
   when_simple:

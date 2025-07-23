@@ -35,9 +35,9 @@ automation:
     trigger:
       - trigger: numeric_state
         entity_id: sensor.cputemp_scatola
-        above: 73
+        above: 80
         for:
-          minutes: 10
+          minutes: 5
     action:
       action: script.notify_important
       data:
