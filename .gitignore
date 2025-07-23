@@ -8,4 +8,8 @@
 __pycache__
 *.csv
 *.db
+*.pdf
+*.log
+*.sql
+*.json
 **/old/**
