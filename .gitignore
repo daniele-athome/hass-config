@@ -6,3 +6,6 @@
 /www/community
 *.pyc
 __pycache__
+*.csv
+*.db
+**/old/**
