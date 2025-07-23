@@ -13,3 +13,5 @@ __pycache__
 *.sql
 *.json
 **/old/**
+bin/energy
+bin/mediarasp
