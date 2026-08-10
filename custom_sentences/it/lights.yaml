@@ -1,0 +1,23 @@
+language: it
+
+intents:
+
+  HassTurnOn_LightBedroom:
+    data:
+      - sentences:
+          - "<turn_on> [<all>] [<the>] <light> [(<of>|<in>)]camera"
+          - "<turn_on> [<in>]camera [<all>] [<the>] <light>"
+          - "[<in>]camera [<all>] [<the>] <light> <turn_on>"
+          - "[<in>]camera <turn_on> [<all>] [<the>] <light>"
+        slots:
+          domain: light
+
+# not inherited from language defaults (speech-to-phrase won't find them)
+expansion_rules:
+  turn_on: "[<to_do>](accend(i|ere) | attiv(a|are) | esegu(i|ire) | avvi(a|are))"
+  to_do: "fa('|i|r|re)"
+  all: "(tutt(o|e|i|a) [quant(i|e)] | ogni)"
+  the: "(l(o |a |e )|i[l] |gli |l'[ ])"
+  in: "(all'interno |dentro |in | ne[l |i |gli |llo |lla |lle |ll'[ ]])"
+  of: "(de[l |llo |lla |lle |ll'[ ]|i |gli ]|di )"
+  light: "( [punt(o|i)] luce | luci | lampad[in](a|e) | lampadari[o])"

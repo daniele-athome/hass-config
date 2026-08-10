@@ -14,6 +14,7 @@ input_number:
 automation:
 
   - alias: bedroom_entering
+    id: 8df2842d-dd01-4edf-8723-62eab803f645
     # disabilita finché non abbiamo qualcosa di più affidabile
     initial_state: false
     trigger:
@@ -32,6 +33,7 @@ automation:
         entity_id: input_number.people_count_living
 
   - alias: bedroom_exiting
+    id: 7f61584b-cebd-4cb9-aab6-0c2b1624c61b
     # disabilita finché non abbiamo qualcosa di più affidabile
     initial_state: false
     trigger:
@@ -48,6 +50,7 @@ automation:
         entity_id: input_number.people_count_living
 
   - alias: bedroom_enter_light_on
+    id: 3f19dfac-8146-4266-b190-629243b56584
     trigger:
       # Presenza in stanza
       - trigger: numeric_state
@@ -56,7 +59,7 @@ automation:
       # Luce naturale scarsa
       # disabilitato - sensore inaffidabile
       #- platform: numeric_state
-      #  entity_id: sensor.bedroom_lux
+      #  entity_id: sensor.lux_bedroom
       #  below: !secret bedroom_lux_darkness_threshold
       # Dieci minuti dopo il tramonto
       - trigger: sun
@@ -71,7 +74,7 @@ automation:
           above: '0'
         # disabilitato - sensore inaffidabile
         #- condition: numeric_state
-        #  entity_id: sensor.bedroom_lux
+        #  entity_id: sensor.lux_bedroom
         #  below: !secret bedroom_lux_darkness_threshold
         - condition: or
           conditions:
@@ -88,6 +91,7 @@ automation:
       - action: script.bedroom_turn_on_light_conditional
 
   - alias: bedroom_exit_light_off
+    id: ee46184a-54bf-4293-bcf0-f7f6b6f25b9a
     trigger:
       # Assenza in stanza
       - trigger: numeric_state
@@ -101,6 +105,7 @@ automation:
 
   # Abilita speaker remoto se entra qualcuno in camera
   - alias: bedroom_enter_speaker_on
+    id: 928beda3-19c3-4fa1-ab95-641bdb809d44
     trigger:
       # Presenza in stanza
       - trigger: numeric_state
@@ -115,6 +120,7 @@ automation:
 
   # Muta speaker remoto se escono tutti dalla camera
   - alias: bedroom_exit_speaker_off
+    id: 54cb43cb-2365-41fa-8db1-694542aba101
     trigger:
       # Assenza in stanza
       - trigger: numeric_state
@@ -130,9 +136,10 @@ automation:
   # Troppa luce in camera: spegni la luce
   # FIXME sensore inaffidabile
   - alias: bedroom_too_much_light
+    id: 3a01afbf-c1b3-46aa-a9e8-b1195c8a9cf8
     trigger:
       - trigger: numeric_state
-        entity_id: sensor.bedroom_lux
+        entity_id: sensor.lux_bedroom
         # Questa soglia è superabile solo con la luce del sole
         above: !secret bedroom_lux_too_much_threshold
     action:
@@ -165,13 +172,14 @@ automation:
       - action: script.bedroom_turn_on_light_conditional
 
   - alias: motion_bedroom_day
+    id: 7b9e8cf2-31fd-464b-8d9d-4d282686728a
     initial_state: false
     trigger:
       - trigger: state
         entity_id: group.motion_bedroom
         to: 'on'
       - trigger: numeric_state
-        entity_id: sensor.bedroom_lux
+        entity_id: sensor.lux_bedroom
         below: !secret bedroom_lux_darkness_threshold
     condition:
       condition: and
@@ -181,13 +189,14 @@ automation:
           entity_id: group.motion_bedroom
           state: 'on'
         - condition: numeric_state
-          entity_id: sensor.bedroom_lux
+          entity_id: sensor.lux_bedroom
           below: !secret bedroom_lux_darkness_threshold
     action:
       - action: light.turn_on
         entity_id: light.bedroom_main
 
   - alias: motion_bedroom_day_ended
+    id: 0a2f074e-59aa-414f-ac77-1ef1f31cf3f7
     initial_state: false
     trigger:
       - trigger: state
@@ -200,6 +209,7 @@ automation:
         entity_id: light.bedroom_main
 
   - alias: house_mode_bedroom_night
+    id: f4547143-bf58-4414-9a6b-7ba3e8047e72
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -212,6 +222,7 @@ automation:
           - automation.bedroom_exit_light_off
 
   - alias: house_mode_bedroom_not_night
+    id: 6e5ab43c-4b8a-43f4-926f-988db10c618d
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -224,6 +235,7 @@ automation:
           - automation.bedroom_exit_light_off
 
   - alias: house_mode_bedroom_away
+    id: 220e7f4a-a7f3-4093-98a2-7353f028ddaa
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -239,6 +251,7 @@ automation:
 
   # Spegni la luce principale quando è accesa la luce di sinistra
   - alias: bedroom_turn_off_main_when_left_is_turned_on
+    id: fa441766-1c5c-44c0-8234-779dfa7dc8e2
     trigger:
       trigger: state
       entity_id: light.bedroom_left
@@ -249,6 +262,7 @@ automation:
 
   # Spegni la luce di sinistra quando è accesa la luce principale
   - alias: bedroom_turn_off_left_when_main_is_turned_on
+    id: 2ac318b3-d1b7-49b8-8283-57659f15414f
     trigger:
       trigger: state
       entity_id: light.bedroom_main
@@ -261,18 +275,20 @@ script:
 
   bedroom_turn_on_light_conditional:
     description: >-
-      Accende la luce di sinistra o la luce principale a seconda dell'orario.
+      Accende la luce di sinistra o la luce principale a seconda dell'orario o dell'house mode.
       Se la casa è calma, spegne anche tutte le altre luci.
       Non verifica altre condizioni (tipo la quantità di luce presente).
     sequence:
-      - if:
-          - condition: time
-            after: "10:00:00"
-            before: "23:00:00"
+      - alias: Di notte o in modalità notte
+        if:
+          - or:
+            - condition: time
+              after: "23:00:00"
+              before: "10:00:00"
+            - condition: state
+              entity_id: input_select.house_mode
+              state: night
         then:
-          - action: light.turn_on
-            entity_id: light.bedroom_main
-        else:
           - action: light.turn_on
             entity_id: light.bedroom_left
           - if:
@@ -280,5 +296,12 @@ script:
                 entity_id: binary_sensor.house_night_calm
                 state: 'on'
             then:
-              - action: light.turn_off
+              - alias: Disabilita luce utility in soggiorno
+                action: input_boolean.turn_off
+                entity_id: input_boolean.need_living_utility_light
+              - alias: Spegni tutte le luci tranne in camera da letto
+                action: light.turn_off
                 entity_id: light.all_but_bedroom
+        else:
+          - action: light.turn_on
+            entity_id: light.bedroom_main

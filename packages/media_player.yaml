@@ -9,9 +9,6 @@ homeassistant:
     media_player.tv:
       friendly_name: TV
 
-    media_player.lounge:
-      friendly_name: Music - Lounge
-
     media_player.snapcast_living:
       friendly_name: Music - Living
 
@@ -27,14 +24,10 @@ homeassistant:
     media_player.snapcast_kitchen:
       friendly_name: Music - Kitchen
 
-media_source:
+    binary_sensor.tv_on_kodi:
+      friendly_name: TV source set to Kodi
 
-media_player:
-  - platform: kodi
-    host: !secret mediarasp_host
-    name: kodi
-    # turn_on_action no longer supported
-    # turn_off_action no longer supported
+media_source:
 
 group:
 
@@ -45,7 +38,6 @@ group:
     entities:
       # conflicts with Kodi - media_player.tv
       - media_player.kodi
-      - media_player.lounge
       - media_player.music
       - media_player.bedroom
 
@@ -58,7 +50,6 @@ group:
       - media_player.kodi
       - media_player.music
       - media_player.bedroom
-      - media_player.lounge
 
   # Media che producono i suoni principali (living room)
   # Usato per mettere in pausa quando deve parlare Assist
@@ -70,7 +61,6 @@ group:
       #- media_player.tv
       - media_player.kodi
       - media_player.music
-      - media_player.lounge
 
   media_audio_only:
     name: Media solo audio
@@ -96,25 +86,23 @@ command_line:
       command: bin/tv-channel.sh "{{ states('input_text.news_tv_channel_name') }}"
       scan_interval: 600
 
-binary_sensor:
-
-  - platform: template
-    sensors:
+template:
+  - binary_sensor:
       # TV accesa su Kodi
-      tv_on_kodi:
-        value_template: >-
-          {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'source', 'HDMI 3') }}
+      - name: tv_on_kodi
+        state: >-
+          {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'source', 'PC') }}
 
       # Modalità visione video/cinema o TV in canale
-      cinema_mode:
-        value_template: >-
+      - name: cinema_mode
+        state: >-
           {{ (is_state('media_player.kodi', 'playing') and states.media_player.kodi.attributes.media_content_type in ['movie','tvshow','video']) or
              (is_state('media_player.tv', 'on') and states.media_player.tv.attributes.media_content_type == 'channel') }}
 
       # Modalità cinema in pausa
       # Pausa di Kodi oppure TV muta
-      cinema_paused_mode:
-        value_template: >-
+      - name: cinema_paused_mode
+        state: >-
           {{ (is_state('media_player.kodi', 'paused') and states.media_player.kodi.attributes.media_content_type in ['movie','tvshow','video']) or
              (is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'is_volume_muted', true) and states.media_player.tv.attributes.media_content_type == 'channel') }}
 
@@ -204,6 +192,7 @@ input_text:
 automation:
 
   - alias: tv_request_turn_on
+    id: da684c17-b7aa-4cca-b5ea-0915affdad65
     trigger:
       - trigger: device
         device_id: 91f5981788a21313c9056f8ba1de975f
@@ -219,6 +208,7 @@ automation:
           command: activate
 
   - alias: kodi_request_turn_on
+    id: 54ce233d-e337-4cd3-b580-2e32c18d9a8b
     trigger:
       trigger: device
       device_id: 990074f3127e3df453ac96e856d47c37
@@ -231,6 +221,7 @@ automation:
           mac: !secret mediarasp_mac_address
 
   - alias: kodi_request_turn_off
+    id: 63fd6e16-461b-4d3c-b230-13c1a9575812
     trigger:
       trigger: device
       device_id: 990074f3127e3df453ac96e856d47c37
@@ -249,6 +240,7 @@ automation:
             command: standby
 
   - alias: update_kodi_last_media
+    id: db64c63b-7f7a-481f-88dd-f9b3fdb69515
     trigger:
       - trigger: state
         entity_id: 'media_player.kodi'
@@ -260,17 +252,36 @@ automation:
           option: "{{ states.media_player.kodi.attributes.media_content_type }}"
 
   - alias: pause_on_phone_call
+    id: 0fd523cb-57e9-4c72-89ac-91068c473b8f
     trigger:
       - trigger: state
         entity_id: sensor.daniele_shiba_phone_state
         from: 'idle'
+      - trigger: state
+        entity_id: sensor.shiba_phone_call_incoming_caller
+        from: ''
     action:
       # Chiamata entrante o uscente, pausa i media grandi suoni
       - action: media_player.media_pause
         data:
           entity_id: group.media_big_sound
+      # notify to Kodi if TV is on and on the right source
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.tv_on_kodi
+                state: 'on'
+              - condition: state
+                entity_id: sensor.daniele_shiba_phone_state
+                state: 'ringing'
+            sequence:
+              - action: notify.kodi
+                data:
+                  title: "Chiamata in arrivo"
+                  message: "Chiamata in arrivo da {{ states('sensor.shiba_phone_call_incoming_caller') }}"
 
   - alias: pause_music_on_video_start
+    id: 5bba969f-430f-4155-a109-ae589a674293
     trigger:
       - trigger: state
         entity_id: media_player.kodi
@@ -282,6 +293,7 @@ automation:
           entity_id: media_player.music
 
   - alias: pause_video_on_music_start
+    id: c0b7f7d5-51f4-459a-b107-b44e5efa2c87
     trigger:
       - trigger: state
         entity_id: media_player.music
@@ -294,6 +306,7 @@ automation:
 
   # Abbassa la musica quando non c'è attività in soggiorno
   - alias: duck_volume_living
+    id: bdfe839c-28a7-49f2-9a59-0c41d00b6450
     trigger:
       - trigger: state
         entity_id: group.motion_living
@@ -321,6 +334,7 @@ automation:
 
   # Ripristina volume della musica quando c'è attività in soggiorno
   - alias: unduck_volume_living
+    id: 4ef4cc14-e714-45b8-8cae-c41bb30c65dd
     trigger:
       - trigger: state
         entity_id: group.motion_living
@@ -333,6 +347,7 @@ automation:
 
   # Se bedroom in pausa da più di tot tempo, stoppalo
   - alias: stop_speaker_bedroom_if_paused
+    id: 85dacd22-69df-4711-b008-11c881ed7787
     trigger:
       - trigger: state
         entity_id: media_player.bedroom
@@ -343,6 +358,7 @@ automation:
         entity_id: media_player.bedroom
 
   - alias: trigger_mediarasp_update
+    id: 367e1f33-0da5-4f1b-b606-3a6a7fae72bf
     trigger:
       trigger: mqtt
       topic: mopidy/music/i/sta
@@ -352,6 +368,7 @@ automation:
           entity_id: media_player.music
 
   - alias: trigger_speaker_bedroom_update
+    id: 9a3fbfe4-8933-4e99-84c5-1a3c3c976589
     trigger:
       trigger: mqtt
       topic: mopidy/bedroom/i/sta
@@ -361,6 +378,7 @@ automation:
           entity_id: media_player.bedroom
 
   - alias: kodi_crash_workaround
+    id: 481b4dd3-b47e-43d0-9719-9cadc4c7f617
     description: Spegni la TV dopo un crash di Kodi se nessuno sta guardando
     trigger:
       trigger: state
@@ -387,6 +405,7 @@ automation:
         entity_id: media_player.tv
 
   - alias: bathroom_activate_media_controller
+    id: c53ca555-9fbc-47d1-aab7-e76230a1a77f
     description: Attiva BubbleUPnP sul telefono quando lo speaker in bagno si connette
     trigger:
       trigger: state

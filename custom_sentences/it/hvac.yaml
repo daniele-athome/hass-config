@@ -15,7 +15,7 @@ intents:
   ACLivingOn:
     data:
        - sentences:
-           - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_living>;[[modo] {living_ac_mode}];[[a] {living_ac_temperature}(°| gradi)];[{living_ac_fan_mode}])"
+           - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_living>;[[modo] {ac_mode}];[[a] {ac_temperature}(°| gradi)];[{living_ac_fan_mode}])"
 
   ACLivingOff:
     data:
@@ -32,13 +32,33 @@ intents:
       - sentences:
           - "(accendi|accendere|attiva|attivare) ([il] (ventilatore);<area_living>;{living_ac_fan_mode})"
 
+  ACBedroomOn:
+    data:
+       - sentences:
+           - "(accendi|accendere|attiva|attivare) ([il] (condizionatore|condizionamento);<area_bedroom>;[[modo] {ac_mode}];[[a] {ac_temperature}(°| gradi)];[{bedroom_ac_fan_mode}])"
+
+  ACBedroomOff:
+    data:
+      - sentences:
+          - "(spegni|spegnere|disattiva|disattivare) [il] (condizionatore|condizionamento) <area_bedroom>"
+
+  ACBedroomDry:
+    data:
+      - sentences:
+          - "(accendi|accendere|attiva|attivare) (([la] deumidificazione|[il] deumidificatore);[{bedroom_ac_fan_mode}];<area_bedroom>)"
+
+  ACBedroomFanOnly:
+    data:
+      - sentences:
+          - "(accendi|accendere|attiva|attivare) ([il] (ventilatore);<area_bedroom>;{bedroom_ac_fan_mode})"
+
 lists:
   heating_temperature:
     range:
       from: 5
       to: 30
 
-  living_ac_mode:
+  ac_mode:
     values:
       - in: "(freddo|a freddo)"
         out: "cool"
@@ -49,7 +69,7 @@ lists:
       - in: "ventilatore"
         out: "fan_only"
 
-  living_ac_temperature:
+  ac_temperature:
     range:
       from: 7
       to: 35
@@ -61,5 +81,13 @@ lists:
       - in: "al minimo"
         out: "Silence"
 
+  bedroom_ac_fan_mode:
+    values:
+      - in: "(a palla|al massimo)"
+        out: "max"
+      - in: "al minimo"
+        out: "min"
+
 expansion_rules:
   area_living: "[(in|nel|del)] (soggiorno|salone)"
+  area_bedroom: "[(in|nella|della)] (camera[ da letto])"

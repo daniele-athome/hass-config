@@ -1,36 +1,13 @@
 # ### Firmware
 # Inspired by https://github.com/JamesMcCarthy79/Home-Assistant-Config/tree/master/config/packages/firmware
 
-homeassistant:
-  customize:
-    sensor.ha_update_available:
-      friendly_name: Aggiornamento HA disponibile
-
-group:
-  firmware:
-    name: Stato Firmware
-    entities:
-      - binary_sensor.ha_update_available
-
-sensor:
-  - platform: template
-    sensors:
-      ha_update_available:
-        icon_template: mdi:cloud-download
-        value_template: "{{ 'on' if states.sensor.current_version.state != states.sensor.latest_version.state else 'off' }}"
-
-  ## Check Latest HA Version
-  #- platform: rest
-  #  resource: https://s3.amazonaws.com/hassio-version/stable.json
-  #  name: Latest HA Version
-  #  value_template: "{{ value_json.homeassistant.default }}"
-  #  scan_interval: 3600
-
+# no update notification is triggered, so we need a dedicated notification
 automation:
   - alias: Notifica aggiornamento HASS
+    id: 2c0756bd-f9d9-47c2-9d2a-70eb7125391d
     trigger:
       - trigger: state
-        entity_id: binary_sensor.latest_version_update_available
+        entity_id: update.home_assistant
         from: 'off'
         to: 'on'
     action:
@@ -38,6 +15,23 @@ automation:
         data:
           message: "Home Assistant {{ states('sensor.latest_version') }} è stato rilasciato."
 
+template:
+  - update:
+      - name: Home Assistant
+        icon: mdi:home-assistant
+        installed_version: "{{ states('sensor.current_version') }}"
+        latest_version: "{{ states('sensor.latest_version') }}"
+        # no way to automatically install, so no install section
+
 shell_command:
   # in teoria la cwd di HA è la cartella della configurazione
   upgrade_configuration_scm: git pull --ff-only
+
+script:
+
+  hass_upgrade_config_and_restart:
+    sequence:
+      - action: shell_command.upgrade_configuration_scm
+      - action: homeassistant.restart
+
+  # TODO hass_update:

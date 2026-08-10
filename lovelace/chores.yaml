@@ -2,19 +2,17 @@
 path: chores
 title: Faccende
 icon: mdi:broom
-type: custom:layout-card
-layout_type: custom:vertical-layout
-layout:
-  max_cols: 2
-cards:
+type: sections
+max_columns: 2
+sections:
 
   # Column 1
+  - type: grid
+    cards:
 
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
-        label: PULIZIA
+      - type: markdown
+        content: >
+          ## Pulizia
 
       {% set clean_chores = [
           'chore_water_closet1_clean',
@@ -31,15 +29,13 @@ cards:
         - chore_name: {{ chore_sensor }}
       {% endfor %}
 
-  - type: custom:layout-break
-
   # Column 2
+  - type: grid
+    cards:
 
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
-        label: ALTRO
+      - type: markdown
+        content: >
+          ## Altro
 
       {% set other_chores = [
           'chore_change_mainbed_sheets',
@@ -53,74 +49,74 @@ cards:
         - chore_name: {{ chore_sensor }}
       {% endfor %}
 
-  - type: custom:xiaomi-vacuum-map-card
-    preset_name: Live map
-    entity: vacuum.spulicchiator
-    map_source:
-      camera: image.spulicchiator_map
-    calibration_source:
-      camera: true
-    map_modes:
-      - template: vacuum_clean_segment
-        predefined_selections:
-          - id: 19
-            label:
-              text: Soggiorno
-              x: 28400
-              y: 27825
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 28400
-              y: 27825
-          - id: 20
-            label:
-              text: Bagno 1
-              x: 22550
-              y: 25625
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 22550
-              y: 25625
-          - id: 18
-            label:
-              text: Bagno 2
-              x: 25625
-              y: 25600
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 25625
-              y: 25600
-          - id: 17
-            label:
-              text: Corridoio
-              x: 24225
-              y: 28400
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 24225
-              y: 28400
-          - id: 16
-            label:
-              text: Camera
-              x: 20025
-              y: 29450
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 20025
-              y: 29450
-          - id: 21
-            label:
-              text: Cucina
-              x: 26400
-              y: 29975
-              offset_y: 35
-            icon:
-              name: "mdi:broom"
-              x: 26400
-              y: 29975
-      - template: vacuum_clean_zone
+      - type: custom:xiaomi-vacuum-map-card
+        preset_name: Live map
+        entity: vacuum.spulicchiator
+        map_source:
+          camera: image.spulicchiator_map
+        calibration_source:
+          camera: true
+        map_modes:
+          - template: vacuum_clean_segment
+            predefined_selections:
+              - id: 19
+                label:
+                  text: Soggiorno
+                  x: 28400
+                  y: 27825
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 28400
+                  y: 27825
+              - id: 20
+                label:
+                  text: Bagno 1
+                  x: 22550
+                  y: 25625
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 22550
+                  y: 25625
+              - id: 18
+                label:
+                  text: Bagno 2
+                  x: 25625
+                  y: 25600
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 25625
+                  y: 25600
+              - id: 17
+                label:
+                  text: Corridoio
+                  x: 24225
+                  y: 28400
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 24225
+                  y: 28400
+              - id: 16
+                label:
+                  text: Camera
+                  x: 20025
+                  y: 29450
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 20025
+                  y: 29450
+              - id: 21
+                label:
+                  text: Cucina
+                  x: 26400
+                  y: 29975
+                  offset_y: 35
+                icon:
+                  name: "mdi:broom"
+                  x: 26400
+                  y: 29975
+          - template: vacuum_clean_zone

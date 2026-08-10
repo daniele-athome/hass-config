@@ -84,6 +84,7 @@ command_line:
 
 automation:
   - alias: shibable_detect_workaround_1
+    id: b3183367-250f-421b-a8fb-e1679dd352b2
     description: 'Forza uno scan di arrivo BLE quando il router rileva shiba.'
     trigger:
       trigger: state
@@ -99,6 +100,7 @@ automation:
       - action: script.scan_arrival
 
   - alias: shibable_detect_workaround_2
+    id: 8b967213-0c7f-44fc-a136-3443fb16b04e
     description: 'Forza uno scan di partenza BLE quando il router non rileva shiba per 3 minuti.'
     trigger:
       trigger: state

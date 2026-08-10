@@ -1,22 +1,66 @@
 # ### Gaming automations
 
+homeassistant:
+  customize:
+    binary_sensor.homeserver_gaming_mode:
+      friendly_name: 'Modalità gaming'
+
+input_text:
+  monitoring_homeserver_gaming_silence_id:
+    name: "Silence ID monitoring homeserver in gaming mode"
+
+binary_sensor:
+  # used by homeserver_gaming_mode
+  - platform: rest
+    resource: http://server:61208/api/4/gpu
+    name: homeserver_gpu_available
+    value_template: '{{ "off" if "detail" in value_json and "Unknown plugin" in value_json.detail else "on" }}'
+    scan_interval: 60
+
+template:
+  - binary_sensor:
+      - name: homeserver_gaming_mode
+        state: >-
+          {{ not is_state('sensor.homeserver_uptime', 'unavailable') and is_state('binary_sensor.homeserver_gpu_available', 'on') }}
+
 automation:
 
+  - alias: gaming_homeserver_monitoring_disable
+    id: c49d4a86-de9f-4d9f-9d4a-86de9f8d9fa9
+    description: 'Disabilita monitoraggio homeserver in gaming mode'
+    trigger:
+      - trigger: state
+        entity_id: binary_sensor.homeserver_gaming_mode
+        to: 'on'
+    action:
+      - action: script.monitoring_homeserver_gaming_create_silence
+
+  - alias: gaming_homeserver_monitoring_enable
+    id: d8b0f7df-412e-4c67-b0f7-df412eac67dc
+    description: 'Abilita monitoraggio homeserver in uscita da gaming mode'
+    trigger:
+      - trigger: state
+        entity_id: binary_sensor.homeserver_gaming_mode
+        to: 'off'
+    action:
+      - action: script.monitoring_homeserver_gaming_delete_silence
+
+  # FIXME if Home Assistant hasn't detected the TV on yet, the condition won't match
   - alias: gaming_mode_on
     id: b58a7dc5-4ae3-4255-a9f2-eb5856c63fdb
     description: Gaming mode attivata
     triggers:
-      # FIXME weak detection
-      - trigger: state
-        entity_id: media_player.kodi
-        to:
-          - "off"
-          - unavailable
-        for: '00:00:05'
+      - trigger: webhook
+        webhook_id: "9a484bd9-969b-4caa-884b-d9969b3caa44"
+        allowed_methods:
+          - POST
+        local_only: false
     conditions:
-      condition: state
-      entity_id: media_player.tv
-      state: "on"
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: media_player.tv
+          state: "on"
     actions:
       - action: webostv.command
         data:
@@ -58,17 +102,16 @@ automation:
     id: cf1ef680-2144-4a08-93ca-caecc582b94e
     description: Gaming mode disattivata
     triggers:
-      # FIXME weak detection
-      - trigger: state
-        entity_id: media_player.kodi
-        from:
-          - "off"
-          - unavailable
-        for: '00:00:05'
+      - trigger: webhook
+        webhook_id: "ec37eca3-8f5c-4393-b7ec-a38f5cc393d7"
+        allowed_methods:
+          - POST
+        local_only: false
     conditions:
-      condition: state
-      entity_id: media_player.tv
-      state: "on"
+      # TV is on
+      - condition: state
+        entity_id: media_player.tv
+        state: "on"
     actions:
       - action: webostv.command
         data:
@@ -110,3 +153,32 @@ script:
   gaming_mode_activate:
     sequence:
       - action: shell_command.homeserver_gamingreboot
+
+  monitoring_homeserver_gaming_create_silence:
+    sequence:
+      - action: rest_command.monitoring_homeserver_create_silence
+        data:
+          comment: 'Gaming mode'
+          end_time: "{{ (now() + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M:%S%:z') }}"
+        response_variable: silence_response
+      - if: "{{ silence_response['status'] == 200 }}"
+        then:
+          - action: input_text.set_value
+            data:
+              value: "{{ silence_response['content']['silenceID'] }}"
+            target:
+              entity_id: input_text.monitoring_homeserver_gaming_silence_id
+
+  monitoring_homeserver_gaming_delete_silence:
+    sequence:
+      - action: rest_command.monitoring_homeserver_delete_silence
+        data:
+          silence_id: "{{ states('input_text.monitoring_homeserver_gaming_silence_id') }}"
+        response_variable: silence_response
+      - if: "{{ silence_response['status'] == 200 }}"
+        then:
+          - action: input_text.set_value
+            data:
+              value: ""
+            target:
+              entity_id: input_text.monitoring_homeserver_gaming_silence_id

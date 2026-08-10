@@ -13,15 +13,14 @@ homeassistant:
     binary_sensor.workmorning:
       friendly_name: 'Mattina feriale'
 
-binary_sensor:
-  - platform: template
-    sensors:
-      workmorning:
-        value_template: >-
+template:
+  - binary_sensor:
+      - name: workmorning
+        state: >-
           {% set hour = states('sensor.time').split(':')[0] | int %}
           {{ is_state('binary_sensor.workday', 'on') and now().hour >= 5 and now().hour < 10 }}
-      workevening:
-        value_template: >-
+      - name: workevening
+        state: >-
           {% set hour = states('sensor.time').split(':')[0] | int %}
           {{ is_state('binary_sensor.workday', 'on') and now().hour >= 16 and now().hour < 20 }}
 

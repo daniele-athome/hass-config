@@ -6,12 +6,16 @@ homeassistant:
       friendly_name: Internet
       icon: mdi:web
 
+    binary_sensor.battery_discharging_scatola:
+      friendly_name: "Batteria scatola in scaricamento"
+
 command_line:
   - sensor:
       name: ac_status_scatola
       command: 'cat /sys/class/power_supply/AC/online'
   - sensor:
       name: cputemp_scatola
+      # TODO use cat /sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input (output: "58000")
       command: '/usr/bin/sensors -j'
       value_template: '{{ value_json["coretemp-isa-0000"]["Package id 0"]["temp1_input"] }}'
       unit_of_measurement: '°C'
@@ -22,16 +26,16 @@ sensor:
     name: battery_scatola
     battery: 0
 
-binary_sensor:
-  - platform: template
-    sensors:
-      battery_discharging_scatola:
-        friendly_name: "Batteria scatola in scaricamento"
-        value_template: "{{ states.sensor.ac_status_scatola.state == '0' }}"
+template:
+  - binary_sensor:
+      - name: battery_discharging_scatola
+        icon: mdi:battery-alert
+        state: "{{ states.sensor.ac_status_scatola.state == '0' }}"
 
 automation:
 
   - alias: scatola_on_fire
+    id: 59af9eab-6d4b-4d9a-83dc-8baa259db03f
     trigger:
       - trigger: numeric_state
         entity_id: sensor.cputemp_scatola
@@ -47,6 +51,7 @@ automation:
           Temperatura scatola eccessiva: {{ states.sensor.cputemp_scatola.state_with_unit }}
 
   - alias: speedtest
+    id: 85f61f54-c972-468a-a6ea-a145258e4eb7
     trigger:
       trigger: time_pattern
       hours: "/3"

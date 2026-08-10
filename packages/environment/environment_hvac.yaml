@@ -1,15 +1,6 @@
 # ### HVAC control automations
 # TODO automazioni da rifare tenendo conto anche del raffrescamento
 
-homeassistant:
-  customize:
-    climate.boiler_main:
-      friendly_name: Riscaldamento
-    climate.living_ac:
-      friendly_name: "A/C soggiorno"
-    climate.bedroom_ac:
-      friendly_name: "A/C camera"
-
 input_number:
 
   hvac_heating_temperature_day:
@@ -26,6 +17,13 @@ input_number:
 
   living_ac_cooling_temperature:
     name: 'Temperatura raffrescamento soggiorno'
+    min: 7
+    max: 35
+    step: 1
+    initial: 28
+
+  bedroom_ac_cooling_temperature:
+    name: 'Temperatura raffrescamento camera'
     min: 7
     max: 35
     step: 1
@@ -63,11 +61,23 @@ automation:
       - trigger: state
         entity_id: input_select.house_mode
         from: "away"
+        to:
+          - day_working
+          - day_not_working
+          - night
+          - guest
+          - dnd
         for:
           minutes: 3
       - trigger: state
         entity_id: input_select.house_mode
         from: "extended_away"
+        to:
+          - day_working
+          - day_not_working
+          - night
+          - guest
+          - dnd
         for:
           minutes: 3
     action:
@@ -100,13 +110,13 @@ automation:
 
   - alias: house_mode_hvac_night_ac_safeguard
     id: e8b98858-3727-11ef-857f-7fa1b81b44d3
-    description: 'Spegni tutti i condizionatori dopo 3 ore di notte'
+    description: 'Spegni tutti i condizionatori dopo 4 ore di notte'
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
         to: "night"
         for:
-          hours: 3
+          hours: 4
     action:
       # spegni tutti i condizionatori
       - action: climate.turn_off
@@ -189,3 +199,78 @@ automation:
           message: |-
             Riscaldamento pre-sveglia impostato a {{ state_attr('climate.boiler_main', 'temperature') }}° C
             Target notturno salvato a {{ states('input_number.hvac_heating_temperature_night') }}° C
+
+  - alias: house_mode_hvac_living_cold_from_work
+    id: 1f0d9079-28a2-42ee-8d90-7928a202ee9c
+    description: 'Accendi condizionatore in soggiorno quando Daniele sta tornando dal lavoro'
+    triggers:
+      - trigger: zone.left
+        target:
+          entity_id: person.daniele
+        options:
+          zone: zone.work
+          for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_select.house_mode
+        state: away
+      - condition: numeric_state
+        entity_id: sensor.temperature_average
+        above: !secret temperature_house_melting_threshold
+      - condition: time
+        after: "14:00:00"
+        before: "22:00:00"
+    actions:
+      - action: calendar.get_events
+        target:
+          entity_id: calendar.my_calendar
+        data:
+          start_date_time: "{{ now().isoformat() }}"
+          end_date_time: "{{ (now() + timedelta(hours=2)).isoformat() }}"
+        response_variable: upcoming_events
+      - condition: template
+        value_template: >
+          {{ upcoming_events['calendar.my_calendar'].events | count == 0 }}
+        alias: 'Nessun evento nelle prossime 2 ore'
+      - action: climate.set_temperature
+        data:
+          # FIXME using same temperature for cooling and heating
+          temperature: "{{ states('input_number.living_ac_cooling_temperature') }}"
+          hvac_mode: "cool"
+        target:
+          entity_id: climate.living_ac
+      - action: climate.set_fan_mode
+        target:
+          entity_id: climate.living_ac
+        data:
+          fan_mode: "Auto"
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          title: "Condizionatore acceso"
+          message: "Stanza: soggiorno"
+          data:
+            tag: hvac_living_cold_from_work
+            sticky: 'false'
+            priority: high
+            ttl: 3600
+            actions:
+              - action: hvac_living_cold_from_work_cancel
+                title: Spegni
+
+  - alias: hvac_living_cold_from_work_cancel
+    id: 0651cdaf-202b-490d-91cd-af202bf90d11
+    description: 'Spegni condizionatore in soggiorno su richiesta da notifica'
+    trigger:
+      - event_data:
+          action: hvac_living_cold_from_work_cancel
+        event_type: mobile_app_notification_action
+        trigger: event
+    action:
+      - action: climate.turn_off
+        target:
+          entity_id: climate.living_ac
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: clear_notification
+          data:
+            tag: hvac_living_cold_from_work

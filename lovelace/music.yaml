@@ -1,0 +1,79 @@
+path: music
+title: Music
+icon: mdi:music
+type: sections
+max_columns: 2
+sections:
+
+  # Column 1
+  - type: grid
+    cards:
+
+      - type: media-control
+        entity: media_player.music
+      - type: media-control
+        entity: media_player.bedroom
+      - type: media-control
+        entity: media_player.kodi
+
+  # Column 2
+  - type: grid
+    cards:
+
+      # snapcast clients control
+
+      - type: custom:mini-media-player
+        entity: media_player.snapcast_living
+        name: Stream source
+        hide:
+          power: true
+          icon: true
+          info: true
+          controls: true
+          volume: true
+          volume_level: true
+
+      - type: custom:mini-media-player
+        entity: media_player.snapcast_living
+        name: Soggiorno
+        hide:
+          power: true
+          icon: true
+          source: true
+          info: true
+          controls: true
+
+      - type: custom:mini-media-player
+        entity: media_player.snapcast_kitchen2
+        name: Cucina
+        hide:
+          power: true
+          icon: true
+          source: true
+          info: true
+          controls: true
+
+      - type: custom:mini-media-player
+        entity: media_player.snapcast_bedroom
+        name: Camera
+        hide:
+          power: true
+          icon: true
+          source: true
+          info: true
+          controls: true
+
+      - type: custom:mini-media-player
+        entity: media_player.group_snapcast_mobile
+        name: Mobile
+        hide:
+          power: true
+          icon: true
+          source: true
+          info: true
+          controls: true
+
+  - type: custom:navbar-card
+    template: navbar_mobile
+  - type: custom:navbar-card
+    template: navbar_desktop

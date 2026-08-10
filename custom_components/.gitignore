@@ -1,2 +1,6 @@
 *
 !.gitignore
+!s6_ready
+!s6_ready/*
+!random_template
+!random_template/*

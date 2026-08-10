@@ -1,15 +1,12 @@
 # Entity state scenes and scenarios for living room
 # FIXME merita una directory dedicata
 
-binary_sensor:
-
-  - platform: template
-    sensors:
+template:
+  - binary_sensor:
       # Bisogno di luce in soggiorno
-      living_need_light:
-        value_template: >-
+      - name: living_need_light
+        state: >-
           {{ states.sensor.lux_living.state|int < 10 or is_state('sun.sun', 'below_horizon') }}
-
 
 input_number:
 
@@ -34,7 +31,6 @@ scene:
     entities:
       light.living_extra: on
       light.living_main: off
-      light.dayway: on
 
   - name: cinema_mode
     entities:
@@ -47,7 +43,7 @@ scene:
       light.living_ceiling:
         state: on
         brightness: 40
-        color_temp: 400
+        color_temp_kelvin: 2500
 
   - name: living_night_guidance_off
     entities:
@@ -57,6 +53,7 @@ scene:
 automation:
 
   - alias: need_utility_light_toggle_tag
+    id: 86481ca8-65dc-47b3-a34d-bca5c1bdfaa3
     trigger:
       - trigger: tag
         tag_id: 573fa973-7041-4431-a3ef-541f37fffe34
@@ -66,6 +63,7 @@ automation:
       # TODO maybe say something?
 
   - alias: need_utility_light_on
+    id: 25ee5d3f-2b58-4d63-ae5d-3f2b581d639f
     trigger:
       - trigger: state
         entity_id: input_boolean.need_living_utility_light
@@ -79,6 +77,7 @@ automation:
         entity_id: light.living_extra
 
   - alias: need_utility_light_off
+    id: 6f71328f-a762-4453-b132-8fa762545346
     trigger:
       - trigger: state
         entity_id: input_boolean.need_living_utility_light
@@ -97,6 +96,7 @@ automation:
         entity_id: light.living_extra
 
   - alias: dinner_watching
+    id: 6dd691bc-a1a7-4386-9691-bca1a7a3863d
     trigger:
       - trigger: state
         entity_id: 'media_player.kodi'
@@ -120,10 +120,14 @@ automation:
         entity_id: scene.dinner_watching
 
   - alias: cinema_mode
+    id: 7071303b-9898-4063-b130-3b98982063a8
     trigger:
       - trigger: state
         entity_id: 'media_player.kodi'
         to: 'playing'
+        # hack for race condition on cinema_mode not updating fast enough
+        for:
+          milliseconds: 500
       - trigger: template
         value_template: >-
           {{ is_state('media_player.tv', 'on') and is_state_attr('media_player.tv', 'media_content_type', 'channel') }}
@@ -145,6 +149,7 @@ automation:
         entity_id: scene.cinema_mode
 
   - alias: media_paused
+    id: 6708aa7a-80c6-406d-88aa-7a80c6606db2
     description: 'Accendi luce utility se mettiamo in pausa un video'
     trigger:
       - trigger: state
@@ -164,6 +169,7 @@ automation:
         entity_id: light.living_ceiling
 
   - alias: media_stopped
+    id: ee865f5a-496c-4c7a-865f-5a496c8c7a0d
     description: Accendi luce utility se fermiamo Kodi
     trigger:
       - trigger: state
@@ -186,6 +192,7 @@ automation:
         entity_id: light.living_ceiling
 
   - alias: house_mode_living_guest
+    id: 5b3be9b1-f536-4bbc-b61a-ced636cda93f
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -213,6 +220,7 @@ automation:
           volume_level: !secret guest_mode_volume
 
   - alias: house_mode_living_not_guest
+    id: f5983319-6e88-4238-bf7f-9f1d07b81600
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -226,6 +234,7 @@ automation:
           volume_level: !secret no_guest_mode_volume
 
   - alias: living_too_much_light
+    id: 72af9e57-49e2-4a05-af9e-5749e28a053f
     description: 'Troppa luce in soggiorno: spegni le luci extra'
     trigger:
       - trigger: numeric_state
@@ -236,6 +245,7 @@ automation:
         entity_id: light.living_extra
 
   - alias: house_mode_living_night
+    id: 503b6a51-d827-47ca-abec-6e548aa3d000
     trigger:
       trigger: state
       entity_id: input_select.house_mode
@@ -250,6 +260,7 @@ automation:
         entity_id: media_player.tv
 
   - alias: house_mode_living_away
+    id: bd5d3c56-4622-49f6-b2dc-36fa5fcd6ebe
     trigger:
       trigger: state
       entity_id: input_select.house_mode
@@ -269,6 +280,7 @@ automation:
           - media_player.tv
 
   - alias: living_motion_night
+    id: dd5f5240-ce8d-47c8-9f52-40ce8dc7c852
     description: Accendi una lieve luce notturna in caso di movimento in soggiorno
     trigger:
       - trigger: state
@@ -312,6 +324,7 @@ automation:
         entity_id: scene.living_night_guidance_on
 
   - alias: living_motion_night_end
+    id: 97e7fda6-2592-47e4-a7fd-a62592e7e43d
     description: Spegni la luce notturna quando il movimento in soggiorno è cessato
     trigger:
       - trigger: state

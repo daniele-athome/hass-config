@@ -13,7 +13,7 @@ template:
           {{ is_state('media_player.kodi', ['off', 'idle', 'unavailable']) and
              is_state('media_player.tv', ['off', 'idle', 'unavailable']) and
              is_state('media_player.music', ['paused', 'off', 'idle', 'unavailable']) and
-             is_state('media_player.lounge', ['off', 'idle', 'unavailable']) and
+             is_state('media_player.voice_living', ['off', 'idle', 'unavailable']) and
              is_state('binary_sensor.activity_notebook_daniele', 'off') }}
 
 script:

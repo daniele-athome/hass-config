@@ -1,0 +1,11 @@
+render:
+  name: Render
+  description:
+    Render a random template for the given template key.
+  fields:
+    key:
+      name: Template key
+      description: Name of the template file or directory (a random file will be picked)
+      default: false
+      selector:
+        text:

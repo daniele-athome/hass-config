@@ -13,6 +13,7 @@ homeassistant:
 sensor:
 
   # Unsupported by Glances integration
+  # FIXME turn this into a template sensor from the glances sensor
   - platform: rest
     resource: http://rasp:61208/api/4/uptime
     name: uptime_mediarasp
@@ -22,6 +23,7 @@ sensor:
 automation:
 
   - alias: media_rasp_on_fire
+    id: eaf90f52-1133-4290-84a9-35e0f882a8e1
     trigger:
       - trigger: numeric_state
         entity_id: sensor.mediarasp_package_id_0_temperature

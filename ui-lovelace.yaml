@@ -8,6 +8,57 @@ swipe_nav:
   #prevent_default: true
   swipe_amount: 40
 
+navbar-templates:
+  navbar_desktop:
+    routes: []
+    mobile:
+      hidden: true
+    styles: |
+      .navbar-card {
+        display: none;
+      }
+      .media-player {
+        margin-bottom: 12px;
+      }
+    media_player:
+      players:
+        - entity: media_player.music
+      album_cover_background: true
+      show: |-
+        [[[
+          const mediaPlayerState = states['media_player.music'];
+          const lastChanged = new Date(mediaPlayerState.last_changed);
+          const now = Date.now();
+          const fiveMinutes = 5 * 60 * 1000;
+    
+          // Display media player if it's playing OR paused in the last 5 minutes
+          return (
+            mediaPlayerState.state == 'playing' ||
+            (mediaPlayerState.state == 'paused' &&
+              (now - lastChanged) <= fiveMinutes)
+          );
+        ]]]
+      desktop_position: bottom-right
+  navbar_mobile:
+    desktop:
+      hidden: true
+    mobile:
+      mode: docked
+      show_labels: false
+    routes:
+      - label: Home
+        icon: mdi:home
+        url: /lovelace/home
+      - label: Environment
+        icon: mdi:thermometer
+        url: /lovelace/environment
+      - label: Music
+        icon: mdi:music
+        url: /lovelace/music
+      - label: Energy
+        icon: mdi:lightning-bolt
+        url: /energy
+
 views:
   - !include lovelace/home.yaml
   - !include lovelace/environment.yaml
@@ -16,4 +67,5 @@ views:
   - !include lovelace/network.yaml
   - !include lovelace/chores.yaml
   - !include lovelace/security.yaml
+  - !include lovelace/music.yaml
   - !include lovelace/energy.yaml

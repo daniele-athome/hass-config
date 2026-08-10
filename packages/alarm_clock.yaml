@@ -109,6 +109,23 @@ automation:
           data:
             tag: alarm_clock
 
+  - alias: alarm_clock_notification_dismiss
+    id: b28ec887-5292-46e8-8ec8-87529236e8f5
+    description: "Disattiva notifica radiosveglia quando il player smette di riprodurre"
+    trigger:
+      - trigger: state
+        entity_id: media_player.bedroom
+        to:
+          - 'off'
+          - idle
+          - paused
+    action:
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          message: clear_notification
+          data:
+            tag: alarm_clock
+
 script:
 
   # TODO parametrizzare e generalizzare in media_player (può servire?)

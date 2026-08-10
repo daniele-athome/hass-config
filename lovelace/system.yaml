@@ -1,367 +1,380 @@
 path: system
 title: Sistema
 icon: mdi:server
-type: custom:layout-card
-layout_type: custom:vertical-layout
-layout:
-  max_cols: 2
-cards:
+type: sections
+max_columns: 2
+sections:
 
   # Column 1
-
-  - type: markdown
-    content: >
-      ## Home Server
-
-  - type: custom:vertical-stack-in-card
+  - type: grid
     cards:
-      - type: horizontal-stack
+
+      - type: markdown
+        content: >
+          ## Home Server
+
+      - type: custom:vertical-stack-in-card
         cards:
-          - type: vertical-stack
+          - type: horizontal-stack
             cards:
-              - type: picture
-                image: /local/ui/homeserver.png
-                style: |
-                  img {
-                    border-radius: var(--ha-card-border-radius);
-                  }
+              - type: vertical-stack
+                cards:
+                  - type: picture
+                    image: /local/ui/homeserver.png
+                    style: |
+                      img {
+                        border-radius: var(--ha-card-border-radius);
+                      }
 
-          - type: glance
-            show_name: false
-            show_icon: false
-            show_state: true
-            entities:
-              - sensor.uptime_homeserver
-            card_mod:
-              style: |-
-                :host {
-                  font-weight: bold;
-                }
+              - type: glance
+                show_name: false
+                show_icon: false
+                show_state: true
+                entities:
+                  - sensor.uptime_homeserver
+                card_mod:
+                  style: |-
+                    :host {
+                      font-weight: bold;
+                    }
 
-  - type: 'custom:bar-card'
-    entities:
-      - entity: sensor.homeserver_used_percent
-      - entity: sensor.homeserver_ram_used_percent
-    columns: 2
-    positions:
-      icon: 'outside'
-      indicator: 'inside'
-      minmax: 'off'
-      name: 'off'
-      value: inside
-    card_mod:
-      style: |-
-        :host {
-          --bar-card-border-radius: 4px;
-        }
-        :host .card-content {
-          padding: 6px 10px;
-        }
-        bar-card-value {
-          font-size: 13px;
-          font-weight: bold;
-          text-shadow: 1px 1px #0008;
-          margin-left: 4px !important;
-        }
-        bar-card-divider {
-          display: none;
-        }
-
-  - type: 'custom:bar-card'
-    entities:
-      - entity: sensor.homeserver_cpu_used
-        icon: 'mdi:cpu-64-bit'
-      - entity: sensor.homeserver_package_id_0_temperature
-        icon: 'mdi:thermometer'
-    columns: 2
-    positions:
-      icon: 'outside'
-      indicator: 'inside'
-      minmax: 'off'
-      name: 'off'
-      value: inside
-    card_mod:
-      style: |-
-        :host {
-          --bar-card-border-radius: 4px;
-        }
-        :host .card-content {
-          padding: 6px 10px;
-        }
-        bar-card-value {
-          font-size: 13px;
-          font-weight: bold;
-          text-shadow: 1px 1px #0008;
-          margin-left: 4px !important;
-        }
-        bar-card-divider {
-          display: none;
-        }
-
-  - type: horizontal-stack
-    cards:
-
-      - type: custom:mini-graph-card
+      - type: 'custom:bar-card'
         entities:
-          - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802580
-        height: 50
-        line_width: 2
-        font_size: 55
-        hours_to_show: 120
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: false
-        color_thresholds:
-          - value: 45
-            color: "#e74c3c"
-          - value: 38
-            color: "#e79b3c"
-          - value: 0
-            color: "#3498db"
+          - entity: sensor.homeserver_used_percent
+          - entity: sensor.homeserver_ram_used_percent
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          name: 'off'
+          value: inside
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-value {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: 4px !important;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
-      - type: custom:mini-graph-card
+      - type: 'custom:bar-card'
         entities:
-          - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802589
-        height: 50
-        line_width: 2
-        font_size: 55
-        hours_to_show: 120
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: false
-        color_thresholds:
-          - value: 45
-            color: "#e74c3c"
-          - value: 38
-            color: "#e79b3c"
-          - value: 0
-            color: "#3498db"
+          - entity: sensor.homeserver_cpu_used
+            icon: 'mdi:cpu-64-bit'
+          - entity: sensor.homeserver_package_id_0_temperature
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          name: 'off'
+          value: inside
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-value {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: 4px !important;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
-  - type: 'custom:button-card'
-    entity: switch.homeserver
-    icon: 'mdi:power-sleep'
-    name: 'Sospendi/Sveglia'
-    layout: icon_name
-    state:
-      - value: 'off'
-        name: 'Sveglia'
-      - value: 'on'
-        name: 'Sospendi'
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
 
-  - type: horizontal-stack
-    cards:
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802580
+              height: 50
+              line_width: 2
+              font_size: 55
+              hours_to_show: 120
+              points_per_hour: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: false
+              color_thresholds:
+                - value: 45
+                  color: "#e74c3c"
+                - value: 38
+                  color: "#e79b3c"
+                - value: 0
+                  color: "#3498db"
+
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wds500g1r0a_68a4w0_214513802589
+              height: 50
+              line_width: 2
+              font_size: 55
+              hours_to_show: 120
+              points_per_hour: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: false
+              color_thresholds:
+                - value: 45
+                  color: "#e74c3c"
+                - value: 38
+                  color: "#e79b3c"
+                - value: 0
+                  color: "#3498db"
 
       - type: 'custom:button-card'
-        icon: 'mdi:power-cycle'
-        name: 'Riavvia'
+        entity: switch.homeserver
+        icon: 'mdi:power-sleep'
+        name: 'Sospendi/Sveglia'
         layout: icon_name
-        confirmation:
-          text: 'Riavviare il server?'
-        tap_action:
-          action: call-service
-          service: shell_command.homeserver_reboot
+        state:
+          - value: 'off'
+            name: 'Sveglia'
+          - value: 'on'
+            name: 'Sospendi'
 
-      - type: 'custom:button-card'
-        icon: 'mdi:power'
-        name: 'Spegni'
-        layout: icon_name
-        confirmation:
-          text: 'Shutdown del server?'
-        tap_action:
-          action: call-service
-          service: shell_command.homeserver_poweroff
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
 
-  - type: custom:layout-break
+            - type: 'custom:button-card'
+              icon: 'mdi:power-cycle'
+              name: 'Riavvia'
+              layout: icon_name
+              confirmation:
+                text: 'Riavviare il server?'
+              tap_action:
+                action: call-service
+                service: shell_command.homeserver_reboot
+
+            - type: 'custom:button-card'
+              icon: 'mdi:power'
+              name: 'Spegni'
+              layout: icon_name
+              confirmation:
+                text: 'Shutdown del server?'
+              tap_action:
+                action: call-service
+                service: shell_command.homeserver_poweroff
 
   # Column 2
-
-  - type: markdown
-    content: >
-      ## Media Center
-
-  - type: custom:vertical-stack-in-card
+  - type: grid
     cards:
-      - type: horizontal-stack
+
+      - type: markdown
+        content: >
+          ## Media Center
+
+      - type: custom:vertical-stack-in-card
         cards:
-          - type: vertical-stack
+          - type: horizontal-stack
             cards:
-              - type: picture
-                image: /local/ui/mediarasp.png
-                style: |
-                  img {
-                    border-radius: var(--ha-card-border-radius);
-                  }
+              - type: vertical-stack
+                cards:
+                  - type: picture
+                    image: /local/ui/mediarasp.png
+                    style: |
+                      img {
+                        border-radius: var(--ha-card-border-radius);
+                      }
 
-          - type: glance
-            show_name: false
-            show_icon: false
-            show_state: true
-            entities:
-              - sensor.uptime_mediarasp
-            card_mod:
-              style: |-
-                :host {
-                  font-weight: bold;
-                }
+              - type: glance
+                show_name: false
+                show_icon: false
+                show_state: true
+                entities:
+                  - sensor.uptime_mediarasp
+                card_mod:
+                  style: |-
+                    :host {
+                      font-weight: bold;
+                    }
 
-  - type: 'custom:bar-card'
-    entities:
-      - entity: sensor.mediarasp_cpu_used
-        icon: 'mdi:cpu-64-bit'
-      - entity: sensor.mediarasp_package_id_0_temperature
-        icon: 'mdi:thermometer'
-    columns: 2
-    positions:
-      icon: 'outside'
-      indicator: 'inside'
-      minmax: 'off'
-      name: 'off'
-      value: inside
-    card_mod:
-      style: |-
-        :host {
-          --bar-card-border-radius: 4px;
-        }
-        :host .card-content {
-          padding: 6px 10px;
-        }
-        bar-card-value {
-          font-size: 13px;
-          font-weight: bold;
-          text-shadow: 1px 1px #0008;
-          margin-left: 4px !important;
-        }
-        bar-card-divider {
-          display: none;
-        }
-
-  - type: horizontal-stack
-    cards:
-
-      - type: custom:mini-graph-card
+      - type: 'custom:bar-card'
         entities:
-          - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 120
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 45
-            color: "#e74c3c"
-          - value: 38
-            color: "#e79b3c"
-          - value: 0
-            color: "#3498db"
+          - entity: sensor.mediarasp_cpu_used
+            icon: 'mdi:cpu-64-bit'
+          - entity: sensor.mediarasp_package_id_0_temperature
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          name: 'off'
+          value: inside
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-value {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: 4px !important;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 120
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 45
-            color: "#e74c3c"
-          - value: 38
-            color: "#e79b3c"
-          - value: 0
-            color: "#3498db"
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
 
-  - type: horizontal-stack
-    cards:
-      - type: entities
-        show_header_toggle: off
-        entities:
-          - type: section
-            label: EXTERNAL DISKS
-          - type: 'custom:hui-horizontal-stack-card'
-            cards:
-              - type: custom:circle-sensor-card
-                entity: sensor.homeserver_media_external1_used_percent
-                max: 100
-                min: 0
-                stroke_width: 15
-                gradient: true
-                fill: '#383C45'
-                name: ext1
-                units: '%'
-                color_stops:
-                  80: '#09C7E8'
-                  95: '#5294E2'
-                font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {width: 6em, height: 6em, transform: none}
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9149732
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 120
+              points_per_hour: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 45
+                  color: "#e74c3c"
+                - value: 38
+                  color: "#e79b3c"
+                - value: 0
+                  color: "#3498db"
 
-              - type: custom:circle-sensor-card
-                entity: sensor.homeserver_media_external2_used_percent
-                max: 100
-                min: 0
-                stroke_width: 15
-                gradient: true
-                fill: '#383C45'
-                name: ext2
-                units: '%'
-                color_stops:
-                  80: '#09C7E8'
-                  95: '#5294E2'
-                font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {width: 6em, height: 6em, transform: none}
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.hddtemp_homeserver_dev_disk_by_id_ata_wdc_wd1002faex_00z3a0_wd_wcatr9159143
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 120
+              points_per_hour: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 45
+                  color: "#e74c3c"
+                - value: 38
+                  color: "#e79b3c"
+                - value: 0
+                  color: "#3498db"
 
-              - type: custom:circle-sensor-card
-                entity: sensor.homeserver_media_external1_sec_used_percent
-                max: 100
-                min: 0
-                stroke_width: 15
-                gradient: true
-                fill: '#383C45'
-                name: ext1_sec
-                units: '%'
-                color_stops:
-                  80: '#09C7E8'
-                  95: '#5294E2'
-                font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {width: 6em, height: 6em, transform: none}
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
+            - type: entities
+              show_header_toggle: off
+              entities:
+                - type: section
+                  label: EXTERNAL DISKS
+                - type: 'custom:hui-horizontal-stack-card'
+                  cards:
+                    - type: custom:circle-sensor-card
+                      entity: sensor.homeserver_media_external1_used_percent
+                      max: 100
+                      min: 0
+                      stroke_width: 15
+                      gradient: true
+                      fill: '#383C45'
+                      name: ext1
+                      units: '%'
+                      color_stops:
+                        80: '#09C7E8'
+                        95: '#5294E2'
+                      font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                      style: {width: 6em, height: 6em, transform: none}
 
-              - type: custom:circle-sensor-card
-                entity: sensor.homeserver_media_external2_sec_used_percent
-                max: 100
-                min: 0
-                stroke_width: 15
-                gradient: true
-                fill: '#383C45'
-                name: ext2_sec
-                units: '%'
-                color_stops:
-                  80: '#09C7E8'
-                  95: '#5294E2'
-                font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {width: 6em, height: 6em, transform: none}
+                    - type: custom:circle-sensor-card
+                      entity: sensor.homeserver_media_external2_used_percent
+                      max: 100
+                      min: 0
+                      stroke_width: 15
+                      gradient: true
+                      fill: '#383C45'
+                      name: ext2
+                      units: '%'
+                      color_stops:
+                        80: '#09C7E8'
+                        95: '#5294E2'
+                      font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                      style: {width: 6em, height: 6em, transform: none}
 
-              - type: custom:circle-sensor-card
-                entity: sensor.homeserver_media_external3_used_percent
-                max: 100
-                min: 0
-                stroke_width: 15
-                gradient: true
-                fill: '#383C45'
-                name: ext3
-                units: '%'
-                color_stops:
-                  80: '#09C7E8'
-                  95: '#5294E2'
-                font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
-                style: {width: 6em, height: 6em, transform: none}
+                    - type: custom:circle-sensor-card
+                      entity: sensor.homeserver_media_external1_sec_used_percent
+                      max: 100
+                      min: 0
+                      stroke_width: 15
+                      gradient: true
+                      fill: '#383C45'
+                      name: ext1_sec
+                      units: '%'
+                      color_stops:
+                        80: '#09C7E8'
+                        95: '#5294E2'
+                      font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                      style: {width: 6em, height: 6em, transform: none}
+
+                    - type: custom:circle-sensor-card
+                      entity: sensor.homeserver_media_external2_sec_used_percent
+                      max: 100
+                      min: 0
+                      stroke_width: 15
+                      gradient: true
+                      fill: '#383C45'
+                      name: ext2_sec
+                      units: '%'
+                      color_stops:
+                        80: '#09C7E8'
+                        95: '#5294E2'
+                      font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                      style: {width: 6em, height: 6em, transform: none}
+
+                    - type: custom:circle-sensor-card
+                      entity: sensor.homeserver_media_external3_used_percent
+                      max: 100
+                      min: 0
+                      stroke_width: 15
+                      gradient: true
+                      fill: '#383C45'
+                      name: ext3
+                      units: '%'
+                      color_stops:
+                        80: '#09C7E8'
+                        95: '#5294E2'
+                      font_style: {font-size: 1.1em, font-color: white, text-shadow: '2px 2px black'}
+                      style: {width: 6em, height: 6em, transform: none}
+
+  - type: custom:navbar-card
+    template: navbar_mobile
+  - type: custom:navbar-card
+    template: navbar_desktop

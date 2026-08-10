@@ -50,8 +50,7 @@ group:
     name: Living room motion
     entities:
       - binary_sensor.motion_living_door
-      # TODO da configurare
-      #- binary_sensor.living_main_motion
+      - binary_sensor.living_main_motion
       - binary_sensor.living_entrance_motion
 
   motion_bedroom:

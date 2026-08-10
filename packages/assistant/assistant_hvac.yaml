@@ -42,18 +42,18 @@ intent_script:
 
   ACLivingOn:
     action:
-      - if: "{{ living_ac_temperature | default(0) > 0 }}"
+      - if: "{{ ac_temperature | default(0) > 0 }}"
         then:
           - action: input_number.set_value
             data:
-              value: "{{ living_ac_temperature }}"
+              value: "{{ ac_temperature }}"
             target:
               entity_id: input_number.living_ac_cooling_temperature
       - action: climate.set_temperature
         data:
           # FIXME using same temperature for cooling and heating
-          temperature: "{{ living_ac_temperature | default(states('input_number.living_ac_cooling_temperature')) }}"
-          hvac_mode: "{{ living_ac_mode | default('cool') }}"
+          temperature: "{{ ac_temperature | default(states('input_number.living_ac_cooling_temperature')) }}"
+          hvac_mode: "{{ ac_mode | default('cool') }}"
         target:
           entity_id: climate.living_ac
       - action: climate.set_fan_mode
@@ -125,6 +125,102 @@ intent_script:
           entity_id: climate.living_ac
         data:
           fan_mode: "{{ living_ac_fan_mode | default('Auto') }}"
+      - action: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  ACBedroomOn:
+    action:
+      - if: "{{ ac_temperature | default(0) > 0 }}"
+        then:
+          - action: input_number.set_value
+            data:
+              value: "{{ ac_temperature }}"
+            target:
+              entity_id: input_number.bedroom_ac_cooling_temperature
+      - action: climate.set_temperature
+        data:
+          # FIXME using same temperature for cooling and heating
+          temperature: "{{ ac_temperature | default(states('input_number.bedroom_ac_cooling_temperature')) }}"
+          hvac_mode: "{{ ac_mode | default('cool') }}"
+        target:
+          entity_id: climate.bedroom_ac
+      - action: climate.set_fan_mode
+        target:
+          entity_id: climate.bedroom_ac
+        data:
+          fan_mode: "{{ bedroom_ac_fan_mode | default('auto') }}"
+      - action: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  ACBedroomOff:
+    action:
+      - action: climate.set_hvac_mode
+        data:
+          hvac_mode: "off"
+        target:
+          entity_id: climate.bedroom_ac
+      - action: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  ACBedroomFanOnly:
+    action:
+      - action: climate.set_hvac_mode
+        data:
+          hvac_mode: "fan_only"
+        target:
+          entity_id: climate.bedroom_ac
+      - action: climate.set_fan_mode
+        target:
+          entity_id: climate.bedroom_ac
+        data:
+          fan_mode: "{{ bedroom_ac_fan_mode | default('auto') }}"
+      - action: random_template.render
+        data:
+          key: assistant_ok
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
+
+  ACBedroomDry:
+    action:
+      - action: climate.set_hvac_mode
+        data:
+          hvac_mode: "dry"
+        target:
+          entity_id: climate.bedroom_ac
+      - action: climate.set_fan_mode
+        target:
+          entity_id: climate.bedroom_ac
+        data:
+          fan_mode: "{{ bedroom_ac_fan_mode | default('auto') }}"
       - action: random_template.render
         data:
           key: assistant_ok

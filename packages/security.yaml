@@ -18,6 +18,7 @@ automation:
 
   # Rilevato movimento, nessuno in casa ed allarme armato
   - alias: security_trigger_alarm
+    id: 9c0b951c-3860-4cbd-aab2-c71f107dea09
     trigger:
       # Qualsiasi sensore di movimento scattato
       - trigger: state
@@ -39,6 +40,7 @@ automation:
 
   # Tutti usciti, attiva allarme
   - alias: security_autoactivate
+    id: 91e9422a-15ae-438b-97da-77e2d7053465
     trigger:
       - trigger: numeric_state
         entity_id: sensor.people_count_home
@@ -51,6 +53,7 @@ automation:
 
   # Ingresso in casa di persone autorizzate, disattiva allarme
   - alias: security_authorized_entry
+    id: 58930873-7ee8-434a-b90b-75e66d389a35
     trigger:
       - trigger: numeric_state
         entity_id: sensor.people_count_home
@@ -63,6 +66,7 @@ automation:
 
   # Movimento rilevato, avvia allarme preliminare
   - alias: security_alarm_pending
+    id: d125e2b9-c052-4941-b3dc-14285d85a0d8
     trigger:
       - trigger: state
         entity_id: alarm_control_panel.main
@@ -70,24 +74,25 @@ automation:
     action:
       - action: media_player.volume_set
         data:
-          entity_id: media_player.lounge
+          entity_id: media_player.voice_living
           volume_level: 0.05
       - action: media_player.play_media
         data:
-          entity_id: media_player.lounge
+          entity_id: media_player.voice_living
           media_content_id: !secret security_alarm_warning_media_url
           media_content_type: music
       # Aspetta che lo stato dell'allarme cambi
       - wait_template: "{{ not is_state('alarm_control_panel.main', 'pending') }}"
         timeout: '00:01:00'
       - action: media_player.media_stop
-        entity_id: media_player.lounge
+        entity_id: media_player.voice_living
       - action: media_player.volume_set
         data:
-          entity_id: media_player.lounge
+          entity_id: media_player.voice_living
           volume_level: !secret lounge_volume
 
   - alias: security_alarm_triggered
+    id: 87a1986b-ec92-4ae4-8b02-5730d0b091d6
     trigger:
       - trigger: state
         entity_id: alarm_control_panel.main
@@ -111,6 +116,7 @@ automation:
 
   # Attiva telecamera ingresso su attivazione allarme
   - alias: security_alarm_arming
+    id: 7669afb4-ce7c-4afc-9587-0255526b7471
     trigger:
       - trigger: state
         entity_id: alarm_control_panel.main
@@ -120,6 +126,7 @@ automation:
 
   # Disattiva telecamera ingresso su disattivazione allarme
   - alias: security_alarm_disarmed
+    id: a0187da7-ef88-4862-b7a0-d9fc04a43f3f
     trigger:
       - trigger: state
         entity_id: alarm_control_panel.main
@@ -129,6 +136,7 @@ automation:
 
   # Porta di ingresso aperta per troppo tempo
   - alias: security_door_opened_long_time
+    id: c324ada8-57d2-4991-b605-b760386ac315
     trigger:
       - trigger: state
         entity_id: binary_sensor.door_main
@@ -145,6 +153,7 @@ automation:
 
   # Notifica attivazione allarme
   - alias: security_alarm_armed
+    id: 618f590c-f550-48f7-a708-99613e599842
     trigger:
       - trigger: state
         entity_id: alarm_control_panel.main

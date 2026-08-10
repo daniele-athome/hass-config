@@ -1,6 +1,33 @@
 
 intent_script:
 
+  TvResume:
+    action:
+      - if: "{{ is_state('media_player.kodi', 'paused') and is_state('media_player.tv', 'on') }}"
+        then:
+          - action: media_player.media_play
+            target:
+              entity_id: media_player.kodi
+
+  MusicResume:
+    action:
+      - if: "{{ state_attr('media_player.music', 'queue_size') == 0 }}"
+        then:
+          - action: random_template.render
+            data:
+              key: assistant_no_media_playing
+            response_variable: speech
+          - stop: "Returning speech"
+            response_variable: "speech"
+        else:
+          - action: media_player.media_play
+            target:
+              entity_id: media_player.music
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "{% if (action_response is defined) %}<p>{{ action_response.text }}</p>{% endif %}"
+
   MusicPlayNowTitleByArtist:
     action:
       - action: script.search_and_play_music

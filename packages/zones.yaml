@@ -17,4 +17,10 @@ zone:
     latitude: !secret latitude_work
     longitude: !secret longitude_work
     radius: 300
-    icon: mdi:worker
+    icon: mdi:briefcase
+
+  - name: Sporting center
+    latitude: !secret latitude_sporting_center
+    longitude: !secret longitude_sporting_center
+    radius: 227
+    icon: mdi:basketball

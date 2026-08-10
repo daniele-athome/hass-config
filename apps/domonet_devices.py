@@ -70,7 +70,6 @@ class DomonetDevices(hass.Hass):
         return name\
             .replace('_', ' ')\
             .replace('-', ' ')\
-            .translate(str.maketrans('', '', string.digits))\
             .strip()\
             .title()
 

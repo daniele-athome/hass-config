@@ -4,11 +4,12 @@ automation:
 # FIXME queste automazioni andrebbero legate a sessionStarted/sessionEnded
 
   - alias: wakeword_disable
+    id: 78992390-3020-41ac-8f6c-29a4e7616b58
     trigger:
-      # Kodi: in playing
+      # cinema mode
       - trigger: state
-        entity_id: 'media_player.kodi'
-        to: 'playing'
+        entity_id: binary_sensor.cinema_mode
+        to: 'on'
       # TV che parla
       - trigger: template
         value_template: "{{ is_state_attr('media_player.tv', 'is_volume_muted', false) }}"
@@ -16,15 +17,29 @@ automation:
       - trigger: state
         entity_id: binary_sensor.internet
         to: 'off'
+    condition:
+      - condition: or
+        conditions:
+          # cinema mode
+          - condition: state
+            entity_id: binary_sensor.cinema_mode
+            state: 'on'
+          # Internet non disponibile
+          - condition: state
+            entity_id: binary_sensor.internet
+            state: 'off'
     action:
-      - action: rest_command.wakeword_disable
+      - action: switch.turn_on
+        target:
+          entity_id: switch.voice_living_mute
 
   - alias: wakeword_enable
+    id: 1eba6369-b74b-429a-9d2f-84f41e597ecd
     trigger:
-      # Kodi: qualsiasi stato che non sia playing
+      # fuori da cinema mode
       - trigger: state
-        entity_id: 'media_player.kodi'
-        from: 'playing'
+        entity_id: binary_sensor.cinema_mode
+        to: 'off'
       # TV spenta
       - trigger: state
         entity_id: 'media_player.tv'
@@ -40,9 +55,12 @@ automation:
             entity_id: binary_sensor.internet
             state: 'on'
     action:
-      - action: rest_command.wakeword_enable
+      - action: switch.turn_off
+        target:
+          entity_id: switch.voice_living_mute
 
   - alias: wakeword_enable2
+    id: 65c90d46-c5a2-46c6-9aa5-9f1179fe6b76
     trigger:
       # Internet disponibile
       - trigger: state
@@ -51,11 +69,14 @@ automation:
     condition:
       condition: and
       conditions:
-        # Kodi: qualsiasi stato che non sia playing
-        - condition: template
-          value_template: "{{ not is_state('media_player.kodi', 'playing') }}"
+        # fuori da cinema mode
+        - condition: state
+          entity_id: binary_sensor.cinema_mode
+          state: 'off'
     action:
-      - action: rest_command.wakeword_enable
+      - action: switch.turn_off
+        target:
+          entity_id: switch.voice_living_mute
 
   - alias: assist_suspend_media
     id: 7719bcba-6701-11f0-be78-0800277ca3d8
@@ -65,18 +86,6 @@ automation:
         to: listening
     action:
       - action: script.suspend_media_for_assist
-
-rest_command:
-
-  wakeword_enable:
-    url: 'http://localhost:12101/api/listen-for-wake'
-    method: post
-    payload: 'on'
-
-  wakeword_disable:
-    url: 'http://localhost:12101/api/listen-for-wake'
-    method: post
-    payload: 'off'
 
 random_template:
   templates_path: /home/homeassistant/.homeassistant/custom_templates

@@ -1,212 +1,229 @@
 path: environment
 title: Ambiente
 icon: mdi:thermometer
-type: custom:layout-card
-layout_type: custom:vertical-layout
-layout:
-  max_cols: 2
-cards:
+type: sections
+max_columns: 2
+sections:
+
+# TODO set per-entity decimals (1 for temperature, 0 for humidity) after
+#   https://github.com/kalkih/mini-graph-card/pull/1233 is merged
 
   # Column 1
+  - type: grid
+    cards:
 
-  - type: thermostat
-    entity: climate.boiler_main
-    features:
-      - type: "climate-hvac-modes"
-        hvac_modes:
-          - heat
-          - "off"
-    card_mod:
-      style: |-
-        :host {
-          height: auto !important;
-        }
-  - type: custom:mini-climate
-    entity: climate.living_ac
-  - type: custom:mini-climate
-    entity: climate.bedroom_ac
-
-  - type: custom:layout-break
+      - type: thermostat
+        entity: climate.boiler_main
+        features:
+          - type: "climate-hvac-modes"
+            hvac_modes:
+              - heat
+              - "off"
+      - type: custom:mini-climate
+        entity: climate.living_ac
+      - type: custom:mini-climate
+        entity: climate.bedroom_ac
 
   # Column 2
-
-  # Riga 1
-  - type: horizontal-stack
+  - type: grid
     cards:
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_external
-          - entity: sensor.humidity_external
-            show_state: true
-            show_graph: false
-        name: Esterno
-        height: 46
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
 
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_average
-          - entity: sensor.humidity_average
-            show_state: true
-            show_graph: false
-        name: Interno
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+      # Riga 1
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_external
+                - entity: sensor.humidity_external
+                  show_state: true
+                  show_graph: false
+              name: Esterno
+              height: 46
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
-  # Riga 2
-  - type: horizontal-stack
-    cards:
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_living
-          - entity: sensor.humidity_living
-            show_state: true
-            show_graph: false
-        name: Soggiorno
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_average
+                - entity: sensor.humidity_average
+                  show_state: true
+                  show_graph: false
+              name: Interno
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_bedroom
-          - entity: sensor.humidity_bedroom
-            show_state: true
-            show_graph: false
-        name: Camera
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+      # Riga 2
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_living
+                - entity: sensor.humidity_living
+                  show_state: true
+                  show_graph: false
+              name: Soggiorno
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
-  # Riga 3
-  - type: horizontal-stack
-    cards:
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_bathroom1
-          - entity: sensor.humidity_bathroom1
-            show_state: true
-            show_graph: false
-        name: Bagno 1
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_bedroom
+                - entity: sensor.humidity_bedroom
+                  show_state: true
+                  show_graph: false
+              name: Camera
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_kitchen
-          - entity: sensor.humidity_kitchen
-            show_state: true
-            show_graph: false
-        name: Cucina
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+      # Riga 3
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_bathroom1
+                - entity: sensor.humidity_bathroom1
+                  show_state: true
+                  show_graph: false
+              name: Bagno 1
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
-  # Riga 4
-  - type: horizontal-stack
-    cards:
-      - type: custom:mini-graph-card
-        entities:
-          - sensor.temperature_studio
-          - entity: sensor.humidity_studio
-            show_state: true
-            show_graph: false
-        name: Studio
-        height: 74
-        line_width: 2
-        font_size: 65
-        hours_to_show: 168
-        points_per_hour: 1
-        hour24: true
-        show:
-          icon: true
-          extrema: true
-        color_thresholds:
-          - value: 28
-            color: "#e74c3c"
-          - value: 15
-            color: "#1db954"
-          - value: 0
-            color: "#3498db"
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_kitchen
+                - entity: sensor.humidity_kitchen
+                  show_state: true
+                  show_graph: false
+              name: Cucina
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
 
+      # Riga 4
+      - type: custom:mod-card
+        card:
+          type: horizontal-stack
+          cards:
+            - type: custom:mini-graph-card
+              entities:
+                - sensor.temperature_studio
+                - entity: sensor.humidity_studio
+                  show_state: true
+                  show_graph: false
+              name: Studio
+              height: 74
+              line_width: 2
+              font_size: 65
+              hours_to_show: 168
+              points_per_hour: 1
+              decimals: 1
+              hour24: true
+              show:
+                icon: true
+                extrema: true
+              color_thresholds:
+                - value: 28
+                  color: "#e74c3c"
+                - value: 15
+                  color: "#1db954"
+                - value: 0
+                  color: "#3498db"
+
+  - type: custom:navbar-card
+    template: navbar_mobile
+  - type: custom:navbar-card
+    template: navbar_desktop

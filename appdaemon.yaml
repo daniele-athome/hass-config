@@ -9,20 +9,10 @@ appdaemon:
       namespace: hass
       ha_url: !secret app_url
       token: !secret appdaemon_token
-    MQTT:
-      type: mqtt
-      namespace: mqtt
-      client_topics:
-        - 'hermes/intent/#'
-    HERMES:
-      type: hermes
-      namespace: hermes
 
 logs:
-  assistant:
-    name: assistant
-  hermes:
-    name: hermes
+  domonet:
+    name: domonet
 
 http:
   url: http://127.0.0.1:5050

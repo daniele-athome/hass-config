@@ -44,9 +44,16 @@ intent_script:
         data:
           entity_id: input_select.house_mode
           option: guest
-      - event: assistant_speak_tts
-        event_data:
-          template: GuestModeOn
+      - action: random_template.render
+        data:
+          key: GuestModeOn
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"
 
   GuestModeOff:
     action:
@@ -54,6 +61,13 @@ intent_script:
         data:
           entity_id: input_select.house_mode
           option: "{{ 'day_working' if is_state('binary_sensor.workday', 'on') else 'day_not_working' }}"
-      - event: assistant_speak_tts
-        event_data:
-          template: GuestModeOff
+      - action: random_template.render
+        data:
+          key: GuestModeOff
+        response_variable: speech
+      - stop: "Returning speech"
+        response_variable: "speech"
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      text: "<p>{{ action_response.text }}</p>"

@@ -14,100 +14,118 @@ homeassistant:
     sensor.weather_temperature:
       friendly_name: Temperatura esterna
 
-sensor:
-# TODO replace these in templates and speech templates
-#  - name: weather
-#    platform: darksky
-#    api_key: !secret darksky_apikey
-#    language: it
-#    scan_interval: '01:00'
-#    forecast:
-#      - 0
-#      - 1
-#      - 2
-#      - 3
-#      - 4
-#      - 5
-#    hourly_forecast:
-#      - 0
-#      - 1
-#      - 2
-#      - 3
-#      - 4
-#      - 5
-#      - 6
-#      - 7
-#      - 8
-#      - 9
-#      - 10
-#      - 11
-#      - 12
-#    monitored_conditions:
-#      - summary
-#      - minutely_summary
-#      - hourly_summary
-#      - daily_summary
-#      - icon
-#      - uv_index
-#      - ozone
-#      - temperature
-#      - temperature_high
-#      - temperature_low
-#      - apparent_temperature
-#      - apparent_temperature_high
-#      - humidity
-#      - wind_speed
-#      - wind_bearing
-#      - precip_probability
-#      - precip_intensity
-#      - precip_intensity_max
-#      - pressure
-#      - visibility
+binary_sensor:
+  - platform: meteoalarm
+    country: "italy"
+    province: "Lazio"
+    language: "it-IT"
 
-  #
-  # Wind direction
-  #
-  # Wind provenance in degrees is great for computers, but pointless for humans.
-  # Cardinal points make more sense to humans.
-  #
-  # @see /customize.yaml
-  #
-  # @link http://www.themethodology.net/2013/12/how-to-convert-degrees-to-cardinal.html
-  # @link https://stackoverflow.com/questions/7490660/converting-wind-direction-in-angles-to-text-words
-  #
-  - platform: template
-    sensors:
-      wind_bearing_cardinal:
-        value_template: >-
-          {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
-          {% set directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] %}
+template:
+  - sensor:
+    - name: weather_wind_speed
+      state: >-
+        {{ state_attr('weather.home', 'wind_speed') }}
+      unit_of_measurement: >-
+        {{ state_attr('weather.home', 'wind_speed_unit') }}
 
-          {% if degrees >= 0 %}
-            {% set val = (degrees / 45) | int %}
+    - name: weather_wind_bearing
+      state: >-
+        {{ state_attr('weather.home', 'wind_bearing') }}
+      unit_of_measurement: '°'
 
-            {{ directions[(val % 8)] }}
-          {% else %}
-            unknown
-          {% endif %}
+    #
+    # Wind direction
+    #
+    # Wind provenance in degrees is great for computers, but pointless for humans.
+    # Cardinal points make more sense to humans.
+    #
+    # @see /customize.yaml
+    #
+    # @link http://www.themethodology.net/2013/12/how-to-convert-degrees-to-cardinal.html
+    # @link https://stackoverflow.com/questions/7490660/converting-wind-direction-in-angles-to-text-words
+    #
+    - name: wind_bearing_cardinal
+      state: >-
+        {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
+        {% set directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] %}
 
-      wind_bearing_cardinal_friendly:
-        value_template: >-
-          {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
-          {% set directions = [
-            'Nord',
-            'Nord-est',
-            'Est',
-            'Sud-est',
-            'Sud',
-            'Sud-ovest',
-            'Ovest',
-            'Nord-ovest'
-          ] %}
+        {% if degrees >= 0 %}
+          {% set val = (degrees / 45) | int %}
 
-          {% if degrees >= 0 %}
-            {% set val = (degrees / 45) | int %}
+          {{ directions[(val % 8)] }}
+        {% else %}
+          unavailable
+        {% endif %}
 
-            {{ directions[(val % 8)] }}
-          {% else %}
-            non lo so
-          {% endif %}
+    - name: wind_bearing_cardinal_friendly
+      state: >-
+        {% set degrees = states('sensor.weather_wind_bearing') | int(-1) %}
+        {% set directions = [
+          'Nord',
+          'Nord-est',
+          'Est',
+          'Sud-est',
+          'Sud',
+          'Sud-ovest',
+          'Ovest',
+          'Nord-ovest'
+        ] %}
+
+        {% if degrees >= 0 %}
+          {% set val = (degrees / 45) | int %}
+
+          {{ directions[(val % 8)] }}
+        {% else %}
+          non lo so
+        {% endif %}
+
+    - name: weather_summary
+      state: >-
+        {{ state_translated("weather.home") }}
+
+  - trigger:
+      # state is forcibly updated by an automation below
+      - trigger: state
+        entity_id: weather.home
+    action:
+      - action: weather.get_forecasts
+        data:
+          type: daily
+        target:
+          entity_id: weather.home
+        response_variable: daily
+      - action: weather.get_forecasts
+        data:
+          type: hourly
+        target:
+          entity_id: weather.home
+        response_variable: hourly
+    sensor:
+      - name: weather_daytime_high_temperature_0d
+        state: "{{ daily['weather.home'].forecast[0].temperature }}"
+        unit_of_measurement: "°C"
+      - name: weather_overnight_low_temperature_0d
+        state: "{{ daily['weather.home'].forecast[0].templow }}"
+        unit_of_measurement: "°C"
+      - name: weather_hourly_summary
+        state: >-
+          {{ ct_translated('component.weather.entity_component._.state.' + hourly['weather.home'].forecast[3].condition, 'it') }}
+
+automation:
+
+  - alias: Reload weather integration
+    id: e101b043-df65-11f0-b742-b4b686ed2aba
+    trigger:
+      - trigger: homeassistant
+        event: start
+    action:
+      - action: rest_command.reload_weather_integration
+
+rest_command:
+
+  reload_weather_integration:
+    url: !secret weather_reload_url
+    method: POST
+    headers:
+      authorization: !secret hass_authorization
+      content-type: 'application/json'

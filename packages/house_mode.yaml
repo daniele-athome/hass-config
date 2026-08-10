@@ -33,6 +33,7 @@ automation:
   # Only house-wide house mode automations here
 
   - alias: mode_select_night
+    id: 756d3524-f9d1-48c9-81d8-136eefb07893
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -42,6 +43,7 @@ automation:
         entity_id: all
 
   - alias: mode_select_away
+    id: b5c03a48-0e40-4f8a-b74e-c8b9fbb23a38
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -52,6 +54,7 @@ automation:
 
   # Impostazione automatica modalità giorno al mattino (risveglio)
   - alias: mode_auto_day
+    id: 28f07a24-1486-471f-9f85-479ff37f9b15
     trigger:
       # Rilevato movimento fuori dalla camera da letto
       - trigger: state
@@ -90,6 +93,7 @@ automation:
 
   # Impostazione automatica modalità casa vuota lunga
   - alias: mode_auto_extended_away
+    id: 285807b4-b4d1-4ff0-86bf-f863a134b71c
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -103,6 +107,7 @@ automation:
 
   # Per debug: notifica cambio house mode
   - alias: notify_mode_change
+    id: 41e8103a-c6bf-4840-b51a-fe19cd4dea30
     initial_state: true
     trigger:
       - trigger: state

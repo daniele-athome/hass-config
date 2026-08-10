@@ -1,82 +1,78 @@
 path: things
 title: Oggetti
 icon: mdi:cogs
-type: custom:layout-card
-layout_type: custom:vertical-layout
-layout:
-  max_cols: 2
-cards:
+type: sections
+max_columns: 2
+sections:
 
   # Column 1
+  - type: grid
+    cards:
 
-  - type: markdown
-    content: >
-      ## Scatola
+      - type: markdown
+        content: >
+          ## Home Assistant
 
-  - type: 'custom:bar-card'
-    entities:
-      - entity: sensor.disk_use_percent
-      - entity: sensor.memory_use_percent
-    columns: 2
-    positions:
-      icon: 'outside'
-      indicator: 'inside'
-      minmax: 'off'
-      name: 'off'
-      value: inside
-    card_mod:
-      style: |-
-        :host {
-          --bar-card-border-radius: 4px;
-        }
-        :host .card-content {
-          padding: 6px 10px;
-        }
-        bar-card-value {
-          font-size: 13px;
-          font-weight: bold;
-          text-shadow: 1px 1px #0008;
-          margin-left: 4px !important;
-        }
-        bar-card-divider {
-          display: none;
-        }
+      - type: 'custom:bar-card'
+        entities:
+          - entity: sensor.disk_use_percent
+          - entity: sensor.memory_use_percent
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          name: 'off'
+          value: inside
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-value {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: 4px !important;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
-  - type: 'custom:bar-card'
-    entities:
-      - entity: sensor.processor_use
-        icon: 'mdi:cpu-64-bit'
-      - entity: sensor.cputemp_scatola
-        icon: 'mdi:thermometer'
-    columns: 2
-    positions:
-      icon: 'outside'
-      indicator: 'inside'
-      minmax: 'off'
-      name: 'off'
-      value: inside
-    card_mod:
-      style: |-
-        :host {
-          --bar-card-border-radius: 4px;
-        }
-        :host .card-content {
-          padding: 6px 10px;
-        }
-        bar-card-value {
-          font-size: 13px;
-          font-weight: bold;
-          text-shadow: 1px 1px #0008;
-          margin-left: 4px !important;
-        }
-        bar-card-divider {
-          display: none;
-        }
+      - type: 'custom:bar-card'
+        entities:
+          - entity: sensor.processor_use
+            icon: 'mdi:cpu-64-bit'
+          - entity: sensor.cputemp_scatola
+            icon: 'mdi:thermometer'
+        columns: 2
+        positions:
+          icon: 'outside'
+          indicator: 'inside'
+          minmax: 'off'
+          name: 'off'
+          value: inside
+        card_mod:
+          style: |-
+            :host {
+              --bar-card-border-radius: 4px;
+            }
+            :host .card-content {
+              padding: 6px 10px;
+            }
+            bar-card-value {
+              font-size: 13px;
+              font-weight: bold;
+              text-shadow: 1px 1px #0008;
+              margin-left: 4px !important;
+            }
+            bar-card-divider {
+              display: none;
+            }
 
-  - type: entities
-    entities:
-      - type: section
-        label: HOME ASSISTANT
       - type: custom:bar-card
         entities:
           - entity: sensor.current_version
@@ -121,53 +117,43 @@ cards:
               flex-direction: column !important;
             }
 
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
-        label: 'GAS (m³)'
-
-      - entity: input_number.energy_gas_total
-
-      - type: 'custom:button-card'
-        icon: mdi:fire
-        name: Applica
+      - type: custom:button-card
+        name: Upgrade Home Assistant
+        icon: mdi:update
         layout: icon_name
         styles:
           card:
             - height: 70px
+          name:
+            - justify-self: start
+        confirmation:
+          text: "Home Assistant sarà aggiornato all'ultima versione."
         tap_action:
           action: call-service
-          service: script.input_reading_energy_gas
+          # TODO call docker upgrade service
+          service: shell_command.upgrade_configuration_scm
 
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
-        label: 'ACQUA (m³)'
-
-      - entity: input_number.energy_water_total
-
-      - type: 'custom:button-card'
-        icon: mdi:water
-        name: Applica
+      - type: custom:button-card
+        name: Upgrade configuration
+        icon: mdi:script-text-play
         layout: icon_name
         styles:
           card:
             - height: 70px
+          name:
+            - justify-self: start
+        confirmation:
+          text: 'Dopo aver aggiornare la configurazione, Home Assistant sarà riavviato.'
         tap_action:
           action: call-service
-          service: script.input_reading_energy_water
-
-  - type: custom:layout-break
+          service: script.hass_upgrade_config_and_restart
 
   # Column 2
-
-  - type: entities
-    show_header_toggle: off
-    entities:
-      - type: section
-        label: CONTROLLER
+  - type: grid
+    cards:
+      - type: markdown
+        content: |-
+          #### CONTROLLER
 
       - type: custom:bar-card
         entities:
@@ -197,7 +183,7 @@ cards:
           name: 'inside'
           value: 'off'
         card_mod:
-          style: |-
+          style: |
             :host {
               --bar-card-border-radius: 4px;
             }
@@ -215,11 +201,13 @@ cards:
               display: none;
             }
 
-      - type: section
-        label: SENSORI
+      - type: markdown
+        content: |-
+          #### BATTERIE
 
       - type: custom:bar-card
         entities:
+          # TODO use "battery_plus" entities from battery-notes
           - entity: sensor.battery_env_external
             name: 'Ambiente: Esterno'
           - entity: sensor.battery_env_living
@@ -242,6 +230,8 @@ cards:
             name: 'Movimento: Camera (sx)'
           - entity: sensor.battery_motion_bedroom_headrest
             name: 'Movimento: Camera (letto)'
+          - entity: sensor.battery_env_bathroom1_shower
+            name: 'Ambiente: Bagno 1 (doccia)'
           #- entity: sensor.battery_water_bathroom1
           #  name: 'Acqua: Bagno 1'
         severity:
@@ -262,7 +252,7 @@ cards:
           name: 'inside'
           value: 'off'
         card_mod:
-          style: |-
+          style: |
             :host {
               --bar-card-border-radius: 4px;
             }
@@ -280,23 +270,43 @@ cards:
               display: none;
             }
 
-      # TODO non so se queste vanno qui...
-      - type: section
-        label: LUCI
+      - type: markdown
+        content: |-
+          #### LUCI
 
-      - type: 'custom:button-card'
-        entity: light.living_extra
-        icon: mdi:lightbulb
-        tap_action:
-          action: toggle
-        hold_action:
-          action: call-service
-          service: script.toggle_living_extra
+      - type: custom:auto-entities
+        card:
+          type: grid
+          columns: 2
+          square: false
+        card_param: cards
+        filter:
+          include:
+            - entity_id: light.*
+              options:
+                type: custom:button-card
+                section_mode: true
+                layout: icon_name
+                styles:
+                  name:
+                    - font-size: 0.9em
+                    - justify-self: start
+          exclude:
+            - entity_id: light.browser_mod_*
+            - entity_id: light.*_real
+            - entity_id: light.all*
+            - entity_id: light.*voice*
+            - entity_id: light.*dial*
+            - hidden_by: user
+        sort:
+          method: friendly_name
 
       - type: custom:browser-control-card
-        hide_fullscreen: false
-        hide_screenlock: true
-        hide_zoom: true
-        hide_refresh: false
+        controls:
+          - fullscreen
+          - reload
+          - navbar
+          - sidebar
         no_padding: false
         small_buttons: false
+        layout: center

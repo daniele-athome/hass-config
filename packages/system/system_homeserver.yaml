@@ -29,6 +29,7 @@ input_text:
 sensor:
 
   # Unsupported by Glances integration
+  # FIXME turn this into a template sensor from the glances sensor
   - platform: rest
     resource: http://server:61208/api/4/uptime
     name: uptime_homeserver
@@ -38,6 +39,7 @@ sensor:
 automation:
 
   - alias: house_mode_system_homeserver_day
+    id: 81c38708-9951-4148-b32d-601d0175737d
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -50,6 +52,7 @@ automation:
         entity_id: switch.homeserver
 
   - alias: house_mode_system_homeserver_night
+    id: b00c77cf-0e8d-4303-848d-d9139ea1da8a
     trigger:
       - trigger: state
         entity_id: input_select.house_mode
@@ -67,6 +70,9 @@ automation:
         to: 'off'
     action:
       - action: script.monitoring_homeserver_night_create_silence
+      - action: automation.turn_off
+        target:
+          entity_id: automation.homeserver_down
 
   - alias: homeserver_monitoring_enable
     id: 4ae1dc3e-1458-11f0-a235-0800277ca3d8
@@ -77,6 +83,26 @@ automation:
         to: 'on'
     action:
       - action: script.monitoring_homeserver_night_delete_silence
+      - action: automation.turn_on
+        target:
+          entity_id: automation.homeserver_down
+
+  - alias: homeserver_down
+    id: acec1e12-521d-4716-ac1e-12521de7167b
+    description: 'Invia una notifica se il server è irraggiungibile'
+    trigger:
+      - trigger: state
+        entity_id: sensor.homeserver_uptime
+        to: 'unavailable'
+        for:
+          minutes: 5
+    action:
+      - action: script.notify_important
+        data:
+          category: Sistema
+          speak: no
+          message: |-
+            Server irraggiungibile!
 
 switch:
   - platform: wake_on_lan

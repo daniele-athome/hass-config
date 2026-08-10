@@ -13,10 +13,16 @@ homeassistant:
       device_class: temperature
     sensor.temperature_living_window:
       device_class: temperature
+    climate.boiler_main:
+      friendly_name: Riscaldamento
+    climate.living_ac:
+      friendly_name: "A/C soggiorno"
+    climate.bedroom_ac:
+      friendly_name: "A/C camera"
 
 group:
   hvac_all:
-    name: "Sistemi HAVC"
+    name: "Sistemi HVAC"
     entities:
       - climate.boiler_main
       - climate.living_ac
@@ -77,6 +83,7 @@ sensor:
     platform: min_max
     type: mean
     round_digits: 1
+    unique_id: 4c20a20c-4230-4262-a0a2-0c42306262e3
     entity_ids:
       - sensor.temperature_kitchen
       - sensor.temperature_bedroom
@@ -88,6 +95,7 @@ sensor:
     platform: min_max
     type: mean
     round_digits: 1
+    unique_id: 5c5d4c9b-db1f-469d-9d4c-9bdb1fd69d41
     entity_ids:
       - sensor.humidity_kitchen
       - sensor.humidity_bedroom
@@ -99,10 +107,25 @@ sensor:
     platform: min_max
     type: mean
     round_digits: 1
+    unique_id: 0fc2834e-e517-426c-8283-4ee517626c0c
     entity_ids:
       # FIXME can't be used in winter because it's placed above a radiator
       #- sensor.temperature_living_window
       - sensor.temperature_living_table
+
+  - name: trend_humidity_env_bathroom1_shower
+    platform: derivative
+    source: sensor.humidity_bathroom1_shower
+    time_window: "00:05:00"
+    unit_time: min
+
+  - name: lux_bedroom
+    platform: min_max
+    type: mean
+    round_digits: 0
+    unique_id: 066a5c03-0bdd-4272-aa5c-030bddf272a2
+    entity_ids:
+      - sensor.lux_bedroom_left
 
 template:
   - sensor:
@@ -111,6 +134,12 @@ template:
         unit_of_measurement: '°C'
         icon: mdi:thermometer
         state_class: measurement
+
+binary_sensor:
+  - platform: trend
+    sensors:
+      trend_humidity_env_bathroom1_shower:
+        entity_id: sensor.humidity_bathroom1_shower
 
 mqtt:
   sensor:
@@ -121,60 +150,11 @@ mqtt:
       state_topic: shellies/gas-kitchen/sensor/concentration
       unit_of_measurement: 'PPM'
 
-climate:
-  # Termostato principale (Zigbee)
-  # Condizionatore soggiorno (Daikin AC)
-  # Condizionatore camera da letto (IRHVAC)
-  # TODO windfree
-  # TODO testare con IR receiver
-  - platform: tasmota_irhvac
-    name: bedroom_ac
-    command_topic: "homeassistant/tasmota/cmnd/bedroom_ac/irhvac"
-    state_topic: "homeassistant/tasmota/tele/bedroom_ac/RESULT"
-    state_topic_2: "homeassistant/tasmota/stat/bedroom_ac/RESULT"
-    availability_topic: "homeassistant/tasmota/tele/bedroom_ac/LWT"
-    temperature_sensor: sensor.temperature_bedroom
-    protocol: "SAMSUNG_AC"
-    min_temp: 16
-    max_temp: 30
-    target_temp: 26
-    initial_operation_mode: "off"
-    #away_temp: 24
-    precision: 1.0
-    supported_modes:
-      - heat
-      - cool
-      - dry
-      - fan_only
-      - auto
-      - "off"
-    supported_fan_speeds:
-      - max
-      - high
-      - medium
-      - min
-      - auto
-    supported_swing_list:
-      - "off"
-      - vertical # up to down
-      - horizontal # left to right
-      - both
-    toggle_list:
-      - Beep
-      #- Clean
-      - Econo
-      #- Filter
-      #- Light
-      - Quiet
-      #- Sleep
-      #- SwingH
-      #- SwingV
-      - Turbo
-
 automation:
   - alias: thermostat_sync_local_temperature
+    id: 67c2d370-27cf-4730-82d3-7027cf873017
     description: 'Sincronizza la temperatura rilevata dal termostato principale'
-    trigger:
+    triggers:
       - trigger: state
         entity_id: climate.boiler_main
         from: unavailable
@@ -185,8 +165,14 @@ automation:
       - trigger: state
         entity_id: climate.boiler_main
         attribute: current_temperature
-    condition: [ ]
-    action:
+      - trigger: homeassistant
+        event: start
+    conditions:
+      not:
+        - condition: state
+          entity_id: sensor.temperature_average
+          state: unavailable
+    actions:
       - variables:
           tempcalc: >-
             {{ (states('sensor.temperature_average')|float(0)|round(1) -
@@ -201,5 +187,33 @@ automation:
               value: "{{ tempcalc }}"
             target:
               entity_id: number.bosch_rbsh_rth0_zb_eu_local_temperature_offset
+    mode: queued
+    max: 3
+
+  - alias: thermostat_sync_external_temperature
+    id: d6d94b8f-4a5d-4765-994b-8f4a5da765f6
+    description: 'Sincronizza la temperatura esterna per il display del termostato principale'
+    triggers:
+      - trigger: state
+        entity_id: climate.boiler_main
+        from: unavailable
+        alias: 'Termostato disponibile'
+      - trigger: state
+        entity_id: sensor.temperature_external
+        alias: 'Variazione temperatura esterna'
+      - trigger: homeassistant
+        event: start
+    conditions:
+      not:
+        - condition: state
+          entity_id: sensor.temperature_external
+          state: unavailable
+    actions:
+      - action: number.set_value
+        data:
+          # supported precision by the thermostat display
+          value: "{{ states('sensor.temperature_external')|round(1) }}"
+        target:
+          entity_id: number.climate_boiler_outdoor_temperature
     mode: queued
     max: 3

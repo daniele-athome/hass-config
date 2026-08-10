@@ -2,6 +2,7 @@
 
 automation:
   - alias: house_on_fire
+    id: 6f48da05-3420-40a3-9fd2-643fff64c3ac
     trigger:
       - trigger: numeric_state
         entity_id: sensor.temperature_kitchen
@@ -33,6 +34,7 @@ automation:
             Studio: {{ states.sensor.temperature_studio.state_with_unit }}
 
   - alias: bathroom_flooded
+    id: d590386b-ec79-4411-a1b5-87f66a35070a
     trigger:
       - trigger: state
         entity_id: binary_sensor.water_bathroom1
@@ -48,6 +50,7 @@ automation:
         entity_id: switch.washing_machine
 
   - alias: gas_leak
+    id: bb6363d9-9c99-4c34-bf92-a0092ff473c5
     trigger:
       - trigger: state
         entity_id: sensor.gas_level_kitchen
@@ -70,6 +73,7 @@ automation:
 
   # Riscaldamento acceso da troppo tempo (qualcosa non va)
   - alias: boiler_main_stuck
+    id: 02adf0cc-029a-4ec0-90c7-3f3b4598b2b5
     trigger:
       - trigger: state
         entity_id: climate.boiler_main
@@ -88,6 +92,7 @@ automation:
   # Termostato down
   # TODO usare stato del termostato Zigbee; spostare in device_monitoring e usare automazione generica
   - alias: thermostat_down
+    id: 66140139-61eb-4d16-b8ec-94b0cea46434
     initial_state: false
     trigger:
       - trigger: state

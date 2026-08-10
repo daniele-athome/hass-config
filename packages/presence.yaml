@@ -13,33 +13,30 @@ input_boolean:
   daniele_zoned_home:
     initial: false
 
-sensor:
+template:
+  - sensor:
+    # Numero di persone note in zona casa
+    - name: people_count_home
+      state: >-
+        {% set count = 0 %}
+        {% if is_state("person.daniele", "home") %}
+          {% set count = count + 1 %}
+        {% endif %}
+        {{count}}
 
-  # Numero di persone note in zona casa
-  - platform: template
-    sensors:
-      people_count_home:
-        value_template: >-
-          {% set count = 0 %}
-          {% if is_state("person.daniele", "home") %}
-            {% set count = count + 1 %}
-          {% endif %}
-          {{count}}
-
-  # Numero di persone note rilevate con device dentro casa
-  - platform: template
-    sensors:
-      people_count_home_local:
-        value_template: >-
-          {% set count = 0 %}
-          {% if is_state("device_tracker.daniele_shibable", "home") or is_state("device_tracker.daniele_shibarouter", "home") %}
-            {% set count = count + 1 %}
-          {% endif %}
-          {{count}}
+    # Numero di persone note rilevate con device dentro casa
+    - name: people_count_home_local
+      state: >-
+        {% set count = 0 %}
+        {% if is_state("device_tracker.daniele_shibable", "home") or is_state("device_tracker.daniele_shibarouter", "home") %}
+          {% set count = count + 1 %}
+        {% endif %}
+        {{count}}
 
 automation:
 
   - alias: monitor_report_device_states
+    id: c59e5a9c-90cb-4e47-bf36-b62e6529d2ed
     description: Reports connected device to monitor at startup
     initial_state: true
     trigger:
@@ -53,6 +50,7 @@ automation:
           payload: ""
 
   - alias: daniele_zoned_home
+    id: 68a55d5e-1b74-4ab5-a79f-241201568198
     description: 'Arrivo di Daniele in zona casa'
     trigger:
       - trigger: state
@@ -63,6 +61,7 @@ automation:
         entity_id: input_boolean.daniele_zoned_home
 
   - alias: daniele_zoned_away
+    id: 4d0fbfcf-fa1c-4fff-9bc0-73416abf0fc6
     description: 'Uscita di Daniele da zona casa'
     trigger:
       - trigger: state
@@ -76,6 +75,7 @@ automation:
   # FIXME evitare falsi positivi derivanti dalla sparizione temporanea dei tracker WiFi e BLE
   # FIXME parte 2 volte quando entro e mi rileva col bluetooth e poi attivo il WiFi
   - alias: daniele_arrived
+    id: 1f0723c4-ac8f-4ad6-b1e8-89a247230db1
     description: 'Arrivo di Daniele: Karen saluta'
     initial_state: false
     mode: single
@@ -118,6 +118,7 @@ automation:
       - action: script.welcome_home
 
   - alias: daniele_left
+    id: 80f70595-6f18-4c0e-9ed0-4c0ff4b10b6b
     description: 'Uscita di Daniele: sveglia il server'
     initial_state: false
     trigger:
@@ -132,6 +133,7 @@ automation:
         entity_id: switch.homeserver
 
   - alias: house_empty
+    id: 74db24ca-64d5-4a84-b2d1-b0fa30f302a6
     trigger:
       - trigger: numeric_state
         entity_id: sensor.people_count_home
@@ -144,6 +146,7 @@ automation:
           option: away
 
   - alias: house_full
+    id: 072c2927-7309-496d-b9b4-86416421a6a1
     trigger:
       - trigger: numeric_state
         entity_id: sensor.people_count_home
@@ -160,6 +163,7 @@ automation:
   # Porta di ingresso aperta
   # Se nessuno presente, fai qualcosa e fa scattare lo scan di arrivo
   - alias: main_door_opened_empty
+    id: 1ab95cfa-a54e-4747-8283-a21053b47ea5
     trigger:
       - trigger: state
         entity_id: binary_sensor.door_main
@@ -176,6 +180,7 @@ automation:
   # Movimento rilevato e nessuno device in casa: fai partire scan di arrivo
   # Aiuta nel risolvere le situazioni di stallo derivanti da assenze brevi
   - alias: motion_fix_empty
+    id: d3ae7000-5233-4457-aaf2-3f58f7be86f5
     trigger:
       # Qualsiasi sensore di movimento scattato
       - trigger: state
@@ -193,6 +198,7 @@ automation:
   # Attiva scan visuale persone
   # FIXME non funziona, motion disattivo con gente in casa
   - alias: main_door_opened_guests
+    id: 0fd203f6-beee-4f51-b24d-2ac9414e5365
     trigger:
       - trigger: state
         entity_id: binary_sensor.door_main
@@ -205,6 +211,7 @@ automation:
   # Rilevata più di 1 persona!
   # Attiva modalità guest
   - alias: people_detected_guests
+    id: faa8bb29-e963-48cd-9e02-e1b608f54754
     trigger:
       trigger: event
       event_type: 'deepstack.object_detected'
@@ -243,6 +250,7 @@ automation:
   # Movimento terminato e porta chiusa meno di 2 minuti fa, persone in casa
   # Fai scattare lo scan di partenza
   - alias: presence_motion_stopped
+    id: af8c1903-3e82-4d3f-8d90-61b12bd147a9
     trigger:
       - trigger: state
         entity_id: group.motion_living
@@ -263,6 +271,7 @@ automation:
 
   # Disattiva le automazioni di luci di movimento se è appena entrato qualcuno in casa
   - alias: motion_house_entrance_disable
+    id: d481a870-21bc-49c4-84c4-498f99360a3c
     trigger:
       - trigger: state
         entity_id: input_boolean.house_entrance_lights
@@ -275,6 +284,7 @@ automation:
 
   # Riattiva le automazioni di luci di movimento dopo il passaggio del grace period dopo ingresso in casa
   - alias: motion_house_entrance_enable
+    id: a7425417-a1e7-4496-b814-ae7864d01bb4
     trigger:
       - trigger: state
         entity_id: input_boolean.house_entrance_lights
@@ -286,6 +296,7 @@ automation:
           - automation.living_motion_night_end
 
   - alias: trigger_daniele_location
+    id: c2c62fb7-e891-4641-9b27-aca4286d9416
     description: 'Richiede la posizione al device di Daniele qualche tempo dopo la disconnessione dei device locali'
     trigger:
       - trigger: state
@@ -304,6 +315,7 @@ automation:
           message: request_location_update
 
   - alias: shiba_house_entered_enable_wifi
+    id: ce6b0589-7910-42e5-97c6-d4a85a463cad
     description: "Abilita Wi-Fi del cellulare all'ingresso di casa."
     trigger:
       trigger: state
@@ -338,8 +350,7 @@ script:
       - action: scene.turn_on
         entity_id: scene.house_entrance
       # Grace period luci accese
-      - delay:
-          minutes: 10
+      - delay: !secret people_arrival_lights_on_grace_period
       # Aspetta che il movimento sia cessato oppure che le luci extra si siano spente perché troppa luce in ambiente (accensione luci principali)
       - wait_template: "{{ is_state('group.motion_living', 'off') or is_state('light.living_extra', 'off') }}"
       # Possiamo uscire dal grace period

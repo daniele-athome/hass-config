@@ -16,6 +16,8 @@
 
 homeassistant:
   customize:
+    light.external:
+      friendly_name: Esterno (tutte)
     light.external_bedroom:
       friendly_name: Esterno (camera)
     light.external_living:
@@ -48,6 +50,7 @@ homeassistant:
 automation:
   # FIXME appartiene a firmware o devices?
   - alias: "Sync Tasmota states on start-up"
+    id: a41e47f9-7288-4f64-b274-6a3dab2887e0
     initial_state: true
     trigger:
       trigger: homeassistant
@@ -58,41 +61,42 @@ automation:
           topic: "cmnd/tasmotas/state"
           payload: ""
 
-light:
-
-  - platform: template
-    lights:
-      living_ceiling:
-        value_template: "{{ states('light.living_ceiling_real') }}"
-        level_template: "{{ state_attr('light.living_ceiling_real', 'brightness') | int(0) }}"
-        temperature_template: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
-        turn_on:
-          action: light.turn_on
-          data:
-            entity_id: light.living_ceiling_real
-            brightness: 255
-            color_temp: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
+template:
+  - light:
+      - turn_on:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_ceiling_real
+              brightness: 255
+              color_temp_kelvin: "{{ state_attr('light.living_ceiling_real', 'color_temp_kelvin') | int(0) | default(2500, true) }}"
         turn_off:
-          action: light.turn_on
-          data:
-            entity_id: light.living_ceiling_real
-            brightness: 0
-            color_temp: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
+          - action: light.turn_on
+            data:
+              entity_id: light.living_ceiling_real
+              brightness: 0
+              color_temp_kelvin: "{{ state_attr('light.living_ceiling_real', 'color_temp_kelvin') | int(0) | default(2500, true) }}"
         set_level:
-          action: light.turn_on
-          data:
-            entity_id: light.living_ceiling_real
-            brightness: "{{ brightness }}"
+          - action: light.turn_on
+            data:
+              entity_id: light.living_ceiling_real
+              brightness: "{{ brightness }}"
         set_temperature:
-          action: light.turn_on
-          data:
-            entity_id: light.living_ceiling_real
-            color_temp: "{{ color_temp }}"
+          - action: light.turn_on
+            data:
+              entity_id: light.living_ceiling_real
+              color_temp_kelvin: "{{ color_temp_kelvin }}"
+        default_entity_id: light.living_ceiling
+        level: "{{ state_attr('light.living_ceiling_real', 'brightness') | int(0) }}"
+        temperature: "{{ state_attr('light.living_ceiling_real', 'color_temp') | int(0) | default(400, true) }}"
+        state: "{{ states('light.living_ceiling_real') }}"
+        name: living_ceiling
+
+light:
 
   - platform: group
     name: living_extra
     entities:
-      - light.living_stand
+      # TODO piantana da installare - light.living_stand
       - light.living_ceiling
 
   - platform: group
@@ -112,20 +116,6 @@ light:
       - light.dayway
       - light.nightway
       - light.studio
-
-mqtt:
-  light:
-    - name: "living_stand"
-      state_topic: "homeassistant/tasmota/stat/piantana/RESULT"
-      state_value_template: "{{ value_json.POWER }}"
-      command_topic: "homeassistant/tasmota/cmnd/piantana/POWER"
-      payload_on: "ON"
-      payload_off: "OFF"
-      availability_topic: "homeassistant/tasmota/tele/piantana/LWT"
-      payload_available: "Online"
-      payload_not_available: "Offline"
-      qos: 1
-      retain: false
 
 script:
 
@@ -151,11 +141,9 @@ scene:
       light.living_ceiling:
         state: on
         brightness: 255
-        color_temp: 400
-      light.living_stand:
-        state: on
-      # TODO finché non installiamo una piantana
-      light.living_main:
-        state: on
+        color_temp_kelvin: 2500
+      # TODO piantana da installare
+      #light.living_stand:
+      #  state: on
       input_boolean.house_entrance_lights:
         state: on

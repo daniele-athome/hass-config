@@ -1,0 +1,10 @@
+{
+  "domain": "random_template",
+  "name": "Random template",
+  "version": "0.0.1",
+  "integration_type": "service",
+  "documentation": "https://git.casaricci.it/casaricci/hass-config",
+  "dependencies": [],
+  "codeowners": ["@daniele-athome"],
+  "requirements": []
+}

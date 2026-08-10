@@ -1,0 +1,50 @@
+# ### Automotive automations
+
+automation:
+
+  - alias: automotive_daniele_fuel_low_warning_workday
+    id: 2c3b6ff7-acdd-42a5-bb6f-f7acddc2a58d
+    description: "Avvisa di fare benzina la mattina lavorativa"
+    triggers:
+      - trigger: time
+        at: "07:00"
+    conditions:
+      - condition: numeric_state
+        entity_id: !secret car_daniele_sensor_fuel_level
+        below: !secret car_daniele_fuel_level_low
+        alias: 'Soglia critica benzina'
+      - condition: state
+        entity_id: binary_sensor.workday
+        state: 'on'
+        alias: 'Giorno lavorativo'
+    actions:
+      - action: script.notify_daniele_fuel_low
+
+  - alias: automotive_daniele_fuel_low_warning_event
+    id: 102d956e-b466-4d5c-ad95-6eb4667d5ce7
+    description: "Avvisa di fare benzina prima di un evento"
+    triggers:
+      - trigger: calendar
+        entity_id: calendar.my_calendar
+        event: start
+        offset: -01:00:00
+    conditions:
+      - condition: numeric_state
+        entity_id: !secret car_daniele_sensor_fuel_level
+        below: !secret car_daniele_fuel_level_low
+        alias: 'Soglia critica benzina'
+    actions:
+      - action: script.notify_daniele_fuel_low
+
+script:
+
+  notify_daniele_fuel_low:
+    sequence:
+      # TODO use a proper notification integration
+      - action: notify.mobile_app_daniele_shiba
+        data:
+          title: "Automobile"
+          message: "Ricordati di fare benzina!"
+          data:
+            tag: automotive_fuel_low_warning
+            sticky: 'false'

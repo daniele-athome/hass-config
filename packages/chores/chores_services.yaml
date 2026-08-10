@@ -4,9 +4,9 @@ template:
   - binary_sensor:
       - name: washing_machine_operating
         #icon: todo
-        state: "{{ states.sensor.power_washing_machine.state|int > 10 }}"
+        state: "{{ states.sensor.power_washing_machine.state|int > 8 }}"
         delay_on: "00:00:10"
-        delay_off: "00:00:60"
+        delay_off: "00:01:30"
 
 automation:
 

@@ -5,9 +5,9 @@ intents:
   GetExternalTemperature:
     data:
       - sentences:
-          - "quale e la temperatura [esterna]"
-          - "quanto è (caldo | freddo)"
-          - "dimmi la temperatura [esterna]"
+          - "quale e la temperatura [(esterna|fuori)]"
+          - "quanto (è|fa) (caldo | freddo)"
+          - "dimmi la temperatura [(esterna|fuori)]"
           - "quanti gradi fanno [fuori]"
 
   WeatherToday:
@@ -15,5 +15,5 @@ intents:
       - sentences:
           - "come (è | sarà) il tempo [oggi]"
           - "com'è il tempo [oggi]"
-          - "che tempo (fa | farà) [oggi]"
-          - "[quali sono] le previsioni di oggi [per (favore|piacere)]"
+          - "che tempo (fa|farà) [oggi]"
+          - "[quali sono] le previsioni di oggi"

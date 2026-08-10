@@ -1,0 +1,110 @@
+# ### Companion app integrations
+
+automation:
+
+  - alias: controlcenter_house_mode_night
+    id: e5b2bbf8-24fc-11f0-aff5-0800277ca3d8
+    description: Imposta la dashboard visibile nel centro di controllo di notte
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        to: night
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_companion
+          path: /lovelace/environment
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_firefox
+          path: /lovelace/environment
+
+  # TODO use a dedicated morning dashboard (e.g. with weather, traffic conditions, calendar overview)
+  - alias: controlcenter_house_mode_not_night
+    id: e899fc29-24fc-11f0-8cdc-0800277ca3d8
+    description: Imposta la dashboard visibile nel centro di controllo al risveglio
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        from: night
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_companion
+          path: /lovelace/home
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_firefox
+          path: /lovelace/home
+
+  - alias: controlcenter_music_playing
+    id: b8565afd-9f8f-4897-965a-fd9f8fa897f8
+    description: Imposta la dashboard visibile nel centro di controllo quando si riproduce musica
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - trigger: state
+        entity_id: media_player.music
+        to: playing
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_companion
+          path: /lovelace/music
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_firefox
+          path: /lovelace/music
+      # https://www.home-assistant.io/docs/automation/modes/#example-throttled-automation
+      - delay: 00:05:00
+
+  - alias: controlcenter_music_stopped
+    id: 4aa395a1-d501-4973-a395-a1d501a973f4
+    description: Imposta la dashboard visibile nel centro di controllo quando si ferma la musica
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - trigger: state
+        entity_id: media_player.music
+        to:
+          - paused
+          - idle
+          - unavailable
+        for: 00:05:00
+    action:
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_companion
+          path: /lovelace/home
+      - action: browser_mod.navigate
+        data:
+          browser_id: !secret controlcenter_browser_id_firefox
+          path: /lovelace/home
+
+  - alias: shiba_phone_update_caller
+    id: ce0d3adc-78ff-11f0-a9cb-0800277ca3d8
+    triggers:
+      - trigger: webhook
+        webhook_id: "0315d756-78fd-11f0-a661-0800277ca3d8"
+        allowed_methods:
+          - POST
+        local_only: false
+    actions:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/shiba/device/phone/state
+          payload: >-
+            {"caller_name": "{{trigger.json.caller}}"}
+
+mqtt:
+  sensor:
+    - name: shiba_phone_call_incoming_caller_origin
+      state_topic: homeassistant/shiba/device/phone/state
+      value_template: "{{ value_json.caller_name }}"
+
+template:
+  - sensor:
+      - name: shiba_phone_call_incoming_caller
+        icon: mdi:call
+        state: >-
+          {{ states('sensor.shiba_phone_call_incoming_caller_origin') if is_state('sensor.daniele_shiba_phone_state', 'ringing') else '' }}

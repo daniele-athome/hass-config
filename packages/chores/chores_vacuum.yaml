@@ -39,6 +39,10 @@ input_text:
     name: Ultima stanza pulita
     #initial: ""
 
+# (off=OK, on=Problem)
+# binary_sensor.spulicchiator_dock_clean_water_box
+# binary_sensor.spulicchiator_dock_dirty_water_box
+
 automation:
 
   # FIXME in caso di cambiamento delle condizioni di avvio durante la finestra del preavviso, non riceverei la notifica
@@ -283,7 +287,7 @@ script:
         action: vacuum.set_fan_speed
         data:
           entity_id: vacuum.spulicchiator
-          fan_speed: "{{ 'low' if states.sensor.people_count_home.state|int > 0 else 'high' }}"
+          fan_speed: "{{ 'balanced' if states.sensor.people_count_home.state|int > 0 else 'max_plus' }}"
       - alias: Wait for robot to settle
         delay:
           seconds: 1
@@ -382,13 +386,22 @@ script:
           seconds: 6
 
       - alias: "Check if water is available"
-        if: "{{ is_state('sensor.spulicchiator_dock_error', 'water_empty') }}"
+        if:
+          - condition: or
+            conditions:
+              # (off=OK, on=Problem)
+              - condition: state
+                entity_id: binary_sensor.spulicchiator_dock_clean_water_box
+                state: 'on'
+              - condition: state
+                entity_id: binary_sensor.spulicchiator_dock_dirty_water_box
+                state: 'on'
         then:
           - action: script.notify_info
             data:
               category: Faccende
               message: |-
-                Acqua mancante: {{ room_name }}
+                Problema acqua: {{ room_name }}
         else:
 
           - alias: "Set mop intensity"

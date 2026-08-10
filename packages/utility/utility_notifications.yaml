@@ -1,9 +1,19 @@
-# Servizi di notifica
+# ### Notification services
+
+# TODO this stuff is awful: use or write a proper integration
 
 # disabled for now -- signal_messenger2:
 
 # Strumenti di notifica
 notify:
+  - name: main
+    platform: supernotify
+    recipients:
+      - person: person.daniele
+        mobile_discovery: false
+        mobile_devices:
+          - mobile_app_id: mobile_app_daniele_shiba
+
   # notify.mobile_app_daniele_shiba definito da integrazione mobile
 
   - platform: kodi
@@ -11,13 +21,6 @@ notify:
     host: !secret mediarasp_host
     username: !secret kodi_username
     password: !secret kodi_password
-  - platform: smtp
-    name: email_daniele
-    server: !secret smtp_server
-    port: 587
-    encryption: starttls
-    sender: !secret email_sender
-    recipient: !secret email_recipient_daniele
 
   # ### Notify entities che usano gli script passando per le API REST
 

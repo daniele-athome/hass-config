@@ -1,20 +1,30 @@
 # ### Device presence and battery monitoring
 # TODO allarmi per sensori che spariscono, data una lista di sensori noti
 
-sensor:
-  - platform: template
-    sensors:
+homeassistant:
+  customize:
+    sensor.low_batteries:
+      friendly_name: Batterie scariche
+
+    sensor.temperature_sensors_stuck:
+      friendly_name: Sensori di temperatura bloccati
+
+    sensor.lights_unavailable:
+      friendly_name: Luci non disponibili
+
+template:
+  - sensor:
       # Device con batteria scarica
-      low_batteries:
-        friendly_name: Batterie scariche
-        value_template: >
+      # TODO use entities from battery-notes
+      - name: low_batteries
+        state: >
           {%- set threshold = 10 -%}
           {%- set result = namespace(count=0) -%}
           {%- for item in states['sensor'] if ((item.entity_id.startswith('sensor.battery_') or item.entity_id == 'sensor.controlcenter_battery_level') and item.state not in ('unknown', 'unavailable') and item.state | int < threshold) -%}
           {%- set result.count = result.count + 1 -%}
           {%- endfor -%}
           {{ result.count }}
-        attribute_templates:
+        attributes:
           devices: >
             {%- set threshold = 10 -%}
             {%- set result = namespace(items=[]) -%}
@@ -24,9 +34,8 @@ sensor:
             {{ result.items }}
 
       # Sensori di temperatura bloccati
-      temperature_sensors_stuck:
-        friendly_name: Sensori di temperatura bloccati
-        value_template: >
+      - name: temperature_sensors_stuck
+        state: >
           {%- set threshold = 24 -%}
           {%- set result = namespace(count=0) -%}
           {%- for item in states['sensor']
@@ -35,7 +44,7 @@ sensor:
           {%- set result.count = result.count + 1 -%}
           {%- endfor -%}
           {{ result.count }}
-        attribute_templates:
+        attributes:
           devices: >
             {%- set threshold = 24 -%}
             {%- set result = namespace(items=[]) -%}
@@ -47,16 +56,15 @@ sensor:
             {{ result.items }}
 
       # Luci non disponibili
-      lights_unavailable:
-        friendly_name: Luci non disponibili
-        value_template: >
+      - name: lights_unavailable
+        state: >
           {%- set result = namespace(count=0) -%}
           {%- for item in states['light']
             if item.state in ('unknown', 'unavailable') -%}
           {%- set result.count = result.count + 1 -%}
           {%- endfor -%}
           {{ result.count }}
-        attribute_templates:
+        attributes:
           devices: >
             {%- set result = namespace(items=[]) -%}
             {%- for item in states['light']
@@ -66,30 +74,30 @@ sensor:
             {{ result.items }}
 
       # da usare in UI per rappresentare stato assente
-      status_controlcenter:
+      - name: status_controlcenter
         unit_of_measurement: "%"
         device_class: battery
-        value_template: >-
+        state: >-
           {% if is_state('device_tracker.controlcenter', 'home') %}
           {{ states.sensor.controlcenter_battery_level.state }}
           {% else %}
           0
           {% endif %}
 
-      status_thermostat:
+      - name: status_thermostat
         unit_of_measurement: "%"
         device_class: battery
-        value_template: >-
+        state: >-
           {% if not is_state('climate.boiler_main', 'unavailable') %}
           100
           {% else %}
           0
           {% endif %}
 
-      status_mediarasp:
+      - name: status_mediarasp
         unit_of_measurement: "%"
         device_class: battery
-        value_template: >-
+        state: >-
           {% if is_state('device_tracker.rasp', 'home') %}
           100
           {% else %}
@@ -115,38 +123,34 @@ automation:
     id: d60577fa-2c0d-11ef-b5c7-9ff802017551
     description: Notifica batterie scariche
     trigger:
-      trigger: numeric_state
-      entity_id: sensor.low_batteries
-      above: '0'
-      # evita sensori che riportano microcambiamenti
-      for: 02:00:00
+      - trigger: event
+        event_type: battery_notes_battery_threshold
+        event_data:
+          battery_low: true
+        alias: Battery went low
     action:
       - action: persistent_notification.create
         data:
-          title: Batterie scariche
+          title: "Batteria scarica: {{ trigger.event.data.device_name }}"
           message: >
-            {%- for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
-            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
-            {% endfor -%}
-          notification_id: alert_low_batteries
-      - action: script.notify_info
-        data:
-          category: Sistema
-          message: |-
-            Batterie scariche:
-            {% for item in states['sensor'] if item.entity_id in states.sensor.low_batteries.attributes.devices -%}
-            - {{ item.attributes.friendly_name }} ({{ item.state }}%)
-            {% endfor -%}
+            Batteria al {{
+            trigger.event.data.battery_level }}% {{ '\n' -}} Sostituiscila con {{
+            trigger.event.data.battery_quantity }}x {{
+            trigger.event.data.battery_type }}
+          notification_id: "{{ trigger.event.data.device_id }}-{{ trigger.event.data.source_entity_id }}"
 
   - alias: alert_low_batteries_dismiss
+    id: e12b49a1-68a3-11f0-997a-0800277ca3d8
     trigger:
-      trigger: numeric_state
-      entity_id: sensor.low_batteries
-      below: '1'
+      - trigger: event
+        event_type: battery_notes_battery_threshold
+        event_data:
+          battery_low: false
+        alias: Battery went high
     action:
       - action: persistent_notification.dismiss
         data:
-          notification_id: alert_low_batteries
+          notification_id: "{{ trigger.event.data.device_id }}-{{ trigger.event.data.source_entity_id }}"
 
   - alias: alert_temperature_sensors_stuck
     id: 8fc0c7f2-78b3-11ef-ade2-ffb2e6ef8276
@@ -176,6 +180,7 @@ automation:
             {% endfor -%}
 
   - alias: alert_temperature_sensors_stuck_dismiss
+    id: 7a9ce2a7-e29d-4e29-8f6f-472da19e2577
     trigger:
       trigger: numeric_state
       entity_id: sensor.temperature_sensors_stuck
@@ -185,7 +190,56 @@ automation:
         data:
           notification_id: alert_temperature_sensors_stuck
 
+  - alias: alert_unavailable_entities
+    id: 120778d2-8da6-11f0-99da-b4b686ed2aba
+    description: Monitora entities degne di nota per stato unavailable
+    triggers:
+      trigger: state
+      entity_id:
+        - light.living_ceiling
+        - light.living_extra
+        - light.external
+        - light.kitchen_main
+        - light.bedroom_left
+        - light.external_bedroom
+        - light.external_living
+        - light.bedroom_main
+        - light.studio
+        - light.dayway
+        - light.bathroom2
+        - light.nightway
+        - light.bathroom1_main
+        - light.living_stand
+        - light.living_ceiling_real
+        - light.bathroom1_mirror
+        - light.living_main
+        - sensor.power_light_bathroom1_main
+        - sensor.power_light_bathroom1_mirror
+        - sensor.power_power_light_living_main
+        - sensor.power_light_bedroom_left
+        - sensor.power_light_bedroom_main
+        - sensor.power_light_dayway
+        - sensor.power_washing_machine
+        # unreliable device
+        # - sensor.power_mains_total
+        - sensor.power_datacenter
+        - vacuum.spulicchiator
+        - climate.bedroom_ac
+        - climate.living_ac
+        - climate.boiler_main
+      to: unavailable
+      for:
+        minutes: 5
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: Sensore non disponibile
+          message: >
+            Sensore "{{ trigger.to_state.name }}" ({{ trigger.to_state.entity_id }}) da stato "{{ trigger.from_state.state }}" a stato "{{ trigger.to_state.state }}"
+          notification_id: alert_unavailable_entities
+
   - alias: alert_home_assistant_startup
+    id: cfcc7e21-0ab4-42b9-9f91-3a57aa5ab5a3
     trigger:
       trigger: homeassistant
       event: start

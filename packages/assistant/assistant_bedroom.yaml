@@ -1,0 +1,11 @@
+
+intent_script:
+
+  HassTurnOn_LightBedroom:
+    action:
+      - action: script.bedroom_turn_on_light_conditional
+    speech:
+      # FIXME ssml is not supported by HASS
+      type: plain
+      # TODO find a way to retrieve the "lights_area" response from the intent subsystem
+      text: "<p>Ho acceso la luce in camera</p>"
