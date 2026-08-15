@@ -127,6 +127,20 @@ automation:
           message: |-
             Condizionatori spenti di notte
 
+  - alias: house_mode_hvac_night_ac_display_off
+    id: bf87dfe8-7536-4129-87df-e875365129f3
+    description: 'Spegni il display dei condizionatori di notte'
+    trigger:
+      - trigger: state
+        entity_id: input_select.house_mode
+        to: "night"
+    action:
+      - action: switch.turn_off
+        target:
+          entity_id:
+            - switch.display_climate_bedroom_ac
+            # not supported by Daikin
+
   # Ripristino temperatura target diurna in caso di risveglio senza sveglia
   - alias: house_mode_hvac_not_night
     id: 69bfec42-2c12-11ef-80ef-6fcf182ea6d8

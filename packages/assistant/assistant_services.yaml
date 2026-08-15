@@ -88,5 +88,5 @@ automation:
       - action: script.suspend_media_for_assist
 
 random_template:
-  templates_path: /home/homeassistant/.homeassistant/custom_templates
+  templates_path: /config/custom_templates
   language: it

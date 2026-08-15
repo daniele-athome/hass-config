@@ -3,8 +3,7 @@
 app_domonet_manager:
   module: domonet_manager
   class: DomonetManager
-  plugin:
-    - HASS
+  plugin: HASS
   log: domonet
   log_level: DEBUG
   domonet_interface: !secret domonet_interface

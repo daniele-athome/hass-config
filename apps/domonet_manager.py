@@ -16,6 +16,7 @@ class DomonetManager(hass.Hass):
 
     # noinspection attribute-outside-init
     def initialize(self):
+        self.logger.info("Domonet manager starting")
         self.domonet_interface = self.args["domonet_interface"]
         self.external_interface = self.args["external_interface"]
         self.check_global_command = self.args["check_global_command"]
@@ -26,9 +27,11 @@ class DomonetManager(hass.Hass):
         self.enable_device_command = self.args["enable_device_command"]
         self.disable_device_command = self.args["disable_device_command"]
 
-        self.set_namespace("domonet")
+        # apparently the dependency to the plugin is not enough to be restarted
+        self.set_namespace("hass")
 
         # FIXME workaround for race condition: the hass namespace might not exist yet
+        # FIXME technically this is not needed anymore because set_namespace will create it
         while not self.namespace_exists("hass"):
             self.logger.debug("Waiting for hass namespace")
             sleep(1)

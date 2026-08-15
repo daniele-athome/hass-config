@@ -19,7 +19,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             os.write(FD, b"\n")
             os.close(FD)
         except OSError as err:
-            _LOGGER.warning("s6 readiness notification fallita: %s", err)
+            _LOGGER.warning("s6 readiness notification failed: %s", err)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _notify)
     return True

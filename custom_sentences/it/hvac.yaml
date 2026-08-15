@@ -84,9 +84,9 @@ lists:
   bedroom_ac_fan_mode:
     values:
       - in: "(a palla|al massimo)"
-        out: "max"
+        out: "turbo"
       - in: "al minimo"
-        out: "min"
+        out: "low"
 
 expansion_rules:
   area_living: "[(in|nel|del)] (soggiorno|salone)"

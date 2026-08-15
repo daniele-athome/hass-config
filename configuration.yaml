@@ -75,7 +75,7 @@ logbook:
 
 # Recording only what is necessary
 recorder:
-  db_url: mysql+pymysql://homeassistant@localhost/homeassistant?charset=utf8
+  db_url: mysql+pymysql://homeassistant:homeassistant@localhost/homeassistant?charset=utf8
   auto_purge: yes
   purge_keep_days: 60
   include:
